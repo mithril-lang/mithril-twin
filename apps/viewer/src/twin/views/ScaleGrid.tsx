@@ -11,25 +11,18 @@ import {
 } from 'react'
 import GitHubLink from '../components/GitHubLink'
 import ThemeSwitcher from '../components/ThemeSwitcher'
-import { CONTROL_WEIGHTS, hopCost, isUnverified, type RoleScore } from '../mith/exposure'
+import { CONTROL_WEIGHTS, type MixedHop, type RoleScore, type ZoneScore } from '../mith/exposure'
+import { DEFAULT_JUMP_HOST_COST, DEFAULT_REACH_WEIGHTS, EDGE, resolveWeights } from '../mith/graph'
 import { fitBoardsInSafeArea } from '../mith/geometry'
 import { SAMPLE_DOCS } from '../mith/load'
-import type { MithBoundary, MithChannel, MithDocument, MithEntity, MithRole } from '../mith/types'
-import {
-  analyzeScale,
-  fetchJson,
-  HOT,
-  packUrl,
-  parseIndex,
-  parseManifest,
-  runScaleAnalysis,
-  type Heat,
-  type ScaleAnalysis,
-} from '../scale/model'
-import { expandChunk, type ExpandedChunk, type PackChunk, type PackCompany, type PackManifest } from '../scale/pack'
+import type { MithBoundary, MithChannel, MithDocument, MithEntity, MithReach, MithRole } from '../mith/types'
+import { sharedEngine } from '../scale/client'
+import type { PathResult } from '../scale/engine'
+import { HOT, type Heat, type ScaleAnalysis } from '../scale/model'
+import { expandChunk, type ExpandedChunk, type PackCompany, type PackManifest } from '../scale/pack'
 import { inset, treemap, type Rect } from '../scale/treemap'
 import { useBoardAnchors } from './node3d'
-import { EasiestPath, RankedResources, RankedRoles } from './LensPanel'
+import { RankedResources, RankedRoles } from './LensPanel'
 import './make-grid.css'
 import './lens.css'
 import './scale.css'
@@ -46,7 +39,8 @@ type Level = { company: string | null; dept: string | null; team: string | null 
 type PerfRow = { name: string; ms: number; note?: string }
 
 type Props = {
-  manifestUrl: string
+  /** Generator seed: the pack is generated in the browser (Web Worker), not fetched. */
+  seed: number
   sampleId: string
   onPickSample: (id: string) => void
 }
@@ -62,6 +56,11 @@ declare global {
   interface Window {
     __twinScalePerf?: PerfRow[]
   }
+}
+
+/** Share of hot roles (score ≥ HOT) → floor tint; saturates at `sat` (weights.heatSaturation). */
+function shareColor(share: number, sat: number): string {
+  return heatColor(Math.min(100, (share / sat) * 100))
 }
 
 /** 0–100 exposure → floor tint. Neutral lavender → amber → red. */
@@ -94,7 +93,29 @@ function shadowColor(count: number, max: number): string {
 }
 
 const zoneKind = (id: string) =>
-  id === 'net:mobile' ? 'Managed mobile' : id.endsWith('.pay') ? 'Payments VLAN' : id.endsWith('.dmz') ? 'DMZ' : id.endsWith('.mgmt') ? 'Mgmt VLAN' : id.endsWith('.corp') ? 'Corp VLAN' : 'Group'
+  id === 'net:mobile'
+    ? 'Managed mobile'
+    : id.endsWith('.pay')
+      ? 'Payments core'
+      : id.endsWith('.prod')
+        ? 'Prod servers'
+        : id.endsWith('.ot')
+          ? 'OT / branch'
+          : id.endsWith('.dmz')
+            ? 'DMZ'
+            : id.endsWith('.mgmt')
+              ? 'Mgmt VLAN'
+              : id.endsWith('.corp')
+                ? 'Corp VLAN'
+                : 'Group'
+const GROUP_ZONES = ['net:inet', 'net:mobile', 'net:transit', 'net:gdc', 'net:gid', 'net:gcore']
+
+/** Zone fill for the Network lens: red = open path into a crown-jewel zone, amber = hosts one. */
+function zoneFill(z: ZoneScore | undefined): string {
+  if (z?.openToCrownJewel) return 'rgba(232, 72, 72, 0.9)'
+  if (z?.hostsCrownJewel) return 'rgba(253, 214, 140, 0.95)'
+  return 'rgba(214, 243, 228, 0.95)'
+}
 
 const fmt = (n: number) => n.toLocaleString('en-US')
 
@@ -110,6 +131,7 @@ type TileSpec = {
   tag?: boolean
   canvas?: { team: string }
 }
+type LinkSpec = { id: string; from: Rect; to: Rect; kind: MithReach['kind']; red: boolean; weight: number }
 type FrameSpec = { id: string; label: string; rect: Rect; kind: string; dashed?: boolean; tag?: boolean; root?: boolean }
 
 /**
@@ -120,7 +142,7 @@ type FrameSpec = { id: string; label: string; rect: Rect; kind: string; dashed?:
  *   team → virtualized people / device list in the right rail
  * Never more than a few hundred DOM tiles at once. Analysis runs in a Web Worker.
  */
-export default function ScaleGrid({ manifestUrl, sampleId, onPickSample }: Props) {
+export default function ScaleGrid({ seed, sampleId, onPickSample }: Props) {
   const stageRef = useRef<HTMLDivElement>(null)
   const [manifest, setManifest] = useState<PackManifest | null>(null)
   const [doc, setDoc] = useState<MithDocument | null>(null)
@@ -141,7 +163,8 @@ export default function ScaleGrid({ manifestUrl, sampleId, onPickSample }: Props
   const fitPasses = useRef(0)
   // Timing mark for the next committed view change; recorded two frames later (after paint).
   const [mark, setMark] = useState<{ name: string; t0: number; note?: string } | null>(null)
-  const docRef = useRef<MithDocument | null>(null)
+  const [pathState, setPathState] = useState<{ key: string; result: PathResult } | null>(null)
+  const path = pathState && pathState.key === selectedId ? pathState.result : null
 
   const record = useCallback((row: PerfRow) => {
     const rounded = { ...row, ms: Math.round(row.ms * 10) / 10 }
@@ -149,63 +172,39 @@ export default function ScaleGrid({ manifestUrl, sampleId, onPickSample }: Props
     setPerf((p) => [...p.filter((x) => x.name !== row.name), rounded])
   }, [])
 
-  // Load manifest + index on the main thread (for rendering); analysis in a worker in parallel.
+  // Generate the synthetic pack in a Web Worker (seeded), then analyze there; the UI renders the
+  // index as soon as it arrives and paints heat when the analysis follows.
   useEffect(() => {
     let cancelled = false
     const t0 = now()
     window.__twinScalePerf = []
-    async function run() {
-      try {
-        const m = parseManifest(await fetchJson(manifestUrl))
-        const indexUrl = packUrl(manifestUrl, m.index)
-        const tA = now()
-        const startAnalysis = () =>
-          runScaleAnalysis(indexUrl, () => docRef.current).then((res) => {
-            if (cancelled) return
-            if (!res.ok) {
-              // Fall back to the main thread if the worker could not run.
-              const d = docRef.current
-              if (d) {
-                const t = now()
-                setAnalysis(analyzeScale(d))
-                setAnalysisVia('main thread (worker failed)')
-                record({ name: 'analysis', ms: now() - t, note: 'main thread fallback' })
-              }
-              return
-            }
-            setAnalysis(res.analysis)
-            setAnalysisVia(res.via)
-            record({ name: 'analysis (round trip)', ms: now() - tA, note: res.via })
-            record({ name: 'analysis · exposure compute', ms: res.analysis.timings.analysisMs, note: res.via })
-            record({ name: 'analysis · index parse in worker', ms: res.analysis.timings.parseMs, note: res.via })
-          })
-        // With a Worker, analysis starts now and overlaps the main-thread index parse.
-        const hasWorker = typeof Worker !== 'undefined'
-        if (hasWorker) void startAnalysis()
-        const tIdx = now()
-        const raw = await fetchJson(indexUrl)
-        const tParse = now()
-        const d = parseIndex(raw)
-        const tDone = now()
+    const engine = sharedEngine(seed)
+    engine.pack
+      .then(({ load, ms }) => {
         if (cancelled) return
-        docRef.current = d
-        record({ name: 'load · manifest', ms: tA - t0 })
-        record({ name: 'load · index fetch', ms: tParse - tIdx })
-        record({ name: 'load · index parse (main)', ms: tDone - tParse })
-        record({ name: 'load · total', ms: tDone - t0 })
-        setMark({ name: 'initial render', t0: tDone })
-        setManifest(m)
-        setDoc(d)
-        if (!hasWorker) void startAnalysis()
-      } catch (err) {
-        if (!cancelled) setError(`Could not load pack: ${err instanceof Error ? err.message : 'unknown'}`)
-      }
-    }
-    void run()
+        const t = now()
+        record({ name: `load · generate (${engine.via})`, ms: load.timings.generateMs, note: `seed ${seed}` })
+        record({ name: `load · index parse (${engine.via})`, ms: load.timings.parseMs })
+        record({ name: 'load · pack to UI (round trip)', ms: t - t0, note: `engine ${ms.toFixed(0)} ms + transfer` })
+        setMark({ name: 'initial render', t0: t })
+        setManifest(load.manifest)
+        setDoc(load.doc)
+      })
+      .catch((err: Error) => !cancelled && setError(`Could not generate pack: ${err.message}`))
+    engine.analysis
+      .then(({ analysis: a, ms }) => {
+        if (cancelled) return
+        setAnalysis(a)
+        setAnalysisVia(engine.via === 'worker' ? 'Web Worker' : 'inline (no Worker)')
+        record({ name: 'analysis · exposure compute', ms: a.timings.analysisMs, note: engine.via })
+        record({ name: 'analysis · aggregate', ms: a.timings.aggregateMs, note: engine.via })
+        record({ name: 'analysis (load → ready)', ms: now() - t0, note: `analysis step ${ms.toFixed(0)} ms` })
+      })
+      .catch((err: Error) => !cancelled && setError(`Analysis failed: ${err.message}`))
     return () => {
       cancelled = true
     }
-  }, [manifestUrl, record])
+  }, [seed, record])
 
   // After the commit that carries a mark, wait two frames (so a paint happened) and record.
   useEffect(() => {
@@ -227,7 +226,15 @@ export default function ScaleGrid({ manifestUrl, sampleId, onPickSample }: Props
     const rolesByDept = new Map<string, MithRole[]>()
     const entities = new Map<string, MithEntity>()
     const channels = new Map<string, MithChannel>()
+    const hosted = new Map<string, string[]>()
+    const reachFrom = new Map<string, MithReach[]>()
+    const reachTo = new Map<string, MithReach[]>()
     if (doc) {
+      for (const e of doc.model.entities) if (e.layer === 'server' && e.zone) hosted.set(e.zone, [...(hosted.get(e.zone) ?? []), e.id])
+      for (const r of doc.model.reach ?? []) {
+        reachFrom.set(r.from, [...(reachFrom.get(r.from) ?? []), r])
+        reachTo.set(r.to, [...(reachTo.get(r.to) ?? []), r])
+      }
       for (const b of doc.model.boundaries ?? []) {
         boundaries.set(b.id, b)
         if (b.parent) children.set(b.parent, [...(children.get(b.parent) ?? []), b])
@@ -244,8 +251,33 @@ export default function ScaleGrid({ manifestUrl, sampleId, onPickSample }: Props
       while (cur && cur.kind !== 'subsidiary') cur = cur.parent ? boundaries.get(cur.parent) : undefined
       return cur?.id ?? null
     }
-    return { boundaries, children, roles, rolesByDept, entities, channels, companyOf }
+    return { boundaries, children, roles, rolesByDept, entities, channels, companyOf, hosted, reachFrom, reachTo }
   }, [doc])
+  const weights = useMemo(() => resolveWeights(doc?.model.weights), [doc])
+  const sat = weights.heatSaturation
+  const zoneScore = useMemo(() => new Map((analysis?.report.zones ?? []).map((z) => [z.zone, z])), [analysis])
+
+  // Mixed org + network path for the selected role / system, computed in the engine on demand.
+  useEffect(() => {
+    if (!selectedId || !analysis) return
+    const isRole = index.roles.has(selectedId)
+    const isSystem = index.entities.get(selectedId)?.layer === 'server'
+    if (!isRole && !isSystem) return
+    const engine = sharedEngine(seed)
+    let cancelled = false
+    const t0 = now()
+    engine
+      .path(isRole ? { role: selectedId } : { resource: selectedId })
+      .then(({ result, ms }) => {
+        if (cancelled) return
+        setPathState({ key: selectedId, result })
+        setMark({ name: 'drill · mixed path', t0, note: `engine ${ms.toFixed(1)} ms · ${result.hops.length} hops` })
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [selectedId, analysis, index, seed])
 
   const companies = useMemo(() => new Map((manifest?.companies ?? []).map((c) => [c.id, c])), [manifest])
   const roleScore = useMemo(() => new Map((analysis?.report.roles ?? []).map((r) => [r.role, r])), [analysis])
@@ -273,15 +305,14 @@ export default function ScaleGrid({ manifestUrl, sampleId, onPickSample }: Props
     async (company: string): Promise<{ chunk: ExpandedChunk; ms: number; cached: boolean }> => {
       const have = chunks.get(company)
       if (have) return { chunk: have, ms: 0, cached: true }
-      const meta = companies.get(company)
-      if (!meta) throw new Error(`unknown company ${company}`)
+      if (!companies.get(company)) throw new Error(`unknown company ${company}`)
       const t = now()
-      const raw = (await fetchJson(packUrl(manifestUrl, meta.chunk))) as PackChunk
+      const { chunk: raw } = await sharedEngine(seed).chunk(company)
       const chunk = expandChunk(raw)
       setChunks((prev) => new Map(prev).set(company, chunk))
       return { chunk, ms: now() - t, cached: false }
     },
-    [chunks, companies, manifestUrl],
+    [chunks, companies, seed],
   )
 
   const goTo = useCallback(
@@ -336,17 +367,18 @@ export default function ScaleGrid({ manifestUrl, sampleId, onPickSample }: Props
   const floor = useMemo(() => {
     const frames: FrameSpec[] = []
     const tiles: TileSpec[] = []
+    const links: LinkSpec[] = []
     let width = WORLD_W
     const height = WORLD_H
-    if (!manifest || !doc) return { frames, tiles, width, height }
-    const heatOf = (h: Record<string, Heat> | undefined, id: string) => h?.[id]?.max ?? 0
+    if (!manifest || !doc) return { frames, tiles, links, width, height }
+    const shareOf = (h: Record<string, Heat> | undefined, id: string) => h?.[id]?.share ?? 0
     const maxShadow = Math.max(1, ...Object.values(analysis?.companyShadow ?? {}))
     const companyFill = (c: PackCompany) =>
       lens === 'shadow'
         ? shadowColor(analysis?.companyShadow[c.id] ?? 0, maxShadow)
         : lens === 'access'
-          ? heatColor(heatOf(analysis?.companyAccessHeat, c.id))
-          : heatColor(heatOf(analysis?.companyHeat, c.id))
+          ? shareColor(shareOf(analysis?.companyAccessHeat, c.id), sat)
+          : shareColor(shareOf(analysis?.companyHeat, c.id), sat)
     const shadowFrame = (apps: NonNullable<typeof analysis>['shadowApps'], filterDepts?: Set<string>) => {
       width = WORLD_W + 40 + SHADOW_W
       const rect = { x: WORLD_W + 40, y: 0, w: SHADOW_W, h: height }
@@ -372,35 +404,44 @@ export default function ScaleGrid({ manifestUrl, sampleId, onPickSample }: Props
       const root = { x: 0, y: 0, w: WORLD_W, h: height }
       frames.push({ id: 'b:polaris', label: `北極星 Group · ${fmt(manifest.counts.subsidiaries)} subsidiaries (synthetic)`, rect: root, kind: 'company', root: true })
       if (lens === 'network') {
-        const byKind = new Map<string, { id: string; company: PackCompany; devices: number }[]>()
+        // Every subsidiary zone (incl. server-only segments), sized by devices, colored by reach risk.
+        const byKind = new Map<string, { id: string; zone: string; company: PackCompany; devices: number; risk: number }[]>()
         for (const c of manifest.companies) {
-          for (const [z, n] of Object.entries(c.zones)) {
-            const k = zoneKind(z)
-            byKind.set(k, [...(byKind.get(k) ?? []), { id: `${z}@${c.id}`, company: c, devices: n }])
+          const key = c.id.replace('b:', '')
+          for (const e of doc.model.entities) {
+            if (e.layer !== 'network' || !e.id.startsWith(`net:${key}.`)) continue
+            const k = zoneKind(e.id)
+            const zs = zoneScore.get(e.id)
+            const risk = zs?.openToCrownJewel ? 2 : zs?.hostsCrownJewel ? 1 : 0
+            byKind.set(k, [...(byKind.get(k) ?? []), { id: `${e.id}@${c.id}`, zone: e.id, company: c, devices: c.zones[e.id] ?? 0, risk }])
           }
         }
-        const clusters = [...byKind].map(([k, list]) => ({ k, list, total: list.reduce((a, x) => a + x.devices, 0) }))
+        const clusters = [...byKind].map(([k, list]) => ({ k, list, total: list.reduce((a, x) => a + x.devices + 20, 0) }))
         for (const cl of treemap(clusters, (x) => x.total, inset(root, 12, 36))) {
           const r = inset(cl, 5)
-          frames.push({ id: `zk:${cl.item.k}`, label: `${cl.item.k} · ${fmt(cl.item.total)} devices`, rect: r, kind: 'zone', tag: true })
-          const sorted = [...cl.item.list].sort((a, b) => b.devices - a.devices)
+          const red = cl.item.list.filter((x) => x.risk === 2).length
+          frames.push({ id: `zk:${cl.item.k}`, label: `${cl.item.k} · ${cl.item.list.length} zones${red ? ` · ${red} open → crown jewel` : ''}`, rect: r, kind: 'zone', tag: true })
+          const sorted = [...cl.item.list].sort((a, b) => b.risk - a.risk || b.devices - a.devices)
           const shown = sorted.slice(0, 80)
           const rest = sorted.slice(80)
-          const items = [...shown, ...(rest.length ? [{ id: `more:${cl.item.k}`, company: null as PackCompany | null, devices: rest.reduce((a, x) => a + x.devices, 0), more: rest.length }] : [])]
-          for (const t of treemap(items, (x) => x.devices, inset(r, 6, 26))) {
-            const it = t.item as { id: string; company: PackCompany | null; devices: number; more?: number }
+          const items = [...shown, ...(rest.length ? [{ id: `more:${cl.item.k}`, zone: '', company: null as PackCompany | null, devices: rest.reduce((a, x) => a + x.devices, 0), risk: 0, more: rest.length }] : [])]
+          for (const t of treemap(items, (x) => x.devices + 20, inset(r, 6, 26))) {
+            const it = t.item as { id: string; zone: string; company: PackCompany | null; devices: number; risk: number; more?: number }
+            const zs = zoneScore.get(it.zone)
             tiles.push({
               id: it.id,
               label: it.company ? it.company.label.replace('北極星 ', '') : `+${it.more} more zones`,
               rect: inset(t, 1.2),
-              fill: it.company ? 'rgba(214, 243, 228, 0.95)' : 'rgba(230, 236, 232, 0.9)',
-              meta: `${fmt(it.devices)} devices`,
+              fill: it.company ? zoneFill(zs) : 'rgba(230, 236, 232, 0.9)',
+              meta: it.company ? `${fmt(it.devices)} dev${zs?.openToCrownJewel ? ' · open → crown jewel' : zs?.hostsCrownJewel ? ' · hosts crown jewel' : ''}` : `${fmt(it.devices)} devices`,
               kind: it.company ? 'zone' : 'more',
+              hot: it.risk === 2,
+              tag: it.risk === 2,
               onClick: it.company ? () => void goTo({ company: it.company!.id, dept: null, team: null }) : undefined,
             })
           }
         }
-        return { frames, tiles, width, height }
+        return { frames, tiles, links, width, height }
       }
       const bySector = new Map<string, PackCompany[]>()
       for (const c of manifest.companies) bySector.set(c.sector, [...(bySector.get(c.sector) ?? []), c])
@@ -431,23 +472,67 @@ export default function ScaleGrid({ manifestUrl, sampleId, onPickSample }: Props
       const big = new Set([...placed].sort((a, b) => b.rect.w * b.rect.h - a.rect.w * a.rect.h).slice(0, TAG_CAP).map((t) => t.id))
       for (const t of placed) tiles.push({ ...t, tag: big.has(t.id) })
       if (lens === 'shadow' && analysis) shadowFrame(analysis.shadowApps)
-      return { frames, tiles, width, height }
+      return { frames, tiles, links, width, height }
     }
 
     const company = companies.get(level.company)
     const chunk = chunks.get(level.company)
-    if (!company) return { frames, tiles, width, height }
+    if (!company) return { frames, tiles, links, width, height }
     const depts = index.children.get(company.id) ?? []
 
     if (!level.dept) {
       const root = { x: 0, y: 0, w: WORLD_W, h: height }
       frames.push({ id: company.id, label: `${company.label} · ${company.departments} departments`, rect: root, kind: 'subsidiary', root: true })
       if (lens === 'network') {
-        const zs = Object.entries(company.zones).map(([z, n]) => ({ z, n }))
-        for (const t of treemap(zs, (x) => x.n, inset(root, 12, 36))) {
-          tiles.push({ id: t.item.z, label: labelOf(t.item.z).replace(`${company.label} · `, ''), rect: inset(t, 4), fill: 'rgba(214, 243, 228, 0.95)', meta: `${fmt(t.item.n)} devices`, kind: 'zone', tag: true })
+        // Subsidiary zones in the middle, internet / mobile on the left, group zones on the right;
+        // reach edges drawn between them (red = open into a crown-jewel zone).
+        const key = company.id.replace('b:', '')
+        const own = doc.model.entities.filter((e) => e.layer === 'network' && e.id.startsWith(`net:${key}.`)).map((e) => e.id)
+        const order = ['corp', 'mgmt', 'prod', 'pay', 'dmz', 'ot']
+        own.sort((a, b) => order.indexOf(a.split('.').pop()!) - order.indexOf(b.split('.').pop()!))
+        const touching = new Set<string>()
+        for (const z of own) for (const r of [...(index.reachFrom.get(z) ?? []), ...(index.reachTo.get(z) ?? [])]) touching.add(r.from).add(r.to)
+        const left = ['net:inet', 'net:mobile'].filter((z) => touching.has(z))
+        const right = ['net:transit', 'net:gdc', 'net:gid', 'net:gcore'].filter((z) => touching.has(z) || z !== 'net:transit')
+        const place = new Map<string, Rect>()
+        const col = (ids: string[], x: number, w: number) => {
+          const h = Math.min(220, (height - 80) / Math.max(1, ids.length) - 24)
+          ids.forEach((z, i) => place.set(z, { x, y: 60 + i * (h + 24), w, h }))
         }
-        return { frames, tiles, width, height }
+        col(left, 30, 220)
+        const cols = own.length > 3 ? 2 : 1
+        const cw = 360
+        const perCol = Math.ceil(own.length / cols)
+        for (let c = 0; c < cols; c++) col(own.slice(c * perCol, (c + 1) * perCol), 420 + c * (cw + 90), cw)
+        col(right, WORLD_W - 280, 250)
+        for (const [z, rect] of place) {
+          const zs = zoneScore.get(z)
+          const hostedIds = index.hosted.get(z) ?? []
+          const cj = hostedIds.filter((id) => index.entities.get(id)?.criticality === 'crown-jewel').length
+          const devices = company.zones[z] ?? 0
+          tiles.push({
+            id: z,
+            label: GROUP_ZONES.includes(z) ? labelOf(z) : labelOf(z).replace(`${company.label} · `, ''),
+            rect,
+            fill: zoneFill(zs),
+            meta: `${devices ? `${fmt(devices)} dev · ` : ''}${hostedIds.length} systems${cj ? ` · ${cj} crown jewel` : ''}${zs?.crownJewelCost != null ? ` · CJ cost ${zs.crownJewelCost}` : ''}`,
+            kind: 'zone',
+            hot: !!zs?.openToCrownJewel,
+            tag: true,
+            onClick: () => setSelectedId(z),
+          })
+        }
+        for (const z of own) {
+          for (const r of [...(index.reachFrom.get(z) ?? []), ...(index.reachTo.get(z) ?? [])]) {
+            const a = place.get(r.from)
+            const b = place.get(r.to)
+            if (!a || !b || links.some((l) => l.id === r.id)) continue
+            const target = zoneScore.get(r.to)
+            const red = r.kind === 'open' && !!(target?.hostsCrownJewel || target?.openToCrownJewel)
+            links.push({ id: r.id, from: a, to: b, kind: r.kind, red, weight: r.weight ?? (r.jumpHost && r.kind !== 'blocked' ? weights.jumpHost : weights.reach[r.kind]) })
+          }
+        }
+        return { frames, tiles, links, width, height }
       }
       const deptStats = (id: string) => manifest.departments[id] ?? [0, 0, 0]
       const maxDeptShadow = Math.max(1, ...depts.map((d) => analysis?.deptShadow[d.id]?.length ?? 0))
@@ -459,7 +544,7 @@ export default function ScaleGrid({ manifestUrl, sampleId, onPickSample }: Props
           id: d.id,
           label: d.label,
           rect: inset(t, 3),
-          fill: lens === 'shadow' ? shadowColor(analysis?.deptShadow[d.id]?.length ?? 0, maxDeptShadow) : heatColor(heat?.max ?? 0),
+          fill: lens === 'shadow' ? shadowColor(analysis?.deptShadow[d.id]?.length ?? 0, maxDeptShadow) : shareColor(heat?.share ?? 0, sat),
           meta: lens === 'shadow' ? `${analysis?.deptShadow[d.id]?.length ?? 0} shadow apps` : `${fmt(p)} ppl · ${fmt(dv)} dev · ${tm} teams`,
           kind: 'department',
           hot: (heat?.hot ?? 0) > 0,
@@ -468,7 +553,7 @@ export default function ScaleGrid({ manifestUrl, sampleId, onPickSample }: Props
         })
       }
       if (lens === 'shadow' && analysis) shadowFrame(analysis.shadowApps, new Set(depts.map((d) => d.id)))
-      return { frames, tiles, width, height }
+      return { frames, tiles, links, width, height }
     }
 
     // Department (and team) level.
@@ -510,8 +595,8 @@ export default function ScaleGrid({ manifestUrl, sampleId, onPickSample }: Props
         onClick: () => void goTo({ company: company.id, dept: level.dept, team: tm.id }),
       })
     }
-    return { frames, tiles, width, height }
-  }, [manifest, doc, analysis, lens, level, companies, chunks, index, roleScore, labelOf, goTo])
+    return { frames, tiles, links, width, height }
+  }, [manifest, doc, analysis, lens, level, companies, chunks, index, roleScore, labelOf, goTo, zoneScore, weights, sat])
 
   // ---- Fit to the safe area (same rule as the Make grid) -------------------------------
   const viewKey = `${level.company}|${level.dept}|${level.team}|${lens}|${floor.width}`
@@ -685,6 +770,7 @@ export default function ScaleGrid({ manifestUrl, sampleId, onPickSample }: Props
                 {(f.tag || f.root) && <i className="lens-tag-anchor" data-board-anchor={f.id} aria-hidden="true" />}
               </div>
             ))}
+            {floor.links.length > 0 && <ReachLinks links={floor.links} width={floor.width} height={floor.height} />}
             {floor.tiles.map((t) => (
               <ScaleTile
                 key={t.id}
@@ -785,6 +871,8 @@ export default function ScaleGrid({ manifestUrl, sampleId, onPickSample }: Props
             roleLabel={roleLabel}
             perf={perf}
             tileCount={tileCount}
+            path={path}
+            sat={sat}
           />
         </aside>
 
@@ -912,6 +1000,7 @@ type IndexLike = {
   entities: Map<string, MithEntity>
   channels: Map<string, MithChannel>
   companyOf: (id: string | undefined) => string | null
+  reachFrom?: Map<string, MithReach[]>
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -924,11 +1013,11 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 const LENS_BLURB: Record<ScaleLens, string> = {
-  org: 'Subsidiaries clustered by sector, sized by headcount, tinted by the highest role exposure score inside. Click to drill: company → department → team.',
-  network: 'Network zones, sized by device count. The same people keep their org boundary.',
-  access: 'Resources ranked by exposure: easiest outside path to a role that holds the grant × resource criticality × grant level.',
-  impersonation: 'Roles ranked by exposure score. Weak controls count: each hop costs 1 + control weights; red hops carry no verification.',
-  shadow: 'Unsanctioned SaaS sits outside the org boundary, sized by how many departments use it.',
+  org: 'Subsidiaries clustered by sector, sized by headcount, tinted by the share of roles inside with exposure score ≥ 50. Click to drill: company → department → team.',
+  network: 'Network zones and zone→zone reach (open / conditional / blocked, weighted). Red: an open-only path into a zone hosting a crown jewel. Drill into a subsidiary to see its reach edges.',
+  access: 'Resources ranked by exposure: cheapest outside path (org channels, network reach, or shadow-SaaS entry) × criticality × grant level (network-only access counts at 0.6).',
+  impersonation: 'Roles ranked by exposure score over mixed org + network paths: actor → channel → role → device → zone → reach → system. Weak controls count; red hops carry no verification or cross open reach.',
+  shadow: 'Unsanctioned SaaS sits outside the org boundary, sized by how many departments use it. Selecting one shows its entry path: internet → SaaS → sync into users’ zones → reach.',
 }
 
 function ScalePanel(props: {
@@ -949,6 +1038,8 @@ function ScalePanel(props: {
   roleLabel: (id: string) => string
   perf: PerfRow[]
   tileCount: number
+  path: PathResult | null
+  sat: number
 }) {
   const { lens, manifest, analysis, scopedReport, scopeCompany, level, chunks, index, roleScore, selectedId, onSelect, labelOf, roleLabel, perf } = props
   const chunk = level.company ? chunks.get(level.company) ?? null : null
@@ -990,8 +1081,7 @@ function ScalePanel(props: {
                 <div><dt>holders</dt><dd>{chunk?.holders.get(selectedRole.id)?.length ?? '—'} (synthetic people)</dd></div>
                 <div><dt>unverified paths</dt><dd>{roleScore.get(selectedRole.id)?.unverifiedPaths ?? 0} of {roleScore.get(selectedRole.id)?.paths ?? 0} (≤4 hops) · min hops {roleScore.get(selectedRole.id)?.minHops ?? '—'}</dd></div>
               </dl>
-              <EasiestPath report={analysis.report} roleId={selectedRole.id} labelOf={labelOf} />
-              <HopChain role={roleScore.get(selectedRole.id)} index={index} labelOf={labelOf} />
+              <MixedPath path={props.path} index={index} labelOf={labelOf} />
             </>
           )}
           {selectedEntity && !shadowApp && (
@@ -1000,16 +1090,25 @@ function ScalePanel(props: {
               <div><dt>criticality</dt><dd>{selectedEntity.criticality ?? 'not declared (level fallback)'}</dd></div>
               <div><dt>zone</dt><dd>{selectedEntity.zone ? labelOf(selectedEntity.zone) : '—'}</dd></div>
               {analysis && (
-                <div><dt>exposure</dt><dd>{(() => { const r = analysis.report.resources.find((x) => x.resource === selectedEntity.id); return r ? `score ${r.score} via ${r.viaRole ? roleLabel(r.viaRole) : '—'}` : 'no grants' })()}</dd></div>
+                <div><dt>exposure</dt><dd>{(() => { const r = analysis.report.resources.find((x) => x.resource === selectedEntity.id); return r ? `score ${r.score} via ${r.viaRole ? roleLabel(r.viaRole) : r.viaNetwork ? 'network / shadow SaaS' : '—'}${r.viaNetwork ? ' · network-reachable' : ''}` : 'no grants' })()}</dd></div>
               )}
+              {selectedEntity.layer === 'network' && (() => {
+                const z = analysis?.report.zones.find((x) => x.zone === selectedEntity.id)
+                return z ? <div><dt>reach</dt><dd>{z.reachableZones} zones reachable · crown jewel {z.crownJewelCost != null ? `at cost ${z.crownJewelCost} (${labelOf(z.crownJewel!)})` : 'not reachable'}{z.openToCrownJewel ? ' · OPEN path' : ''}</dd></div> : null
+              })()}
             </dl>
           )}
+          {selectedEntity?.layer === 'server' && !shadowApp && <MixedPath path={props.path} index={index} labelOf={labelOf} />}
           {shadowApp && (
             <dl className="lens-kv">
               <div><dt>source</dt><dd>{shadowApp.source}</dd></div>
               <div><dt>criticality</dt><dd>{shadowApp.criticality}</dd></div>
               <div><dt>used by</dt><dd>{shadowApp.departments.length} departments in {shadowApp.companies.length} subsidiaries</dd></div>
               <div><dt>first users</dt><dd>{shadowApp.departments.slice(0, 6).map((d) => `${labelOf(d)} (${d.split('.')[0]!.replace('b:', '').toUpperCase()})`).join(', ')}</dd></div>
+              {(() => {
+                const x = analysis?.report.shadowEntries.find((e) => e.system === shadowApp.id)
+                return x ? <div><dt>entry path</dt><dd>syncs into {x.syncZones} zones · {x.reachableZones} reachable · crown jewel {x.crownJewelCost != null ? `at cost ${x.crownJewelCost} (${labelOf(x.crownJewel!)})` : 'not reachable'}</dd></div> : null
+              })()}
             </dl>
           )}
         </div>
@@ -1023,7 +1122,7 @@ function ScalePanel(props: {
                 <div><dt>People</dt><dd>{fmt(manifest.departments[level.dept]![0])}</dd></div>
                 <div><dt>Devices</dt><dd>{fmt(manifest.departments[level.dept]![1])}</dd></div>
                 <div><dt>Teams</dt><dd>{manifest.departments[level.dept]![2]}</dd></div>
-                <div><dt>Max role score</dt><dd>{analysis?.deptHeat[level.dept]?.max ?? '—'}</dd></div>
+                <div><dt>Roles ≥ {HOT}</dt><dd>{analysis?.deptHeat[level.dept] ? `${analysis.deptHeat[level.dept]!.hot} of ${analysis.deptHeat[level.dept]!.roles}` : '—'}</dd></div>
               </dl>
             </Section>
           )}
@@ -1036,42 +1135,26 @@ function ScalePanel(props: {
             </dl>
           )}
           {!scopeCompany && analysis && (
-            <Section title="Hottest subsidiaries (max role score)">
+            <Section title={`Hottest subsidiaries (share of roles ≥ ${HOT})`}>
               <div className="lens-list">
                 {Object.entries(analysis.companyHeat)
-                  .sort((a, b) => b[1].max - a[1].max || b[1].hot - a[1].hot)
+                  .sort((a, b) => b[1].share - a[1].share || b[1].max - a[1].max)
                   .slice(0, 8)
                   .map(([id, h]) => (
                     <button key={id} type="button" className="lens-row" onClick={() => h.top && onSelect(h.top)}>
-                      <span><strong>{labelOf(id)}</strong><small>max {h.max} · {h.hot} roles ≥ {HOT} · top {h.top ? labelOf(h.top) : '—'}</small></span>
+                      <span><strong>{labelOf(id)}</strong><small>{Math.round(h.share * 100)}% · {h.hot} of {h.roles} roles ≥ {HOT} · max {h.max} · top {h.top ? labelOf(h.top) : '—'}</small></span>
                     </button>
                   ))}
               </div>
             </Section>
           )}
           {level.team && chunk && <TeamList team={level.team} chunk={chunk} />}
-          <HeatLegend />
+          <HeatLegend sat={props.sat} />
         </>
       )}
 
-      {lens === 'network' && manifest && (
-        <Section title={scopeCompany ? 'Zones in this subsidiary' : 'Zones across the group'}>
-          <div className="lens-list">
-            {(scopeCompany
-              ? Object.entries(scopeCompany.zones)
-              : Object.entries(
-                  manifest.companies.reduce<Record<string, number>>((acc, c) => {
-                    for (const [z, n] of Object.entries(c.zones)) acc[zoneKind(z)] = (acc[zoneKind(z)] ?? 0) + n
-                    return acc
-                  }, {}),
-                )
-            )
-              .sort((a, b) => b[1] - a[1])
-              .map(([z, n]) => (
-                <div key={z} className="lens-row"><span><strong>{scopeCompany ? labelOf(z) : z}</strong><small>{fmt(n)} devices</small></span></div>
-              ))}
-          </div>
-        </Section>
+      {lens === 'network' && manifest && analysis && (
+        <NetworkPanel analysis={analysis} scopeCompany={scopeCompany} level={level} index={index} labelOf={labelOf} roleLabel={roleLabel} selectedId={selectedId} onSelect={onSelect} />
       )}
 
       {lens === 'access' && scopedReport && (
@@ -1083,6 +1166,18 @@ function ScalePanel(props: {
           <p className="lens-metric">
             <b className="lens-num-hot">{fmt(scopedReport.totals.unverifiedPaths)}</b> unverified of {fmt(scopedReport.totals.paths)} paths (≤{scopedReport.totals.maxHops} hops){scopedReport.totals.capped ? ' (capped)' : ''} · {fmt(scopedReport.totals.reachableRoles)} of {fmt(scopedReport.totals.roles)} roles reachable from outside
           </p>
+          <Section title="Mixed org + network paths (role → device → zone → system)">
+            <div className="lens-list" data-mixed-roles>
+              {scopedReport.roles
+                .filter((r) => r.viaNetwork && r.score > 0)
+                .slice(0, 8)
+                .map((r) => (
+                  <button key={r.role} type="button" className={`lens-row ${r.role === selectedId ? 'active' : ''}`} onClick={() => onSelect(r.role)}>
+                    <span><strong>{roleLabel(r.role)}</strong><small>score {r.score} · seize {r.minCost} + network {r.topCost} → {r.topResource ? labelOf(r.topResource) : '—'} (no grant)</small></span>
+                  </button>
+                ))}
+            </div>
+          </Section>
           <RankedRoles report={scopedReport} labelOf={labelOf} subOf={roleWhere} selectedId={selectedId} onSelect={onSelect} limit={40} />
           <WeightsNote />
         </>
@@ -1114,43 +1209,171 @@ function ScalePanel(props: {
   )
 }
 
-function HopChain({ role, index, labelOf }: { role: RoleScore | undefined; index: IndexLike; labelOf: (id: string) => string }) {
-  if (!role?.easiest) return null
-  const path = role.easiest
+const NET_EDGE_TYPES = new Set<number>([EDGE.pivot, EDGE.device, EDGE.reach, EDGE.host, EDGE.entry, EDGE.sync])
+
+/** Mixed org + network hop chain from the engine (actor → role → device → zone → … → system). */
+function MixedPath({ path, index, labelOf }: { path: PathResult | null; index: IndexLike; labelOf: (id: string) => string }) {
+  if (!path) return <p className="lens-blurb" data-path-pending>Computing mixed path…</p>
+  if (!path.hops.length) return <p className="lens-blurb">No path from an external actor in the model.</p>
+  const net = path.hops.filter((h) => NET_EDGE_TYPES.has(h.edge)).length
   return (
-    <ol className="scale-hops" aria-label="Easiest path hops">
-      {path.channels.map((cid, i) => {
-        const ch = index.channels.get(cid)
-        if (!ch) return null
-        const red = isUnverified(ch)
+    <div className="scale-path" data-mixed-path={path.target ?? path.role ?? ''}>
+      <p className="lens-metric">
+        cost <b>{path.cost ?? '—'}</b> · {path.hops.length} hops ({path.hops.length - net} org, {net} network){path.target ? ` → ${labelOf(path.target)}` : ''}
+      </p>
+      <ol className="scale-hops" aria-label="Mixed org and network path">
+        {path.hops.map((h: MixedHop, i) => {
+          const ch = h.edge === EDGE.channel ? index.channels.get(h.ref) : undefined
+          const dim = NET_EDGE_TYPES.has(h.edge) ? 'net' : 'org'
+          return (
+            <li key={`${h.ref}:${i}`} className={`${h.red ? 'is-unverified' : ''} hop-${dim}`} data-hop-edge={dim}>
+              <span>
+                <em className={`scale-hop-dim dim-${dim}`}>{dim}</em>
+                {labelOf(h.from)} → {labelOf(h.to)}
+              </span>
+              <small>
+                {ch ? `${ch.kind} · ${h.red ? 'no verification' : ch.verification.join(' + ')}` : h.kind}
+                {h.edge === EDGE.reach ? ` · ${h.red ? 'open' : 'conditional'}` : ''} · cost {h.cost}
+              </small>
+            </li>
+          )
+        })}
+      </ol>
+      {path.blast && (
+        <dl className="lens-kv" aria-label="Weighted blast radius">
+          <div><dt>blast radius</dt><dd>{path.blast.count} resources within cost ≤ {path.blast.maxCost} · {path.blast.crownJewels} crown jewel · {path.blast.network} network-only</dd></div>
+          {path.blast.top.slice(0, 5).map((r) => (
+            <div key={r.resource}><dt>{r.level}</dt><dd>{labelOf(r.resource)} · cost {r.cost}</dd></div>
+          ))}
+        </dl>
+      )}
+    </div>
+  )
+}
+
+/** Zone→zone reach edges on the floor. Red: open into a crown-jewel zone; dashed: conditional. */
+function ReachLinks({ links, width, height }: { links: LinkSpec[]; width: number; height: number }) {
+  const center = (r: Rect) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 })
+  const clip = (r: Rect, from: { x: number; y: number }, to: { x: number; y: number }) => {
+    const dx = to.x - from.x
+    const dy = to.y - from.y
+    const t = Math.min(Math.abs(dx) > 1e-6 ? r.w / 2 / Math.abs(dx) : Infinity, Math.abs(dy) > 1e-6 ? r.h / 2 / Math.abs(dy) : Infinity, 1)
+    return { x: from.x + dx * t, y: from.y + dy * t }
+  }
+  return (
+    <svg className="scale-reach" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-label="Zone reach" data-reach-links={links.length}>
+      <defs>
+        {['red', 'open', 'conditional', 'blocked'].map((k) => (
+          <marker key={k} id={`reach-arrow-${k}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" className={`reach-head reach-${k}`} />
+          </marker>
+        ))}
+      </defs>
+      {links.map((l) => {
+        const a = center(l.from)
+        const b = center(l.to)
+        const len = Math.hypot(b.x - a.x, b.y - a.y) || 1
+        // Offset so a→b and b→a do not overlap.
+        const off = 7
+        const nx = (-(b.y - a.y) / len) * off
+        const ny = ((b.x - a.x) / len) * off
+        const p = clip(l.from, { x: a.x + nx, y: a.y + ny }, { x: b.x + nx, y: b.y + ny })
+        const q = clip(l.to, { x: b.x + nx, y: b.y + ny }, { x: a.x + nx, y: a.y + ny })
+        const k = l.red ? 'red' : l.kind
         return (
-          <li key={cid} className={red ? 'is-unverified' : ''}>
-            <span>{labelOf(path.nodes[i]!)} → {labelOf(path.nodes[i + 1]!)}</span>
-            <small>
-              {ch.kind} · {red ? 'no verification' : ch.verification.join(' + ')} · cost {hopCost(ch)}
-            </small>
-          </li>
+          <g key={l.id} className={`reach-link reach-${k}`} data-reach={l.kind} data-reach-red={l.red ? 'true' : undefined}>
+            <line x1={p.x} y1={p.y} x2={q.x} y2={q.y} markerEnd={`url(#reach-arrow-${k})`} />
+            {l.kind !== 'blocked' && (
+              <text x={(p.x + q.x) / 2 + nx} y={(p.y + q.y) / 2 + ny}>{l.kind === 'open' ? `open ${l.weight}` : `${l.weight}`}</text>
+            )}
+          </g>
         )
       })}
-    </ol>
+    </svg>
+  )
+}
+
+function NetworkPanel(props: {
+  analysis: ScaleAnalysis
+  scopeCompany: PackCompany | null
+  level: Level
+  index: IndexLike
+  labelOf: (id: string) => string
+  roleLabel: (id: string) => string
+  selectedId: string | null
+  onSelect: (id: string | null) => void
+}) {
+  const { analysis, scopeCompany, index, labelOf, roleLabel, selectedId, onSelect } = props
+  const key = scopeCompany?.id.replace('b:', '')
+  const inScopeZone = (z: string | null) => !key || (!!z && z.startsWith(`net:${key}.`))
+  const zones = analysis.report.zones.filter((z) => inScopeZone(z.zone))
+  const open = zones.filter((z) => z.openToCrownJewel)
+  const reach = (index.reachFrom ? [...index.reachFrom.values()].flat() : []).filter((r) => inScopeZone(r.from) || inScopeZone(r.to))
+  const counts = { open: 0, conditional: 0, blocked: 0 }
+  for (const r of reach) counts[r.kind] += 1
+  const netExp = analysis.report.networkExposures.filter((x) => inScopeZone(x.hostZone))
+  const shadow = analysis.report.shadowEntries.filter((x) => x.crownJewelCost != null)
+  return (
+    <>
+      <dl className="lens-stats" aria-label="Zone reach">
+        <div><dt>Zones</dt><dd>{fmt(zones.length)}</dd></div>
+        <div><dt>Reach open</dt><dd className="lens-num-hot">{fmt(counts.open)}</dd></div>
+        <div><dt>Conditional</dt><dd>{fmt(counts.conditional)}</dd></div>
+        <div><dt>Blocked</dt><dd>{fmt(counts.blocked)}</dd></div>
+      </dl>
+      <Section title={`Open paths into crown-jewel zones (${open.length})`}>
+        <div className="lens-list" data-open-cj>
+          {open.slice(0, 10).map((z) => (
+            <button key={z.zone} type="button" className={`lens-row ${z.zone === selectedId ? 'active' : ''}`} onClick={() => onSelect(z.zone)}>
+              <span><strong className="lens-num-hot">{labelOf(z.zone)}</strong><small>open reach only → {z.crownJewel ? labelOf(z.crownJewel) : 'crown-jewel zone'} · weighted cost {z.crownJewelCost ?? '—'}</small></span>
+            </button>
+          ))}
+          {!open.length && <p className="lens-blurb">No open-only path into a crown-jewel zone in scope.</p>}
+        </div>
+      </Section>
+      <Section title={`Network-reachable without a grant (${fmt(netExp.length)})`}>
+        <div className="lens-list" data-net-no-grant>
+          {netExp.slice(0, 8).map((x) => (
+            <button key={x.resource} type="button" className={`lens-row ${x.resource === selectedId ? 'active' : ''}`} onClick={() => onSelect(x.resource)}>
+              <span><strong>{labelOf(x.resource)}</strong><small>{x.criticality} · cost {x.cost} · via {x.viaRole ? roleLabel(x.viaRole) : 'shadow SaaS entry'} · hosted in {x.hostZone ? labelOf(x.hostZone) : '—'}</small></span>
+            </button>
+          ))}
+        </div>
+      </Section>
+      <Section title={`Shadow-IT SaaS entry paths to crown jewels (${shadow.length})`}>
+        <div className="lens-list" data-shadow-entry>
+          {shadow.slice(0, 6).map((x) => (
+            <button key={x.system} type="button" className={`lens-row ${x.system === selectedId ? 'active' : ''}`} onClick={() => onSelect(x.system)}>
+              <span><strong>{labelOf(x.system)}</strong><small>internet → SaaS → sync into {x.syncZones} zones → {x.crownJewel ? labelOf(x.crownJewel) : '—'} · cost {x.crownJewelCost}</small></span>
+            </button>
+          ))}
+        </div>
+      </Section>
+      <div className="scale-legend" aria-label="Zone legend">
+        <span style={{ background: zoneFill({ openToCrownJewel: true } as ZoneScore) }}>open → CJ</span>
+        <span style={{ background: zoneFill({ hostsCrownJewel: true } as ZoneScore) }}>hosts CJ</span>
+        <span style={{ background: zoneFill(undefined) }}>other</span>
+        <small>arrows: red open into CJ zone · solid open · dashed conditional · dotted blocked</small>
+      </div>
+    </>
   )
 }
 
 function WeightsNote() {
   return (
     <p className="lens-blurb scale-weights">
-      Hop cost = 1 + {Object.entries(CONTROL_WEIGHTS).filter(([k]) => k !== 'none').map(([k, v]) => `${k} ${v}`).join(', ')} (tunable defaults, not real-world success rates). Score = 100 × (1 / path cost) × criticality × level ÷ 8.
+      Hop cost = 1 + {Object.entries(CONTROL_WEIGHTS).filter(([k]) => k !== 'none').map(([k, v]) => `${k} ${v}`).join(', ')}; network reach open {DEFAULT_REACH_WEIGHTS.open}, conditional {DEFAULT_REACH_WEIGHTS.conditional}, blocked impassable; jump host {DEFAULT_JUMP_HOST_COST}, device pivot / host 1 (tunable defaults, per-document overrides in model.weights; not real-world success rates). Score = 100 × criticality × level ÷ 8 ÷ (cost to seize the role + network cost to the system).
     </p>
   )
 }
 
-function HeatLegend() {
+function HeatLegend({ sat }: { sat: number }) {
   return (
     <div className="scale-legend" aria-label="Heat legend">
-      {[0, 10, 25, 50, 80, 100].map((s) => (
-        <span key={s} style={{ background: heatColor(s) }}>{s}</span>
+      {[0, 0.2, 0.4, 0.6, 0.8, 1].map((k) => (
+        <span key={k} style={{ background: shareColor(k * sat, sat) }}>{Math.round(k * sat * 100)}%{k === 1 ? '+' : ''}</span>
       ))}
-      <small>exposure score (max role in tile)</small>
+      <small>tile = share of roles with score ≥ {HOT}</small>
     </div>
   )
 }

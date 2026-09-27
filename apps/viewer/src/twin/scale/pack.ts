@@ -53,6 +53,10 @@ export type PackManifest = {
     grants: number
     channels: number
     actors: number
+    /** Zone→zone reach edges; `openReach` of them open; `misconfigured` seeded open-by-mistake. */
+    reach: number
+    openReach: number
+    misconfigured: number
   }
   companies: PackCompany[]
   /** department id → [people, devices, teams] */

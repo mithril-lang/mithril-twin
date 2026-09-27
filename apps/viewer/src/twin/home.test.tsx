@@ -7,7 +7,6 @@ import { TwinHome } from './home'
 import { labelLines } from './components/TokenNode'
 import { orthoPath } from './components/ortho'
 import { twinSymbol } from './themes/symbols'
-import { enterpriseFiles } from './scale/generate'
 
 const tinyMith = {
   mith: '0.1',
@@ -207,13 +206,8 @@ describe('Twin lenses', () => {
 })
 
 describe('Enterprise-scale pack', () => {
-  it('lands on the generated 北極星 pack, drills company → department → team, and ranks exposure', async () => {
-    const files = enterpriseFiles()
-    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
-      const path = String(input).split('/data/polaris-enterprise/')[1]
-      const body = path ? files.get(path) : undefined
-      return body ? new Response(body, { status: 200 }) : new Response('', { status: 404 })
-    })
+  it('generates the 北極星 pack in the browser, drills company → department → team, and ranks exposure', async () => {
+    const fetchMock = vi.fn(async () => new Response('', { status: 404 }))
     vi.stubGlobal('fetch', fetchMock)
     window.history.replaceState(null, '', '/twin')
     render(<TwinHome />)
@@ -231,14 +225,19 @@ describe('Enterprise-scale pack', () => {
     expect(document.querySelectorAll('[data-tile-kind="company"]')).toHaveLength(300)
     expect(document.querySelectorAll('[data-scale-tile]').length).toBeLessThan(500)
     expect(screen.getByLabelText('Dataset counts').textContent).toMatch(/50,000/)
-    // Only the manifest and index were fetched so far: no per-company chunk.
-    expect(fetchMock.mock.calls.map((c) => String(c[0])).some((u) => u.includes('/companies/'))).toBe(false)
+    // Generated in the browser: nothing is fetched for the pack.
+    expect(fetchMock).not.toHaveBeenCalled()
 
     fireEvent.click(document.querySelector('[data-scale-tile="b:s002"]')!)
     await waitFor(() => expect(app().getAttribute('data-scale-level')).toBe('company'))
-    expect(fetchMock.mock.calls.map((c) => String(c[0])).filter((u) => u.includes('/companies/'))).toEqual([
-      '/data/polaris-enterprise/companies/s002.json',
-    ])
+    // Network lens at company level: zones plus zone→zone reach edges.
+    const lensGroup = screen.getByRole('group', { name: 'Lens' })
+    fireEvent.click(lensGroup.querySelector('button:nth-child(2)')!)
+    expect(app().getAttribute('data-lens')).toBe('network')
+    expect(Number(document.querySelector('[data-reach-links]')?.getAttribute('data-reach-links'))).toBeGreaterThan(5)
+    expect(document.querySelector('[data-reach="blocked"]')).toBeTruthy()
+    fireEvent.click(lensGroup.querySelector('button:nth-child(1)')!)
+    expect(fetchMock).not.toHaveBeenCalled()
     const dept = document.querySelector('[data-tile-kind="department"]')!
     fireEvent.click(dept)
     await waitFor(() => expect(app().getAttribute('data-scale-level')).toBe('department'))

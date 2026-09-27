@@ -7,10 +7,11 @@ import type {
   MithEntity,
   MithGrant,
   MithGrantLevel,
+  MithReach,
   MithRole,
   MithVerification,
 } from '../mith/types'
-import { PACK_VERSION, type PackChunk, type PackCompany, type PackManifest } from './pack'
+import { deviceId, PACK_VERSION, personId, personLabel, type PackChunk, type PackCompany, type PackManifest } from './pack'
 
 /**
  * Deterministic, seeded generator for the enterprise-scale 北極星 (Polaris) group.
@@ -19,7 +20,7 @@ import { PACK_VERSION, type PackChunk, type PackCompany, type PackManifest } fro
  */
 
 export const ENTERPRISE_SEED = 20260927
-export const GENERATOR = { name: 'polaris-enterprise', version: 1 }
+export const GENERATOR = { name: 'polaris-enterprise', version: 2 }
 export const TARGETS = {
   subsidiaries: 300,
   departments: 2000,
@@ -186,6 +187,9 @@ const SECTOR_LOCAL: Record<string, string[]> = {
   overseas: ['accounting', 'bankportal', 'crm', 'files'],
   ventures: ['accounting', 'app'],
 }
+const OT_SECTORS = new Set(['bank', 'regional', 'card', 'realestate', 'ops'])
+const FINANCIAL = new Set(['bank', 'regional', 'trust', 'securities', 'card', 'payments'])
+const GROUP_ZONE: Record<string, string> = { idp: 'net:gid', pam: 'net:gid', payhub: 'net:gcore', swift: 'net:gcore', tms: 'net:gcore', cardswitch: 'net:gcore', ledger: 'net:gcore' }
 const LOCAL_FILL = ['files', 'intranet', 'reporting', 'docs', 'ticketing', 'app', 'legacy', 'crm']
 
 const SHADOW_PREFIX = ['Drift', 'Sign', 'Note', 'Form', 'Chat', 'Pixel', 'Task', 'Share', 'Meet', 'Sheet', 'Clip', 'Vault', 'Flow', 'Snap', 'Doc']
@@ -254,7 +258,7 @@ type Company = {
   maturity: number
   federated: boolean
   depts: Dept[]
-  zones: { corp: string; pay?: string; dmz?: string; mgmt?: string }
+  zones: { corp: string; prod?: string; pay?: string; dmz?: string; mgmt?: string; ot?: string }
   local: Map<string, string[]>
 }
 type Dept = { id: string; kind: string; label: string; people: number; teams: number; roles: MithRole[] }
@@ -282,6 +286,8 @@ export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
   zone('net:inet', 'Internet edge', 'InternetEdge')
   zone('net:transit', 'Group transit', 'TransitNetwork')
   zone('net:gdc', 'Group data center', 'CorpVLAN')
+  zone('net:gcore', 'Group core payments segment', 'CorpVLAN')
+  zone('net:gid', 'Group identity & PAM tier', 'CorpVLAN')
   zone('net:mobile', 'Managed mobile (MDM)', 'CorpVLAN')
 
   // --- Companies and sizes -------------------------------------------------------------
@@ -348,10 +354,12 @@ export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
     boundaries.push({ id: c.id, label: c.label, kind: 'subsidiary', parent: 'b:polaris' })
     c.zones.corp = zone(`net:${c.key}.corp`, `${c.label} · Corp VLAN`, 'CorpVLAN')
     if (['bank', 'regional', 'trust', 'securities', 'card', 'payments'].includes(c.sector)) {
-      c.zones.pay = zone(`net:${c.key}.pay`, `${c.label} · Payments VLAN`, 'CorpVLAN')
+      c.zones.pay = zone(`net:${c.key}.pay`, `${c.label} · Payments core segment`, 'ServerVLAN')
     }
     if (c.size > 500) c.zones.dmz = zone(`net:${c.key}.dmz`, `${c.label} · DMZ`, 'DMZ')
     if (c.size > 200) c.zones.mgmt = zone(`net:${c.key}.mgmt`, `${c.label} · Mgmt VLAN`, 'CorpVLAN')
+    c.zones.prod = zone(`net:${c.key}.prod`, `${c.label} · Prod servers`, 'ServerVLAN')
+    if (OT_SECTORS.has(c.sector)) c.zones.ot = zone(`net:${c.key}.ot`, `${c.label} · OT / branch & building`, 'OTNetwork')
 
     const nd = deptCounts[c.idx]!
     const kinds = [...BASE_DEPTS, ...SECTOR_DEPTS[c.sector]!]
@@ -393,7 +401,7 @@ export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
   const group = new Map<string, string>()
   const itDeptOf = (c: Company) => (c.depts.find((d) => d.kind === 'it') ?? c.depts[c.depts.length - 1]!).id
   for (const [key, label, crit, type] of GROUP_SYSTEMS) {
-    group.set(key, sys(`sys:g.${key}`, label, type, { criticality: crit, boundary: itDeptOf(companies[0]!), zone: type === 'SaaS' ? 'net:inet' : 'net:gdc' }))
+    group.set(key, sys(`sys:g.${key}`, label, type, { criticality: crit, boundary: itDeptOf(companies[0]!), zone: type === 'SaaS' ? 'net:inet' : GROUP_ZONE[key] ?? 'net:gdc' }))
   }
   const localBudget = TARGETS.systems - TARGETS.unsanctioned - GROUP_SYSTEMS.length
   const lsq = companies.reduce((a, c) => a + Math.sqrt(c.size), 0)
@@ -418,7 +426,8 @@ export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
       // A few legacy records carry no criticality; the analysis falls back to grant level.
       const crit = crit0 && r() < 0.03 ? null : crit0
       const id = `sys:${c.key}.${tag}${nth > 1 ? nth : ''}`
-      const zoneId = tag === 'online' || tag === 'gateway' ? c.zones.dmz ?? c.zones.corp : tag === 'core' || tag === 'cardproc' || tag === 'settlement' || tag === 'bankportal' ? c.zones.pay ?? c.zones.corp : c.zones.corp
+      const server = c.zones.prod ?? c.zones.corp
+      const zoneId = tag === 'bankportal' ? 'net:inet' : tag === 'online' || tag === 'gateway' ? c.zones.dmz ?? server : tag === 'core' || tag === 'cardproc' || tag === 'settlement' ? c.zones.pay ?? server : server
       sys(id, `${label}${nth > 1 ? ` ${nth}` : ''} · ${c.key.toUpperCase()}`, tag === 'bankportal' ? 'SaaS' : 'System', {
         boundary: itDeptOf(c),
         zone: zoneId,
@@ -582,7 +591,7 @@ export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
   const chunks = new Map<string, PackChunk>()
   const packCompanies: PackCompany[] = []
   const deptAgg: Record<string, [number, number, number]> = {}
-  const DEVICE_KINDS = ['Laptop', 'Phone', 'Workstation', 'Server']
+  const DEVICE_KINDS = ['Laptop', 'Phone', 'Workstation', 'Server', 'OT controller']
   let totalTeams = 0
   let totalDevices = 0
   for (const c of companies) {
@@ -616,21 +625,31 @@ export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
         teams.push({ id: `${d.id}.t${t + 1}`, label: `${d.label} · Team ${String.fromCharCode(65 + t)}`, parent: d.id })
       }
       const deptStart = people.team.length
+      const firstDevice: number[] = []
       const devStart = devices.owner.length
-      const personZone = (d.kind === 'treasury' || d.kind === 'payments') && c.zones.pay ? c.zones.pay : c.zones.corp
+      // Everyone sits on the corp user VLAN; the payments segment holds servers only.
+      const personZone = c.zones.corp
       for (let p = 0; p < d.people; p++) {
         const team = first + (p % d.teams)
         const idx = people.team.length
         people.team.push(team)
         people.zone.push(zi(personZone))
         people.title.push(ti(p === 0 ? `${d.label} head` : DEPT[d.kind]!.roles[p % DEPT[d.kind]!.roles.length]![1]))
+        firstDevice.push(devices.owner.length)
         addDevice(idx, team, 0, personZone)
         if (r() < 0.3) addDevice(idx, team, 1, 'net:mobile')
         if ((d.kind === 'trading' || d.kind === 'dev') && r() < 0.6) addDevice(idx, team, 2, personZone)
       }
       if (d.kind === 'it') {
         const servers = Math.round(c.size * 0.075 + 1)
-        for (let s = 0; s < servers; s++) addDevice(-1, first + (s % d.teams), 3, c.zones.dmz && s % 3 === 0 ? c.zones.dmz : c.zones.mgmt ?? c.zones.corp)
+        for (let s = 0; s < servers; s++) {
+          const z = c.zones.dmz && s % 3 === 0 ? c.zones.dmz : c.zones.prod && s % 3 === 1 ? c.zones.prod : c.zones.mgmt ?? c.zones.corp
+          addDevice(-1, first + (s % d.teams), 3, z)
+        }
+        if (c.zones.ot) {
+          const ot = Math.round(c.size * 0.02) + 2
+          for (let s = 0; s < ot; s++) addDevice(-1, first + (s % d.teams), 4, c.zones.ot)
+        }
       }
       // Role holders: 1 to a handful of people in the department.
       d.roles.forEach((role, ri) => {
@@ -638,6 +657,14 @@ export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
         const list: number[] = []
         for (let h = 0; h < want; h++) list.push(deptStart + ((ri + h * d.roles.length) % d.people))
         holders[role.id] = [...new Set(list)]
+        // The index carries one representative holder + laptop per role (same ids as the chunk),
+        // so the attack graph can walk role → device → zone without loading chunks.
+        const p0 = list[0]!
+        const pid = personId(c.id, p0)
+        entities.push({ id: pid, label: personLabel(c.id, p0), type: 'Person', layer: 'organization', citations: [], attrs: { representative: 'true' }, boundary: d.id, zone: personZone })
+        entities.push({ id: deviceId(c.id, firstDevice[p0 - deptStart]!), label: `Laptop · ${personLabel(c.id, p0)}`, type: 'Laptop', layer: 'node', citations: [], attrs: { owner: pid }, boundary: d.id, zone: personZone })
+        role.holders = [pid]
+        role.zone = personZone
       })
       deptAgg[d.id] = [d.people, devices.owner.length - devStart, d.teams]
     }
@@ -670,6 +697,65 @@ export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
     })
   }
 
+  // --- Zone reach (separate stream so org data stays stable when segmentation changes) --
+  const rr = mulberry32(seed ^ 0x5eed)
+  const reach: MithReach[] = []
+  const misconfigured: string[] = []
+  let rN = 0
+  const R = (from: string | undefined, to: string | undefined, kind: MithReach['kind'], jumpHost = false) => {
+    if (!from || !to || from === to) return
+    reach.push({ id: `rc:${++rN}`, from, to, kind, ...(jumpHost ? { jumpHost: true } : {}) })
+  }
+  // Misconfigured-open with a probability that shrinks with security maturity.
+  const leaky = (c: Company, p: number, from: string | undefined, to: string | undefined, fallback: MithReach['kind']) => {
+    if (!from || !to) return
+    const open = rr() < p * (1.2 - c.maturity)
+    if (open) misconfigured.push(`rc:${rN + 1}`)
+    R(from, to, open ? 'open' : fallback)
+  }
+  R('net:inet', 'net:transit', 'blocked')
+  R('net:transit', 'net:gdc', 'conditional')
+  R('net:gdc', 'net:gid', 'conditional')
+  R('net:gid', 'net:gcore', 'conditional')
+  R('net:gdc', 'net:gcore', 'blocked')
+  R('net:transit', 'net:gcore', 'blocked')
+  R('net:mobile', 'net:transit', 'blocked')
+  for (const c of companies) {
+    const z = c.zones
+    R('net:inet', z.dmz, 'conditional')
+    R('net:inet', z.corp, 'blocked')
+    R('net:mobile', z.corp, 'conditional')
+    leaky(c, 0.03, z.dmz, z.prod, 'conditional')
+    leaky(c, 0.02, z.dmz, z.pay, 'blocked')
+    R(z.dmz, z.corp, 'blocked')
+    leaky(c, 0.15, z.corp, z.prod, 'conditional')
+    R(z.corp, z.dmz, 'conditional')
+    leaky(c, 0.06, z.corp, z.pay, 'blocked')
+    leaky(c, 0.05, z.corp, z.mgmt, 'blocked')
+    R(z.corp, z.ot, 'blocked')
+    R(z.corp, 'net:transit', 'conditional')
+    // Admin paths go through a jump host: conditional, costed by `weights.jumpHost` (default 2).
+    R(z.mgmt, z.prod, 'conditional', true)
+    R(z.mgmt, z.corp, 'conditional', true)
+    R(z.mgmt, z.dmz, 'conditional', true)
+    R(z.mgmt, z.pay, 'conditional')
+    R(z.mgmt, z.ot, 'conditional')
+    R(z.pay, z.prod, 'conditional')
+    if (FINANCIAL.has(c.sector)) R(z.pay, 'net:gcore', 'conditional')
+    R(z.prod, 'net:transit', 'conditional')
+    R(z.prod, z.pay, 'blocked')
+    leaky(c, 0.25, z.ot, z.corp, 'blocked')
+    // Cross-subsidiary: group transit should never route into a subsidiary's servers.
+    const into = z.prod ?? z.corp
+    if (rr() < 0.03) { misconfigured.push(`rc:${rN + 1}`); R('net:transit', into, 'open') } else R('net:transit', into, 'blocked')
+    if (c.idx === 0) {
+      R(z.mgmt, 'net:gid', 'conditional')
+      // Legacy jump host left open from group shared-services admin into the core segment.
+      misconfigured.push(`rc:${rN + 1}`)
+      R(z.mgmt, 'net:gcore', 'open')
+    }
+  }
+
   const systems = entities.filter((e) => e.layer === 'server')
   const index = {
     mith: '0.1',
@@ -689,6 +775,7 @@ export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
       grants,
       actors,
       channels,
+      reach,
     },
     diagram: {
       arrangement: 'coplanar',
@@ -723,6 +810,9 @@ export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
       grants: grants.length,
       channels: channels.length,
       actors: actors.length,
+      reach: reach.length,
+      openReach: reach.filter((x) => x.kind === 'open').length,
+      misconfigured: misconfigured.length,
     },
     companies: packCompanies,
     departments: deptAgg,

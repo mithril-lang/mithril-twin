@@ -228,6 +228,134 @@
         "zone": "net:mgmt"
       },
       {
+        "id": "dev:cfo",
+        "label": "Laptop · Person-01 (CFO)",
+        "type": "Laptop",
+        "layer": "node",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {
+          "owner": "p:cfo"
+        },
+        "boundary": "b:hq-exec",
+        "zone": "net:corp"
+      },
+      {
+        "id": "dev:ea",
+        "label": "Laptop · Person-02 (EA)",
+        "type": "Laptop",
+        "layer": "node",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {
+          "owner": "p:ea"
+        },
+        "boundary": "b:hq-exec",
+        "zone": "net:corp"
+      },
+      {
+        "id": "dev:controller",
+        "label": "Laptop · Person-03 (Controller)",
+        "type": "Laptop",
+        "layer": "node",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {
+          "owner": "p:controller"
+        },
+        "boundary": "b:hq-controller",
+        "zone": "net:corp"
+      },
+      {
+        "id": "dev:treasury1",
+        "label": "Laptop · Person-04 (Treasury)",
+        "type": "Laptop",
+        "layer": "node",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {
+          "owner": "p:treasury1"
+        },
+        "boundary": "b:bank-treasury",
+        "zone": "net:pay"
+      },
+      {
+        "id": "dev:treasury2",
+        "label": "Laptop · Person-05 (Treasury)",
+        "type": "Laptop",
+        "layer": "node",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {
+          "owner": "p:treasury2"
+        },
+        "boundary": "b:bank-treasury",
+        "zone": "net:pay"
+      },
+      {
+        "id": "dev:ap1",
+        "label": "Laptop · Person-06 (AP)",
+        "type": "Laptop",
+        "layer": "node",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {
+          "owner": "p:ap1"
+        },
+        "boundary": "b:bank-ap",
+        "zone": "net:pay"
+      },
+      {
+        "id": "dev:sd1",
+        "label": "Laptop · Person-07 (Service Desk)",
+        "type": "Laptop",
+        "layer": "node",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {
+          "owner": "p:sd1"
+        },
+        "boundary": "b:bank-servicedesk",
+        "zone": "net:corp"
+      },
+      {
+        "id": "dev:iam1",
+        "label": "Laptop · Person-08 (IAM)",
+        "type": "Laptop",
+        "layer": "node",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {
+          "owner": "p:iam1"
+        },
+        "boundary": "b:bank-iam",
+        "zone": "net:mgmt"
+      },
+      {
         "id": "sys:erp",
         "label": "ERP (finance)",
         "type": "System",
@@ -801,6 +929,74 @@
         "verification": [
           "none"
         ]
+      }
+    ],
+    "reach": [
+      {
+        "id": "rc:1",
+        "from": "net:inet",
+        "to": "net:dmz",
+        "kind": "conditional"
+      },
+      {
+        "id": "rc:2",
+        "from": "net:inet",
+        "to": "net:corp",
+        "kind": "blocked"
+      },
+      {
+        "id": "rc:3",
+        "from": "net:dmz",
+        "to": "net:corp",
+        "kind": "blocked"
+      },
+      {
+        "id": "rc:4",
+        "from": "net:corp",
+        "to": "net:dmz",
+        "kind": "conditional"
+      },
+      {
+        "id": "rc:5",
+        "from": "net:corp",
+        "to": "net:transit",
+        "kind": "conditional"
+      },
+      {
+        "id": "rc:6",
+        "from": "net:corp",
+        "to": "net:mgmt",
+        "kind": "blocked"
+      },
+      {
+        "id": "rc:7",
+        "from": "net:corp",
+        "to": "net:pay",
+        "kind": "open"
+      },
+      {
+        "id": "rc:8",
+        "from": "net:mgmt",
+        "to": "net:corp",
+        "kind": "conditional"
+      },
+      {
+        "id": "rc:9",
+        "from": "net:mgmt",
+        "to": "net:pay",
+        "kind": "conditional"
+      },
+      {
+        "id": "rc:10",
+        "from": "net:pay",
+        "to": "net:transit",
+        "kind": "conditional"
+      },
+      {
+        "id": "rc:11",
+        "from": "net:transit",
+        "to": "net:pay",
+        "kind": "blocked"
       }
     ]
   },

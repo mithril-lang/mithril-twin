@@ -2,8 +2,10 @@ import {
   buildGraph,
   channelCost,
   DEFAULT_CONTROL_WEIGHTS,
+  DEFAULT_NETWORK_VALUE,
   dijkstra,
   EDGE,
+  MinHeap,
   NODE,
   reconstruct,
   resolveWeights,
@@ -37,7 +39,7 @@ export const CRITICALITY_WEIGHT: Record<MithCriticality, number> = {
 
 export const LEVEL_FACTOR: Record<MithGrantLevel, number> = { read: 0.4, approve: 0.8, admin: 1 }
 /** Value factor for a system reached over the network without any grant (host access). */
-export const NETWORK_FACTOR = 0.6
+export const NETWORK_FACTOR = DEFAULT_NETWORK_VALUE
 
 const MAX_VALUE = CRITICALITY_WEIGHT['crown-jewel'] * LEVEL_FACTOR.admin
 
@@ -86,6 +88,8 @@ export type RoleScore = {
   minUnverifiedHops: number | null
   /** True when the role's best value comes from a network-reachable system it holds no grant on. */
   viaNetwork: boolean
+  /** Network cost from the seized role to `topResource` (0 for a direct grant). */
+  topCost: number
 }
 
 export type ResourceScore = {
@@ -117,9 +121,26 @@ export type NetworkExposure = {
 export type ShadowEntry = {
   system: string
   zone: string | null
+  /** Internal zones the SaaS syncs into (from the departments / people that use it). */
+  syncZones: number
   reachableZones: number
   reachesCrownJewelZone: boolean
+  /** Cheapest cost from the SaaS to a crown-jewel system over sync + reach + host; null if none. */
+  crownJewelCost: number | null
+  crownJewel: string | null
   usedBy: number
+}
+
+/** Per-zone network posture: what a foothold in this zone reaches. */
+export type ZoneScore = {
+  zone: string
+  hostsCrownJewel: boolean
+  /** A path of only `open` reach edges (≥ 1 hop) ends in a zone hosting a crown jewel. */
+  openToCrownJewel: boolean
+  /** Cheapest weighted cost from the zone to any crown-jewel system (blocked impassable). */
+  crownJewelCost: number | null
+  crownJewel: string | null
+  reachableZones: number
 }
 
 export type ExposureReport = {
@@ -127,6 +148,7 @@ export type ExposureReport = {
   resources: ResourceScore[]
   networkExposures: NetworkExposure[]
   shadowEntries: ShadowEntry[]
+  zones: ZoneScore[]
   totals: {
     actors: number
     roles: number
@@ -138,6 +160,9 @@ export type ExposureReport = {
     reachableRoles: number
     reachableSystems: number
     networkOnlySystems: number
+    openToCrownJewelZones: number
+    /** Shadow SaaS whose cheapest path to a crown jewel costs ≤ the blast-radius threshold. */
+    shadowToCrownJewel: number
     capped: boolean
     maxHops: number
   }
@@ -146,10 +171,15 @@ export type ExposureReport = {
 type Input = MithDocument['model']
 
 /** Weighted exposure across the org + network graph, plus channel-only path counts. */
-export function analyzeExposure(
+export function analyzeExposure(model: Input, opts: { maxHops?: number; visitCap?: number } = {}): ExposureReport {
+  return analyzeExposureGraph(model, opts).report
+}
+
+/** Same as `analyzeExposure`, also returning the graph and actor Dijkstra for on-demand paths. */
+export function analyzeExposureGraph(
   model: Input,
   opts: { maxHops?: number; visitCap?: number } = {},
-): ExposureReport {
+): { report: ExposureReport; graph: Graph; dj: ReturnType<typeof dijkstra> } {
   const maxHops = opts.maxHops ?? DEFAULT_MAX_HOPS
   const visitCap = opts.visitCap ?? DEFAULT_VISIT_CAP
   const roles = model.roles ?? []
@@ -171,9 +201,10 @@ export function analyzeExposure(
   const roleIndex = new Map<string, number>()
   roles.forEach((r, k) => roleIndex.set(r.id, k))
   const cn = nA + roles.length
+  const actorIndex = new Map(actors.map((x, k) => [x.id, k]))
   const cid = (id: string): number => {
-    const a = actors.findIndex((x) => x.id === id)
-    if (a >= 0) return a
+    const a = actorIndex.get(id)
+    if (a != null) return a
     const r = roleIndex.get(id)
     return r == null ? -1 : nA + r
   }
@@ -287,11 +318,11 @@ export function analyzeExposure(
     const viaNetwork = finalT === EDGE.host
     const roleNode = reachable ? firstRoleOnPath(i) : -1
     const viaRole = roleNode >= 0 ? g.ids[roleNode]! : null
-    // Value: a grant path uses the best grant level; a network (host) path uses NETWORK_FACTOR.
+    // Value: a grant path uses the best grant level; a network (host) path uses weights.networkValue.
     const rg = grantsByResource.get(id) ?? []
     let level: MithGrantLevel | null = null
     for (const gr of rg) if (level == null || LEVEL_FACTOR[gr.level] > LEVEL_FACTOR[level]) level = gr.level
-    const factor = viaNetwork || level == null ? NETWORK_FACTOR : LEVEL_FACTOR[level]
+    const factor = viaNetwork || level == null ? g.weights.networkValue : LEVEL_FACTOR[level]
     const declaredCrit = c ?? effectiveCriticality(level ?? 'read')
     const grantCount = rg.length
     if (viaNetwork) level = null
@@ -318,7 +349,7 @@ export function analyzeExposure(
       networkExposures.push({
         resource: id,
         criticality: declaredCrit,
-        score: scoreOf(ease, CRITICALITY_WEIGHT[declaredCrit] * NETWORK_FACTOR),
+        score: scoreOf(ease, CRITICALITY_WEIGHT[declaredCrit] * g.weights.networkValue),
         cost: d,
         viaRole,
         fromZone: roleNode >= 0 && g.roleZone.get(viaRole!)?.[0] ? g.roleZone.get(viaRole!)![0]! : null,
@@ -331,39 +362,53 @@ export function analyzeExposure(
   )
   networkExposures.sort((a, b) => b.score - a.score || a.cost - b.cost || a.resource.localeCompare(b.resource))
 
-  // ---- Role scores: ease(role) × best reachable value (grant or network) ----
-  // Best value reachable by seizing each role: its grants, plus systems reachable from its zones.
-  // Zone→system reachability closure gives the best criticality reachable from each zone.
-  const zoneBestCrit = zoneReachableCriticality(g, crit)
+  // ---- Zone frontiers: what a foothold in each zone reaches over the network ----
+  const net = zoneNetwork(g, crit)
+  // ---- Role scores: best of (grant value / cost to seize) and (network value / (cost to seize + network cost)) ----
   const roleScores: RoleScore[] = roles.map((r) => {
     const i = g.index.get(r.id)!
     const ease = easeOf(i)
+    const dA = Number.isFinite(dist[i]!) ? dist[i]! : Infinity
     const direct = roleGrantValue.get(r.id)
     let value = direct?.value ?? 0
     let topResource = direct?.resource ?? null
+    let topCost = 0
     let viaNet = false
-    for (const z of g.roleZone.get(r.id) ?? []) {
-      const best = zoneBestCrit.get(z)
-      if (best && CRITICALITY_WEIGHT[best.crit] * NETWORK_FACTOR > value) {
-        value = CRITICALITY_WEIGHT[best.crit] * NETWORK_FACTOR
-        topResource = best.system
-        viaNet = true
+    // Ranking key: value / (dA + cost). For unreachable roles rank by value / (1 + cost).
+    const base = Number.isFinite(dA) ? dA : 1
+    let best = value / base
+    const held = grantsByRole.get(r.id)
+    for (const x of g.roleZones.get(i) ?? []) {
+      for (const f of net.frontier[x.zone - g.zoneStart] ?? []) {
+        if (held?.has(g.ids[f.sys]!)) continue
+        const v = f.value * g.weights.networkValue
+        const c = x.cost + f.cost
+        const k = v / (base + c)
+        if (k > best + 1e-12) {
+          best = k
+          value = v
+          topResource = g.ids[f.sys]!
+          topCost = c
+          viaNet = true
+        }
       }
     }
-    const high = [...(grantsByRole.get(r.id) ?? [])].some((res) => isHighValueGrant(bestLevel(grants, r.id, res), crit.get(res)))
+    const high = [...(held ?? [])].some((res) => isHighValueGrant(bestLevel(grants, r.id, res), crit.get(res)))
+    const k = nA + roleIndex.get(r.id)!
     return {
       role: r.id,
       highValue: high,
       value,
       topResource,
-      minCost: Number.isFinite(dist[i]!) ? dist[i]! : null,
+      topCost,
+      minCost: Number.isFinite(dA) ? dA : null,
       ease,
-      score: scoreOf(ease, value),
+      score: Number.isFinite(dA) ? Math.round((1000 * value) / (MAX_VALUE * (dA + topCost))) / 10 : 0,
       easiest: easiestFor(g, dj, i),
-      paths: pathCount[nA + roleIndex.get(r.id)!]!,
-      unverifiedPaths: unvCount[nA + roleIndex.get(r.id)!]!,
-      minHops: minHops[nA + roleIndex.get(r.id)!]! >= 0 ? minHops[nA + roleIndex.get(r.id)!]! : null,
-      minUnverifiedHops: minUnv[nA + roleIndex.get(r.id)!]! >= 0 ? minUnv[nA + roleIndex.get(r.id)!]! : null,
+      paths: pathCount[k]!,
+      unverifiedPaths: unvCount[k]!,
+      minHops: minHops[k]! >= 0 ? minHops[k]! : null,
+      minUnverifiedHops: minUnv[k]! >= 0 ? minUnv[k]! : null,
       viaNetwork: viaNet,
     }
   })
@@ -377,7 +422,7 @@ export function analyzeExposure(
   )
 
   // ---- Shadow-IT SaaS entry paths into zones ----
-  const shadowEntries = shadowSaaSEntries(g, model, crit)
+  const shadowEntries = shadowSaaSEntries(g, model, net)
 
   let paths = 0, unverifiedPaths = 0, reachableRoles = 0
   for (const r of roleScores) {
@@ -385,13 +430,14 @@ export function analyzeExposure(
     unverifiedPaths += r.unverifiedPaths
     if (r.minCost != null) reachableRoles++
   }
-  return {
+  const report: ExposureReport = {
     roles: roleScores,
     resources,
     networkExposures,
     shadowEntries,
+    zones: net.zones,
     totals: {
-      actors: nA,
+      actors: g.modelActors,
       roles: roles.length,
       channels: usable.length,
       zones: g.zoneEnd - g.zoneStart,
@@ -401,10 +447,13 @@ export function analyzeExposure(
       reachableRoles,
       reachableSystems,
       networkOnlySystems,
+      openToCrownJewelZones: net.zones.filter((z) => z.openToCrownJewel).length,
+      shadowToCrownJewel: shadowEntries.filter((x) => x.crownJewelCost != null && x.crownJewelCost <= g.weights.blastRadius + 1e-9).length,
       capped,
       maxHops,
     },
   }
+  return { report, graph: g, dj }
 }
 
 function bestLevel(grants: NonNullable<Input['grants']>, role: string, resource: string): MithGrantLevel {
@@ -426,95 +475,142 @@ function easiestFor(g: Graph, dj: ReturnType<typeof dijkstra>, roleNode: number)
   }
 }
 
-/** For each zone, the highest criticality of any system hosted in a zone reachable over finite reach. */
-function zoneReachableCriticality(
-  g: Graph,
-  crit: Map<string, MithCriticality | undefined>,
-): Map<string, { crit: MithCriticality; system: string }> {
-  // Reach adjacency over zones only.
-  const zoneNodes: number[] = []
-  for (let i = g.zoneStart; i < g.zoneEnd; i++) zoneNodes.push(i)
-  // Systems hosted directly in each zone (host edges from zone → system).
-  const hostedBest = new Map<number, { crit: MithCriticality; system: string }>()
-  for (const z of zoneNodes) {
-    for (let e = g.deg[z]!; e < g.deg[z + 1]!; e++) {
-      if (g.eType[e] !== EDGE.host) continue
-      const sys = g.eTo[e]!
-      const c = crit.get(g.ids[sys]!)
-      const eff = c ?? 'medium'
-      const prev = hostedBest.get(z)
-      if (!prev || CRITICALITY_WEIGHT[eff] > CRITICALITY_WEIGHT[prev.crit]) hostedBest.set(z, { crit: eff, system: g.ids[sys]! })
-    }
-  }
-  // Closure: best reachable = max over zones reachable via finite reach edges (incl. self).
-  const out = new Map<string, { crit: MithCriticality; system: string }>()
-  for (const start of zoneNodes) {
-    let best = hostedBest.get(start) ?? null
-    const seen = new Set<number>([start])
-    const stack = [start]
-    while (stack.length) {
-      const z = stack.pop()!
-      const here = hostedBest.get(z)
-      if (here && (!best || CRITICALITY_WEIGHT[here.crit] > CRITICALITY_WEIGHT[best.crit])) best = here
-      for (let e = g.deg[z]!; e < g.deg[z + 1]!; e++) {
-        if (g.eType[e] !== EDGE.reach) continue
-        const t = g.eTo[e]!
-        if (!seen.has(t)) { seen.add(t); stack.push(t) }
-      }
-    }
-    if (best) out.set(g.ids[start]!, best)
-  }
-  return out
-}
+const NET_EDGES = (1 << EDGE.reach) | (1 << EDGE.host)
+const SHADOW_EDGES = NET_EDGES | (1 << EDGE.sync)
+/** Upper bound on network cost explored from one zone (keeps per-zone searches small). */
+export const NETWORK_COST_CAP = 24
 
-function shadowSaaSEntries(
-  g: Graph,
-  model: Input,
-  _crit: Map<string, MithCriticality | undefined>,
-): ShadowEntry[] {
-  const usesCount = new Map<string, number>()
-  for (const e of model.edges) if (e.kind === 'uses') usesCount.set(e.target, (usesCount.get(e.target) ?? 0) + 1)
-  const hostedCrit = new Map<string, MithCriticality>()
-  for (const e of model.entities) {
-    if (e.layer === 'server' && e.zone) {
-      const c = e.criticality ?? 'medium'
-      const prev = hostedCrit.get(e.zone)
-      if (!prev || CRITICALITY_WEIGHT[c] > CRITICALITY_WEIGHT[prev]) hostedCrit.set(e.zone, c)
-    }
-  }
-  const out: ShadowEntry[] = []
-  for (const e of model.entities) {
-    if (e.sanctioned !== false) continue
-    const zoneNode = e.zone ? g.index.get(e.zone) : undefined
-    let reachableZones = 0
-    let crownJewel = false
-    if (zoneNode != null) {
-      const seen = new Set<number>([zoneNode])
-      const stack = [zoneNode]
-      while (stack.length) {
-        const z = stack.pop()!
-        for (let ed = g.deg[z]!; ed < g.deg[z + 1]!; ed++) {
-          if (g.eType[ed] !== EDGE.reach) continue
-          const t = g.eTo[ed]!
-          if (seen.has(t)) continue
-          seen.add(t)
-          reachableZones++
-          const hz = hostedCrit.get(g.ids[t]!)
-          if (hz === 'crown-jewel') crownJewel = true
-          stack.push(t)
+/** Reusable bounded Dijkstra over a subset of edge types. Returns touched nodes with their cost. */
+function makeBounded(g: Graph) {
+  const n = g.ids.length
+  const dist = new Float64Array(n).fill(Infinity)
+  const touched: number[] = []
+  return (src: number, mask: number, cap: number, visit: (node: number, d: number) => void) => {
+    for (const t of touched) dist[t] = Infinity
+    touched.length = 0
+    const heap = new MinHeap()
+    dist[src] = 0
+    touched.push(src)
+    heap.push(0, src)
+    while (heap.size) {
+      const [d, u] = heap.pop()
+      if (d > dist[u]!) continue
+      visit(u, d)
+      for (let e = g.deg[u]!; e < g.deg[u + 1]!; e++) {
+        if (!((mask >> g.eType[e]!) & 1)) continue
+        const v = g.eTo[e]!
+        const nd = d + g.eCost[e]!
+        if (nd <= cap && nd < dist[v]!) {
+          if (dist[v] === Infinity) touched.push(v)
+          dist[v] = nd
+          heap.push(nd, v)
         }
       }
+    }
+  }
+}
+
+type Frontier = { sys: number; cost: number; value: number }[]
+
+/**
+ * Per-zone network search (reach + host edges, blocked impassable): a Pareto frontier of
+ * (cost, system value) for role scoring, plus crown-jewel reach per zone.
+ */
+function zoneNetwork(g: Graph, crit: Map<string, MithCriticality | undefined>) {
+  const run = makeBounded(g)
+  const nz = g.zoneEnd - g.zoneStart
+  const frontier: Frontier[] = new Array(nz)
+  const zones: ZoneScore[] = []
+  const valueOf = (sys: number) => CRITICALITY_WEIGHT[crit.get(g.ids[sys]!) ?? 'medium']
+  const isCJ = (sys: number) => crit.get(g.ids[sys]!) === 'crown-jewel'
+  // Zones hosting a crown jewel, and open-only reach adjacency.
+  const hostsCJ = new Uint8Array(nz)
+  for (let z = g.zoneStart; z < g.zoneEnd; z++) {
+    for (let e = g.deg[z]!; e < g.deg[z + 1]!; e++) if (g.eType[e] === EDGE.host && isCJ(g.eTo[e]!)) hostsCJ[z - g.zoneStart] = 1
+  }
+  const openReach = (z: number) => {
+    const out: number[] = []
+    for (let e = g.deg[z]!; e < g.deg[z + 1]!; e++) if (g.eType[e] === EDGE.reach && g.eUnv[e] === 1) out.push(g.eTo[e]!)
+    return out
+  }
+  for (let z = g.zoneStart; z < g.zoneEnd; z++) {
+    const found: Frontier = []
+    let reachableZones = 0
+    let cjCost: number | null = null
+    let cj: string | null = null
+    run(z, NET_EDGES, NETWORK_COST_CAP, (node, d) => {
+      const t = g.nodeType[node]
+      if (t === NODE.zone) { if (node !== z) reachableZones++ }
+      else if (t === NODE.system) {
+        found.push({ sys: node, cost: d, value: valueOf(node) })
+        if (isCJ(node) && cjCost == null) { cjCost = d; cj = g.ids[node]! }
+      }
+    })
+    // Pareto: visited in cost order; keep a system only if its value beats every cheaper one.
+    const front: Frontier = []
+    let bestV = -1
+    for (const f of found) if (f.value > bestV) { front.push(f); bestV = f.value }
+    frontier[z - g.zoneStart] = front
+    // Open-only path (≥ 1 hop) into a zone hosting a crown jewel.
+    let open = false
+    const seen = new Set<number>([z])
+    const stack = openReach(z)
+    for (const s of stack) seen.add(s)
+    while (stack.length && !open) {
+      const u = stack.pop()!
+      if (hostsCJ[u - g.zoneStart]) { open = true; break }
+      for (const v of openReach(u)) if (!seen.has(v)) { seen.add(v); stack.push(v) }
+    }
+    zones.push({
+      zone: g.ids[z]!,
+      hostsCrownJewel: hostsCJ[z - g.zoneStart] === 1,
+      openToCrownJewel: open,
+      crownJewelCost: cjCost,
+      crownJewel: cj,
+      reachableZones,
+    })
+  }
+  zones.sort((a, b) => Number(b.openToCrownJewel) - Number(a.openToCrownJewel) || (a.crownJewelCost ?? 1e9) - (b.crownJewelCost ?? 1e9) || a.zone.localeCompare(b.zone))
+  return { frontier, zones, run, isCJ }
+}
+
+function shadowSaaSEntries(g: Graph, model: Input, net: ReturnType<typeof zoneNetwork>): ShadowEntry[] {
+  const usesCount = new Map<string, number>()
+  for (const e of model.edges) if (e.kind === 'uses') usesCount.set(e.target, (usesCount.get(e.target) ?? 0) + 1)
+  const out: ShadowEntry[] = []
+  for (const e of model.entities) {
+    if (e.layer !== 'server' || e.sanctioned !== false) continue
+    const si = g.index.get(e.id)
+    let syncZones = 0
+    let reachableZones = 0
+    let cjCost: number | null = null
+    let cj: string | null = null
+    if (si != null) {
+      for (let ed = g.deg[si]!; ed < g.deg[si + 1]!; ed++) if (g.eType[ed] === EDGE.sync) syncZones++
+      net.run(si, SHADOW_EDGES, NETWORK_COST_CAP, (node, d) => {
+        const t = g.nodeType[node]
+        if (t === NODE.zone) reachableZones++
+        else if (t === NODE.system && node !== si && net.isCJ(node) && cjCost == null) { cjCost = d; cj = g.ids[node]! }
+      })
     }
     out.push({
       system: e.id,
       zone: e.zone ?? null,
+      syncZones,
       reachableZones,
-      reachesCrownJewelZone: crownJewel,
+      reachesCrownJewelZone: cjCost != null,
+      crownJewelCost: cjCost,
+      crownJewel: cj,
       usedBy: usesCount.get(e.id) ?? 0,
     })
   }
   out.sort(
-    (a, b) => Number(b.reachesCrownJewelZone) - Number(a.reachesCrownJewelZone) || b.reachableZones - a.reachableZones || b.usedBy - a.usedBy || a.system.localeCompare(b.system),
+    (a, b) =>
+      Number(b.reachesCrownJewelZone) - Number(a.reachesCrownJewelZone) ||
+      (a.crownJewelCost ?? 1e9) - (b.crownJewelCost ?? 1e9) ||
+      b.reachableZones - a.reachableZones ||
+      b.usedBy - a.usedBy ||
+      a.system.localeCompare(b.system),
   )
   return out
 }

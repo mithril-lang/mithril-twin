@@ -75,7 +75,7 @@ function TwinApp() {
   const isPack = !!sample.pack
 
   const loadMith = useCallback(async () => {
-    // The enterprise pack loads inside ScaleGrid (manifest → index → per-company chunks).
+    // The enterprise pack is generated inside ScaleGrid (Web Worker, seeded; chunks on drill-down).
     if (isPack) return
     setLoading(true)
     setError('')
@@ -188,7 +188,7 @@ function TwinApp() {
   )
 
   if (view === 'make' && isPack) {
-    return <ScaleGrid manifestUrl={sample.url} sampleId={sample.id} onPickSample={pickSample} />
+    return <ScaleGrid seed={sample.seed ?? 20260927} sampleId={sample.id} onPickSample={pickSample} />
   }
 
   if (view === 'make') {

@@ -149,6 +149,11 @@ type OrgSections = {
   weights?: MithWeights
 }
 
+function bool(v: unknown, path: string): boolean {
+  if (typeof v !== 'boolean') throw new MithParseError(`${path} must be true or false`)
+  return v
+}
+
 function nonNeg(v: unknown, path: string): number {
   const n = num(v, path)
   if (n < 0) throw new MithParseError(`${path} must be 0 or more`)
@@ -168,7 +173,7 @@ function weightMap<K extends string>(v: unknown, allowed: readonly K[], path: st
 /** Optional per-document weight overrides. Unknown keys are rejected so typos surface. */
 function weights(v: unknown): MithWeights {
   if (!isObj(v)) throw new MithParseError('model.weights must be an object')
-  const known = ['base', 'controls', 'reach', 'pivot', 'host', 'blastRadius']
+  const known = ['base', 'controls', 'reach', 'pivot', 'host', 'blastRadius', 'networkValue', 'jumpHost', 'sync', 'heatSaturation']
   for (const key of Object.keys(v)) {
     if (!known.includes(key)) throw new MithParseError(`model.weights.${key} is not a known weight (${known.join(', ')})`)
   }
@@ -179,7 +184,20 @@ function weights(v: unknown): MithWeights {
     ...(v.pivot != null ? { pivot: nonNeg(v.pivot, 'model.weights.pivot') } : {}),
     ...(v.host != null ? { host: nonNeg(v.host, 'model.weights.host') } : {}),
     ...(v.blastRadius != null ? { blastRadius: nonNeg(v.blastRadius, 'model.weights.blastRadius') } : {}),
+    ...(v.networkValue != null ? { networkValue: inRange(v.networkValue, 'model.weights.networkValue', 0, 1, true) } : {}),
+    ...(v.jumpHost != null ? { jumpHost: nonNeg(v.jumpHost, 'model.weights.jumpHost') } : {}),
+    ...(v.sync != null ? { sync: weightMap<'open' | 'conditional'>(v.sync, ['open', 'conditional'] as const, 'model.weights.sync') } : {}),
+    ...(v.heatSaturation != null ? { heatSaturation: inRange(v.heatSaturation, 'model.weights.heatSaturation', 0, 1, false) } : {}),
   }
+}
+
+/** Number in [lo, hi] (or (lo, hi] when `loInclusive` is false). */
+function inRange(v: unknown, path: string, lo: number, hi: number, loInclusive: boolean): number {
+  const n = num(v, path)
+  if ((loInclusive ? n < lo : n <= lo) || n > hi) {
+    throw new MithParseError(`${path} must be ${loInclusive ? 'between' : 'above'} ${lo} ${loInclusive ? 'and' : 'and at most'} ${hi}`)
+  }
+  return n
 }
 
 /**
@@ -308,6 +326,7 @@ function orgSections(model: Record<string, unknown>, entities: MithEntity[]): Or
       to: str(r.to, `${at}.to`),
       kind: oneOf<MithReachKind>(r.kind, REACH_KINDS, `${at}.kind`),
       ...(r.weight != null ? { weight: nonNeg(r.weight, `${at}.weight`) } : {}),
+      ...(r.jumpHost != null ? { jumpHost: bool(r.jumpHost, `${at}.jumpHost`) } : {}),
     }))
     uniqueIds(out.reach, 'model.reach', taken)
     for (const r of out.reach) {

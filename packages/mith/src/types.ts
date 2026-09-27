@@ -110,6 +110,8 @@ export type MithReach = {
   to: string
   kind: MithReachKind
   weight?: number
+  /** Admin path through a jump host / bastion. Costs `weights.jumpHost` (default 2) unless `weight` is set. */
+  jumpHost?: boolean
 }
 
 /**
@@ -127,8 +129,19 @@ export type MithWeights = {
   pivot?: number
   /** Cost to reach a system hosted in a zone you already stand in. */
   host?: number
-  /** Blast radius: max total cost from the impersonated role for a resource to count as reached. */
+  /**
+   * Blast radius: max total cost from the impersonated role for a resource to count as reached.
+   * Also the cut-off for counting a shadow-SaaS entry path to a crown jewel as a finding.
+   */
   blastRadius?: number
+  /** Value factor for a system reached over the network without a grant, 0–1 (default 0.6). */
+  networkValue?: number
+  /** Cost of a reach edge marked `jumpHost` (default 2). */
+  jumpHost?: number
+  /** Shadow-SaaS sync cost into users' zones: `open` for oauth-grant, `conditional` otherwise. Defaults follow `reach`. */
+  sync?: { open?: number; conditional?: number }
+  /** Tile heat: share of hot roles at which a tile is fully red, in (0, 1] (default 0.25). */
+  heatSaturation?: number
 }
 
 /** Where one entity sits on one plane. The same entity may be placed on several planes (shared object). */

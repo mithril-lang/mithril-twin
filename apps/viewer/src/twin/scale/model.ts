@@ -1,9 +1,17 @@
-import { analyzeExposure, type ExposureReport, type RoleScore } from '../mith/exposure'
+import { analyzeExposureGraph, type ExposureReport, type RoleScore } from '../mith/exposure'
+import type { Dijkstra, Graph } from '../mith/graph'
 import { parseMith } from '../mith/parse'
 import type { MithDocument } from '../mith/types'
 import type { PackManifest } from './pack'
 
-export type Heat = { max: number; hot: number; top: string | null }
+/**
+ * Tile heat. `share` (hot / roles) drives the fill: the share of roles in the tile whose exposure
+ * score is ≥ HOT. `max` / `top` stay for the ranked lists.
+ */
+export type Heat = { max: number; hot: number; roles: number; share: number; top: string | null }
+
+/** Default share of hot roles at which a tile is fully red; per document: `weights.heatSaturation`. */
+export const SHARE_SATURATION = 0.25
 
 export type ShadowApp = {
   id: string
@@ -17,7 +25,7 @@ export type ShadowApp = {
 /** Everything the scale view needs from the analysis, keyed for aggregation. Structured-clone safe. */
 export type ScaleAnalysis = {
   report: ExposureReport
-  /** Role exposure heat per subsidiary / department (max score, count ≥ 50, top role). */
+  /** Role exposure heat per subsidiary / department (share of roles ≥ 50, max score, top role). */
   companyHeat: Record<string, Heat>
   deptHeat: Record<string, Heat>
   /** Resource exposure heat per subsidiary (company-local systems only). */
@@ -26,6 +34,8 @@ export type ScaleAnalysis = {
   /** subsidiary → number of distinct unsanctioned apps used by its departments */
   companyShadow: Record<string, number>
   deptShadow: Record<string, string[]>
+  /** subsidiary → zones with an open-only path into a crown-jewel zone, and zone count. */
+  companyNet: Record<string, { zones: number; openToCrownJewel: number }>
   timings: { parseMs: number; analysisMs: number; aggregateMs: number }
 }
 
@@ -51,17 +61,24 @@ const now = () => (typeof performance !== 'undefined' ? performance.now() : Date
 
 function bump(map: Record<string, Heat>, key: string | undefined, score: number, id: string) {
   if (!key) return
-  const h = (map[key] ??= { max: 0, hot: 0, top: null })
+  const h = (map[key] ??= { max: 0, hot: 0, roles: 0, share: 0, top: null })
+  h.roles += 1
   if (score > h.max) {
     h.max = score
     h.top = id
   }
   if (score >= HOT) h.hot += 1
+  h.share = h.hot / h.roles
 }
 
 export function analyzeScale(doc: MithDocument, parseMs = 0): ScaleAnalysis {
+  return analyzeScaleGraph(doc, parseMs).analysis
+}
+
+/** `analyzeScale` plus the graph and actor Dijkstra, kept by the engine for on-demand paths. */
+export function analyzeScaleGraph(doc: MithDocument, parseMs = 0): { analysis: ScaleAnalysis; graph: Graph; dj: Dijkstra } {
   const t0 = now()
-  const report = analyzeExposure(doc.model)
+  const { report, graph, dj } = analyzeExposureGraph(doc.model)
   const t1 = now()
   const parent = new Map((doc.model.boundaries ?? []).map((b) => [b.id, b.parent]))
   const roleBoundary = new Map((doc.model.roles ?? []).map((r) => [r.id, r.boundary]))
@@ -85,6 +102,14 @@ export function analyzeScale(doc: MithDocument, parseMs = 0): ScaleAnalysis {
   const entityBoundary = new Map(doc.model.entities.map((e) => [e.id, e.boundary]))
   const companyAccessHeat: Record<string, Heat> = {}
   for (const x of report.resources) bump(companyAccessHeat, companyOf(entityBoundary.get(x.resource)), x.score, x.resource)
+  const companyNet: Record<string, { zones: number; openToCrownJewel: number }> = {}
+  for (const z of report.zones) {
+    const m = /^net:(s\d+)\./.exec(z.zone)
+    if (!m) continue
+    const c = (companyNet[`b:${m[1]}`] ??= { zones: 0, openToCrownJewel: 0 })
+    c.zones += 1
+    if (z.openToCrownJewel) c.openToCrownJewel += 1
+  }
 
   const deptShadow: Record<string, string[]> = {}
   const shadowApps: ShadowApp[] = doc.model.entities
@@ -106,7 +131,7 @@ export function analyzeScale(doc: MithDocument, parseMs = 0): ScaleAnalysis {
   }
   shadowApps.sort((a, b) => b.departments.length - a.departments.length || a.label.localeCompare(b.label))
   const companyShadow = Object.fromEntries(Object.entries(companyShadowSets).map(([k, v]) => [k, v.size]))
-  return {
+  const analysis: ScaleAnalysis = {
     report,
     companyHeat,
     deptHeat,
@@ -114,35 +139,10 @@ export function analyzeScale(doc: MithDocument, parseMs = 0): ScaleAnalysis {
     shadowApps,
     companyShadow,
     deptShadow,
+    companyNet,
     timings: { parseMs, analysisMs: t1 - t0, aggregateMs: now() - t1 },
   }
-}
-
-export type WorkerResult =
-  | { ok: true; analysis: ScaleAnalysis; workerMs: number; fetchMs: number }
-  | { ok: false; error: string }
-
-/** Parse the index + run the exposure analysis off the main thread when a Worker is available. */
-export function runScaleAnalysis(indexUrl: string, fallbackDoc: () => MithDocument | null): Promise<WorkerResult & { via: 'worker' | 'inline' }> {
-  if (typeof Worker === 'undefined') {
-    const doc = fallbackDoc()
-    if (!doc) return Promise.resolve({ ok: false, error: 'index not loaded', via: 'inline' })
-    const t = now()
-    const analysis = analyzeScale(doc)
-    return Promise.resolve({ ok: true, analysis, workerMs: now() - t, fetchMs: 0, via: 'inline' })
-  }
-  return new Promise((resolve) => {
-    const worker = new Worker(new URL('./analysis.worker.ts', import.meta.url), { type: 'module' })
-    worker.onmessage = (e: MessageEvent<WorkerResult>) => {
-      resolve({ ...e.data, via: 'worker' })
-      worker.terminate()
-    }
-    worker.onerror = (e) => {
-      resolve({ ok: false, error: e.message || 'worker failed', via: 'worker' })
-      worker.terminate()
-    }
-    worker.postMessage({ indexUrl: new URL(indexUrl, globalThis.location?.href ?? 'http://localhost/').href })
-  })
+  return { analysis, graph, dj }
 }
 
 export function parseIndex(raw: unknown): MithDocument {

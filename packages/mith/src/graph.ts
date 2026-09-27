@@ -9,16 +9,22 @@ import type {
 /**
  * Unified org + network attack graph. Display-only arithmetic over the parsed document.
  *
- * Nodes: external actors, roles, network zones, and systems (resources).
+ * Nodes: external actors, roles, devices, network zones, and systems (resources).
  * Edges, each with a bypass-difficulty cost:
  *   - channel   actor/role → role     base + control weights (weak controls still cross)
- *   - pivot     role → its device zone (an impersonated identity stands in its zone)
+ *   - pivot     role → holder device  (an impersonated identity uses its holder's device)
+ *               role → zone           when no device is modeled (role.zone / holder zone)
+ *   - device    device → its zone     cost 0 (the device sits in that zone)
  *   - reach     zone → zone           open lightest, conditional heavier, blocked impassable
  *   - host      zone → system         a system hosted in a zone you already stand in
  *   - grant     role → system         cost 0; the grant level is captured in the system value
+ *   - entry     internet → shadow SaaS  unsanctioned SaaS is reachable from outside (cost base)
+ *   - sync      shadow SaaS → zone    the SaaS syncs into the zone of the departments using it
+ *                                     (oauth-grant = open reach cost, otherwise conditional)
  *
  * A path can therefore cross both dimensions:
- *   actor → channel → role → pivot → zone → reach → zone → host → system.
+ *   actor → channel → role → device → zone → reach → zone → host → system, or
+ *   internet → shadow SaaS → sync → zone → reach → zone → host → system.
  *
  * Weights are tunable ranking defaults, overridable per document. They are NOT claims about
  * real-world bypass success rates.
@@ -45,6 +51,12 @@ export const DEFAULT_HOST_COST = 1
  * dual-approval (10) or a conditional firewall after another control.
  */
 export const DEFAULT_BLAST_COST = 6
+/** Value factor for a system reached over the network without a grant. */
+export const DEFAULT_NETWORK_VALUE = 0.6
+/** Cost of a reach edge through a jump host / bastion (`reach.jumpHost`). */
+export const DEFAULT_JUMP_HOST_COST = 2
+/** Tile heat saturates (fully red) at this share of hot roles. */
+export const DEFAULT_HEAT_SATURATION = 0.25
 
 export type ResolvedWeights = {
   base: number
@@ -53,16 +65,26 @@ export type ResolvedWeights = {
   pivot: number
   host: number
   blastRadius: number
+  networkValue: number
+  jumpHost: number
+  sync: { open: number; conditional: number }
+  heatSaturation: number
 }
 
 export function resolveWeights(w?: MithWeights): ResolvedWeights {
+  const reach = { ...DEFAULT_REACH_WEIGHTS, ...(w?.reach ?? {}) }
   return {
     base: w?.base ?? BASE_HOP_COST,
     controls: { ...DEFAULT_CONTROL_WEIGHTS, ...(w?.controls ?? {}) },
-    reach: { ...DEFAULT_REACH_WEIGHTS, ...(w?.reach ?? {}) },
+    reach,
     pivot: w?.pivot ?? DEFAULT_PIVOT_COST,
     host: w?.host ?? DEFAULT_HOST_COST,
     blastRadius: w?.blastRadius ?? DEFAULT_BLAST_COST,
+    networkValue: w?.networkValue ?? DEFAULT_NETWORK_VALUE,
+    jumpHost: w?.jumpHost ?? DEFAULT_JUMP_HOST_COST,
+    // Sync defaults follow the (possibly overridden) reach weights, as before.
+    sync: { open: w?.sync?.open ?? reach.open, conditional: w?.sync?.conditional ?? reach.conditional },
+    heatSaturation: w?.heatSaturation ?? DEFAULT_HEAT_SATURATION,
   }
 }
 
@@ -72,9 +94,11 @@ export function channelCost(channel: Pick<MithChannel, 'verification'>, w: Resol
   return cost
 }
 
-export const EDGE = { channel: 0, pivot: 1, reach: 2, host: 3, grant: 4 } as const
+export const EDGE = { channel: 0, pivot: 1, reach: 2, host: 3, grant: 4, device: 5, entry: 6, sync: 7 } as const
 export type EdgeType = (typeof EDGE)[keyof typeof EDGE]
-export const NODE = { actor: 0, role: 1, zone: 2, system: 3 } as const
+export const NODE = { actor: 0, role: 1, zone: 2, system: 3, device: 4 } as const
+/** Implicit actor added when the document has unsanctioned SaaS used by the org. */
+export const INTERNET_ACTOR = 'actor:internet'
 export type NodeType = (typeof NODE)[keyof typeof NODE]
 
 export type Graph = {
@@ -84,6 +108,8 @@ export type Graph = {
   nA: number
   roleStart: number
   roleEnd: number
+  devStart: number
+  devEnd: number
   zoneStart: number
   zoneEnd: number
   sysStart: number
@@ -98,6 +124,10 @@ export type Graph = {
   eRef: string[]
   weights: ResolvedWeights
   roleZone: Map<string, string[]>
+  /** Zones a role stands in after impersonation, with the pivot cost (via device or directly). */
+  roleZones: Map<number, { zone: number; cost: number; device: number }[]>
+  /** Model actor count (the implicit internet actor, when present, is extra). */
+  modelActors: number
 }
 
 type Model = MithDocument['model']
@@ -117,36 +147,68 @@ export function buildGraph(model: Model): Graph {
   for (const e of model.entities) if (e.layer === 'server') sysSet.set(e.id, e.id)
   for (const g of grants) if (!sysSet.has(g.resource)) sysSet.set(g.resource, g.resource)
   const systems = [...sysSet.keys()]
+  // Device nodes: node-layer entities that sit in a zone. `attrs.owner` names the person.
+  const devices = model.entities.filter((e) => e.layer === 'node' && e.zone)
+  const shadowUsed = new Set(model.edges.filter((e) => e.kind === 'uses').map((e) => e.target))
+  const shadow = model.entities.filter((e) => e.layer === 'server' && e.sanctioned === false && shadowUsed.has(e.id))
+  const implicitActor = shadow.length > 0 && !actors.some((a) => a.id === INTERNET_ACTOR)
 
   const ids: string[] = [
     ...actors.map((a) => a.id),
+    ...(implicitActor ? [INTERNET_ACTOR] : []),
     ...roles.map((r) => r.id),
+    ...devices.map((d) => d.id),
     ...zones.map((z) => z.id),
     ...systems,
   ]
   const index = new Map<string, number>()
   ids.forEach((id, i) => index.set(id, i))
-  const nA = actors.length
+  const nA = actors.length + (implicitActor ? 1 : 0)
   const roleStart = nA
   const roleEnd = roleStart + roles.length
-  const zoneStart = roleEnd
+  const devStart = roleEnd
+  const devEnd = devStart + devices.length
+  const zoneStart = devEnd
   const zoneEnd = zoneStart + zones.length
   const sysStart = zoneEnd
   const sysEnd = sysStart + systems.length
   const n = ids.length
   const nodeType = new Uint8Array(n)
   for (let i = roleStart; i < roleEnd; i++) nodeType[i] = NODE.role
+  for (let i = devStart; i < devEnd; i++) nodeType[i] = NODE.device
   for (let i = zoneStart; i < zoneEnd; i++) nodeType[i] = NODE.zone
   for (let i = sysStart; i < sysEnd; i++) nodeType[i] = NODE.system
 
   // Zone of a role's holders: role.zone wins, else the distinct zones of holder people.
   const entityById = new Map(model.entities.map((e) => [e.id, e]))
+  const devicesByOwner = new Map<string, number[]>()
+  devices.forEach((d, k) => {
+    const o = d.attrs?.owner
+    if (o) devicesByOwner.set(o, [...(devicesByOwner.get(o) ?? []), devStart + k])
+  })
   const roleZone = new Map<string, string[]>()
+  const roleZones = new Map<number, { zone: number; cost: number; device: number }[]>()
   for (const r of roles) {
+    const ri = index.get(r.id)!
     const zs = new Set<string>()
+    const devs: number[] = []
+    for (const h of r.holders) for (const d of devicesByOwner.get(h) ?? []) devs.push(d)
+    const list: { zone: number; cost: number; device: number }[] = []
+    for (const d of devs) {
+      const z = devices[d - devStart]!.zone!
+      const zi = index.get(z)
+      if (zi == null) continue
+      zs.add(z)
+      if (!list.some((x) => x.zone === zi)) list.push({ zone: zi, cost: w.pivot, device: d })
+    }
     if (r.zone) zs.add(r.zone)
-    else for (const h of r.holders) { const z = entityById.get(h)?.zone; if (z) zs.add(z) }
+    if (!devs.length) for (const h of r.holders) { const z = entityById.get(h)?.zone; if (z) zs.add(z) }
+    for (const z of zs) {
+      const zi = index.get(z)
+      if (zi != null && !list.some((x) => x.zone === zi)) list.push({ zone: zi, cost: w.pivot, device: -1 })
+    }
     if (zs.size) roleZone.set(r.id, [...zs])
+    if (list.length) roleZones.set(ri, list)
   }
 
   // Gather edges, then pack CSR.
@@ -167,18 +229,57 @@ export function buildGraph(model: Model): Graph {
     const u = c.verification.every((v) => v === 'none') ? 1 : 0
     push(f, t, channelCost(c, w), EDGE.channel, u, c.id)
   }
-  for (const r of roles) {
-    const f = index.get(r.id)!
-    for (const z of roleZone.get(r.id) ?? []) {
-      const t = index.get(z)
-      if (t != null) push(f, t, w.pivot, EDGE.pivot, 0, `pivot:${r.id}`)
+  for (const [ri, list] of roleZones) {
+    const seenDev = new Set<number>()
+    for (const x of list) {
+      if (x.device >= 0) {
+        if (seenDev.has(x.device)) continue
+        seenDev.add(x.device)
+        push(ri, x.device, x.cost, EDGE.pivot, 0, `pivot:${ids[ri]}`)
+      } else push(ri, x.zone, x.cost, EDGE.pivot, 0, `pivot:${ids[ri]}`)
+    }
+  }
+  for (let d = devStart; d < devEnd; d++) {
+    const t = index.get(devices[d - devStart]!.zone!)
+    if (t != null) push(d, t, 0, EDGE.device, 0, `on:${ids[d]}`)
+  }
+  // Shadow-IT SaaS entry: internet → SaaS → zones of the departments / people using it.
+  if (shadow.length) {
+    const inet = index.get(INTERNET_ACTOR)!
+    const parent = new Map((model.boundaries ?? []).map((b) => [b.id, b.parent]))
+    const zonesOfBoundary = new Map<string, Set<number>>()
+    const addBZ = (b: string, zi: number) => {
+      let cur: string | undefined = b
+      let guard = 0
+      while (cur && guard++ < 12) {
+        const set = zonesOfBoundary.get(cur) ?? new Set<number>()
+        set.add(zi)
+        zonesOfBoundary.set(cur, set)
+        cur = parent.get(cur)
+      }
+    }
+    for (const r of roles) for (const x of roleZones.get(index.get(r.id)!) ?? []) addBZ(r.boundary, x.zone)
+    const usesBy = new Map<string, string[]>()
+    for (const e of model.edges) if (e.kind === 'uses') usesBy.set(e.target, [...(usesBy.get(e.target) ?? []), e.source])
+    for (const sys of shadow) {
+      const si = index.get(sys.id)!
+      push(inet, si, w.base, EDGE.entry, sys.source === 'sso-missing' ? 1 : 0, `entry:${sys.id}`)
+      const open = sys.source === 'oauth-grant'
+      const targets = new Set<number>()
+      for (const u of usesBy.get(sys.id) ?? []) {
+        const ent = entityById.get(u)
+        const z = ent?.zone ? index.get(ent.zone) : undefined
+        if (z != null) targets.add(z)
+        for (const zi of zonesOfBoundary.get(u) ?? []) targets.add(zi)
+      }
+      for (const t of targets) push(si, t, open ? w.sync.open : w.sync.conditional, EDGE.sync, open ? 1 : 0, `sync:${sys.id}`)
     }
   }
   for (const rc of reach) {
     const f = index.get(rc.from)
     const t = index.get(rc.to)
     if (f == null || t == null) continue
-    const c = rc.weight ?? w.reach[rc.kind]
+    const c = rc.weight ?? (rc.jumpHost && rc.kind !== 'blocked' ? w.jumpHost : w.reach[rc.kind])
     push(f, t, c, EDGE.reach, rc.kind === 'open' ? 1 : 0, rc.id)
   }
   for (const e of model.entities) {
@@ -213,8 +314,9 @@ export function buildGraph(model: Model): Graph {
   }
   return {
     ids, nodeType, index, nA,
-    roleStart, roleEnd, zoneStart, zoneEnd, sysStart, sysEnd,
-    deg, eTo, eCost, eType, eUnv, eRef, weights: w, roleZone,
+    roleStart, roleEnd, devStart, devEnd, zoneStart, zoneEnd, sysStart, sysEnd,
+    deg, eTo, eCost, eType, eUnv, eRef, weights: w, roleZone, roleZones,
+    modelActors: actors.length,
   }
 }
 
@@ -281,12 +383,15 @@ export function dijkstra(g: Graph, sources: number[]): Dijkstra {
   return { dist, prevNode, prevEdge }
 }
 
-/** One hop of a mixed org + network path. `red`: channel without verification, or open network reach. */
+/** One hop of a mixed org + network path. `red`: channel without verification, open network reach, open SaaS sync. */
 export type MixedHop = { from: string; to: string; kind: string; edge: EdgeType; cost: number; red: boolean; ref: string }
 
 const EDGE_KIND: Record<EdgeType, string> = {
   [EDGE.channel]: 'channel',
-  [EDGE.pivot]: 'pivot to zone',
+  [EDGE.pivot]: 'holder device / zone',
+  [EDGE.device]: 'device on zone',
+  [EDGE.entry]: 'internet → shadow SaaS',
+  [EDGE.sync]: 'SaaS sync into zone',
   [EDGE.reach]: 'network reach',
   [EDGE.host]: 'hosted in zone',
   [EDGE.grant]: 'grant',
@@ -304,7 +409,7 @@ export function reconstruct(g: Graph, dj: Dijkstra, target: number): MixedHop[] 
     hops.unshift({
       from: g.ids[p]!,
       to: g.ids[cur]!,
-      kind: ty === EDGE.channel ? channelRef(g, e) : EDGE_KIND[ty],
+      kind: ty === EDGE.channel ? channelRef(g, e) : ty === EDGE.pivot ? (g.nodeType[cur] === NODE.device ? 'holder device' : 'pivot to zone') : EDGE_KIND[ty],
       edge: ty,
       cost: g.eCost[e]!,
       red: g.eUnv[e]! === 1,

@@ -131,3 +131,42 @@
 .scale-vrow { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 10px; border-bottom: 1px solid #f4f2f8; font-size: 11.5px; }
 .scale-vrow small { opacity: 0.65; font-size: 10.5px; }
 .scale-busy { top: 56px; }
+
+/* Network lens: zone → zone reach edges drawn on the floor. */
+.scale-reach {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 3;
+  /* Tiles are lifted off the floor (translateZ); draw reach above them. */
+  transform: translateZ(14px);
+}
+.scale-reach .reach-link line { stroke-width: 3; fill: none; }
+.scale-reach .reach-link text { font: 700 15px/1 var(--font-sans, system-ui); paint-order: stroke; stroke: #fff; stroke-width: 4px; text-anchor: middle; }
+.scale-reach .reach-conditional line { stroke: #7b8794; stroke-dasharray: 10 7; }
+.scale-reach .reach-conditional text { fill: #52606d; }
+.scale-reach .reach-blocked line { stroke: #b8c0cc; stroke-dasharray: 3 7; stroke-width: 2.5; opacity: 0.9; }
+.scale-reach .reach-open line { stroke: #e8892e; stroke-width: 5; }
+.scale-reach .reach-open text { fill: #b25e12; }
+.scale-reach .reach-red line { stroke: #d6283f; stroke-width: 7; }
+.scale-reach .reach-red text { fill: #b0142e; }
+.scale-reach .reach-head.reach-conditional { fill: #7b8794; }
+.scale-reach .reach-head.reach-blocked { fill: #b8c0cc; }
+.scale-reach .reach-head.reach-open { fill: #e8892e; }
+.scale-reach .reach-head.reach-red { fill: #d6283f; }
+
+/* Mixed org + network hop chain. */
+.scale-hops .scale-hop-dim {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.scale-hops .dim-org { background: #ede7fb; color: #5b3fb3; }
+.scale-hops .dim-net { background: #dff3ea; color: #1f7a52; }

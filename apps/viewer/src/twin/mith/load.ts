@@ -8,14 +8,13 @@ export const SAMPLE_MITH_URL = '/data/polaris-fi.mith'
 export const SAMPLE_PACKAGE_URL = '/data/polaris-fi.mithril'
 export const ORG_SAMPLE_MITH_URL = '/data/polaris-org.mith'
 
-export const ENTERPRISE_PACK_URL = '/data/polaris-enterprise/manifest.json'
-
 /**
  * Synthetic samples the grid can open. The first entry loads by default.
- * `pack: true` is the enterprise-scale chunked pack, generated at build time (not committed).
+ * `pack: true` is the enterprise-scale pack: generated in the browser (Web Worker) from a seed,
+ * never shipped as files. `url` is unused for it.
  */
-export const SAMPLE_DOCS: { id: string; file: string; url: string; label: string; pack?: boolean }[] = [
-  { id: 'polaris-enterprise', file: 'polaris-enterprise/ (generated)', url: ENTERPRISE_PACK_URL, label: 'Enterprise scale (synthetic)', pack: true },
+export const SAMPLE_DOCS: { id: string; file: string; url: string; label: string; pack?: boolean; seed?: number }[] = [
+  { id: 'polaris-enterprise', file: 'polaris-enterprise (generated in browser)', url: '', label: 'Enterprise scale (synthetic)', pack: true, seed: 20260927 },
   { id: 'polaris-org', file: 'polaris-org.mith', url: ORG_SAMPLE_MITH_URL, label: 'Org & access lenses' },
   { id: 'polaris-fi', file: 'polaris-fi.mith', url: SAMPLE_MITH_URL, label: 'Layer boards' },
   { id: 'polaris-floor', file: 'polaris-floor.mith', url: '/data/polaris-floor.mith', label: 'Tiny floor' },
