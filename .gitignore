@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.DS_Store
+# Copied from packages/mith/samples by apps/viewer/scripts/sync-samples.mjs
+apps/viewer/public/data/*.mith
+apps/viewer/public/data/*.mithril

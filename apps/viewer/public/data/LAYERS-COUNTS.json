@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-09-27T15:52:36+09:00",
+  "dataset_kind": "synthetic-demo",
+  "layers": {
+    "organization": {
+      "nodes": 100,
+      "edges": 99
+    },
+    "network": {
+      "nodes": 302,
+      "edges": 301
+    },
+    "firewall": {
+      "nodes": 403,
+      "edges": 402
+    },
+    "node": {
+      "nodes": 2563,
+      "edges": 2400
+    },
+    "server": {
+      "nodes": 3673,
+      "edges": 9989
+    }
+  }
+}

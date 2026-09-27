@@ -1,0 +1,13 @@
+{
+  "mithril": "0.1",
+  "kind": "package",
+  "id": "polaris-fi-synthetic",
+  "dataset_kind": "synthetic-demo",
+  "documents": [
+    "polaris-fi.mith",
+    "polaris-floor.mith",
+    "polaris-org.mith"
+  ],
+  "attachments": [],
+  "note": "v0 stub manifest. Member documents lay boards coplanar (shared transform.z, different x/y). polaris-org.mith adds org boundaries, roles, grants, channels, and shadow IT for the lenses. A zip bundle can wrap this later; v0 only lists member documents."
+}

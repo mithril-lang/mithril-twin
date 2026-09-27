@@ -1,0 +1,1004 @@
+{
+  "mith": "0.1",
+  "kind": "document",
+  "id": "polaris-org-synthetic",
+  "title": "北極星 FI · org & access (synthetic)",
+  "dataset_kind": "synthetic-demo",
+  "generated_at": "2026-09-27T20:00:00+09:00",
+  "disclaimer": "Fictional Polaris FI. Every person, role, system, channel, and external actor is synthetic. Lenses visualize and measure exposure only. No runners, no credential collection, no scanning.",
+  "model": {
+    "citations": [
+      {
+        "source": "synthetic-demo",
+        "note": "org, access, impersonation, and shadow-IT sample; not a live institution"
+      }
+    ],
+    "entities": [
+      {
+        "id": "net:inet",
+        "label": "Internet (SaaS)",
+        "type": "InternetEdge",
+        "layer": "network",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {
+          "cidr": "0.0.0.0/0"
+        }
+      },
+      {
+        "id": "net:transit",
+        "label": "Polaris Transit",
+        "type": "TransitNetwork",
+        "layer": "network",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {
+          "cidr": "10.0.0.0/16"
+        }
+      },
+      {
+        "id": "net:corp",
+        "label": "Corp VLAN",
+        "type": "CorpVLAN",
+        "layer": "network",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {
+          "cidr": "10.20.0.0/24"
+        },
+        "zone": "net:transit"
+      },
+      {
+        "id": "net:pay",
+        "label": "Payments VLAN",
+        "type": "CorpVLAN",
+        "layer": "network",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {
+          "cidr": "10.30.0.0/24"
+        },
+        "zone": "net:transit"
+      },
+      {
+        "id": "net:mgmt",
+        "label": "Mgmt VLAN",
+        "type": "CorpVLAN",
+        "layer": "network",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {
+          "cidr": "10.40.0.0/24"
+        },
+        "zone": "net:transit"
+      },
+      {
+        "id": "net:dmz",
+        "label": "DMZ",
+        "type": "DMZ",
+        "layer": "network",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {
+          "cidr": "10.50.0.0/24"
+        },
+        "zone": "net:transit"
+      },
+      {
+        "id": "fw:edge",
+        "label": "Edge FW",
+        "type": "Firewall",
+        "layer": "firewall",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "zone": "net:dmz"
+      },
+      {
+        "id": "p:cfo",
+        "label": "Person-01 (CFO)",
+        "type": "Person",
+        "layer": "organization",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "boundary": "b:hq-exec",
+        "zone": "net:corp"
+      },
+      {
+        "id": "p:ea",
+        "label": "Person-02 (EA)",
+        "type": "Person",
+        "layer": "organization",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "boundary": "b:hq-exec",
+        "zone": "net:corp"
+      },
+      {
+        "id": "p:controller",
+        "label": "Person-03 (Controller)",
+        "type": "Person",
+        "layer": "organization",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "boundary": "b:hq-controller",
+        "zone": "net:corp"
+      },
+      {
+        "id": "p:treasury1",
+        "label": "Person-04 (Treasury)",
+        "type": "Person",
+        "layer": "organization",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "boundary": "b:bank-treasury",
+        "zone": "net:pay"
+      },
+      {
+        "id": "p:treasury2",
+        "label": "Person-05 (Treasury)",
+        "type": "Person",
+        "layer": "organization",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "boundary": "b:bank-treasury",
+        "zone": "net:pay"
+      },
+      {
+        "id": "p:ap1",
+        "label": "Person-06 (AP)",
+        "type": "Person",
+        "layer": "organization",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "boundary": "b:bank-ap",
+        "zone": "net:pay"
+      },
+      {
+        "id": "p:sd1",
+        "label": "Person-07 (Service Desk)",
+        "type": "Person",
+        "layer": "organization",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "boundary": "b:bank-servicedesk",
+        "zone": "net:corp"
+      },
+      {
+        "id": "p:iam1",
+        "label": "Person-08 (IAM)",
+        "type": "Person",
+        "layer": "organization",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "boundary": "b:bank-iam",
+        "zone": "net:mgmt"
+      },
+      {
+        "id": "sys:erp",
+        "label": "ERP (finance)",
+        "type": "System",
+        "layer": "server",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "boundary": "b:hq-finance",
+        "zone": "net:corp",
+        "sanctioned": true,
+        "criticality": "high"
+      },
+      {
+        "id": "sys:bank-portal",
+        "label": "Corporate banking portal",
+        "type": "SaaS",
+        "layer": "server",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "boundary": "b:bank-treasury",
+        "zone": "net:inet",
+        "sanctioned": true,
+        "criticality": "crown-jewel"
+      },
+      {
+        "id": "sys:payments-hub",
+        "label": "Payments hub",
+        "type": "System",
+        "layer": "server",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "boundary": "b:bank-payments",
+        "zone": "net:pay",
+        "sanctioned": true,
+        "criticality": "crown-jewel"
+      },
+      {
+        "id": "sys:vendor-master",
+        "label": "Vendor master data",
+        "type": "System",
+        "layer": "server",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "boundary": "b:bank-ap",
+        "zone": "net:pay",
+        "sanctioned": true,
+        "criticality": "high"
+      },
+      {
+        "id": "sys:idp",
+        "label": "Identity provider",
+        "type": "System",
+        "layer": "server",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "boundary": "b:bank-iam",
+        "zone": "net:mgmt",
+        "sanctioned": true,
+        "criticality": "crown-jewel"
+      },
+      {
+        "id": "sys:itsm",
+        "label": "Service desk (ITSM)",
+        "type": "SaaS",
+        "layer": "server",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "boundary": "b:bank-servicedesk",
+        "zone": "net:inet",
+        "sanctioned": true,
+        "criticality": "medium"
+      },
+      {
+        "id": "sys:mail",
+        "label": "Email",
+        "type": "SaaS",
+        "layer": "server",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "boundary": "b:bank-it",
+        "zone": "net:inet",
+        "sanctioned": true,
+        "criticality": "medium"
+      },
+      {
+        "id": "sys:shadow-filesync",
+        "label": "File sync app",
+        "type": "SaaS",
+        "layer": "server",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "zone": "net:inet",
+        "sanctioned": false,
+        "source": "sso-missing",
+        "criticality": "medium"
+      },
+      {
+        "id": "sys:shadow-esign",
+        "label": "E-sign service",
+        "type": "SaaS",
+        "layer": "server",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "zone": "net:inet",
+        "sanctioned": false,
+        "source": "expense",
+        "criticality": "medium"
+      },
+      {
+        "id": "sys:shadow-notes",
+        "label": "Meeting-notes assistant",
+        "type": "SaaS",
+        "layer": "server",
+        "citations": [
+          {
+            "source": "synthetic-demo"
+          }
+        ],
+        "attrs": {},
+        "zone": "net:inet",
+        "sanctioned": false,
+        "source": "oauth-grant",
+        "criticality": "low"
+      }
+    ],
+    "edges": [
+      {
+        "id": "e:use-filesync-team",
+        "source": "b:bank-treasury",
+        "target": "sys:shadow-filesync",
+        "kind": "uses"
+      },
+      {
+        "id": "e:use-filesync-p4",
+        "source": "p:treasury1",
+        "target": "sys:shadow-filesync",
+        "kind": "uses"
+      },
+      {
+        "id": "e:use-esign-ap",
+        "source": "p:ap1",
+        "target": "sys:shadow-esign",
+        "kind": "uses"
+      },
+      {
+        "id": "e:use-esign-ctrl",
+        "source": "b:hq-controller",
+        "target": "sys:shadow-esign",
+        "kind": "uses"
+      },
+      {
+        "id": "e:use-notes-cfo",
+        "source": "p:cfo",
+        "target": "sys:shadow-notes",
+        "kind": "uses"
+      },
+      {
+        "id": "e:use-notes-ea",
+        "source": "p:ea",
+        "target": "sys:shadow-notes",
+        "kind": "uses"
+      },
+      {
+        "id": "e:corp-transit",
+        "source": "net:corp",
+        "target": "net:transit",
+        "kind": "uplinksTo"
+      },
+      {
+        "id": "e:pay-transit",
+        "source": "net:pay",
+        "target": "net:transit",
+        "kind": "uplinksTo"
+      },
+      {
+        "id": "e:fw-dmz",
+        "source": "fw:edge",
+        "target": "net:dmz",
+        "kind": "guards"
+      }
+    ],
+    "boundaries": [
+      {
+        "id": "b:polaris",
+        "label": "Polaris Financial Group (synthetic)",
+        "kind": "company"
+      },
+      {
+        "id": "b:bank",
+        "label": "Polaris Bank",
+        "kind": "subsidiary",
+        "parent": "b:polaris"
+      },
+      {
+        "id": "b:bank-payments",
+        "label": "Payments",
+        "kind": "department",
+        "parent": "b:bank"
+      },
+      {
+        "id": "b:bank-treasury",
+        "label": "Treasury Ops",
+        "kind": "team",
+        "parent": "b:bank-payments"
+      },
+      {
+        "id": "b:bank-ap",
+        "label": "Accounts Payable",
+        "kind": "team",
+        "parent": "b:bank-payments"
+      },
+      {
+        "id": "b:bank-it",
+        "label": "IT",
+        "kind": "department",
+        "parent": "b:bank"
+      },
+      {
+        "id": "b:bank-servicedesk",
+        "label": "Service Desk",
+        "kind": "team",
+        "parent": "b:bank-it"
+      },
+      {
+        "id": "b:bank-iam",
+        "label": "Identity & Access",
+        "kind": "team",
+        "parent": "b:bank-it"
+      },
+      {
+        "id": "b:hq-finance",
+        "label": "Group Finance",
+        "kind": "department",
+        "parent": "b:polaris"
+      },
+      {
+        "id": "b:hq-controller",
+        "label": "Controller",
+        "kind": "team",
+        "parent": "b:hq-finance"
+      },
+      {
+        "id": "b:hq-exec",
+        "label": "Executive Office",
+        "kind": "department",
+        "parent": "b:polaris"
+      }
+    ],
+    "roles": [
+      {
+        "id": "role:cfo",
+        "label": "CFO",
+        "boundary": "b:hq-exec",
+        "holders": [
+          "p:cfo"
+        ]
+      },
+      {
+        "id": "role:ea",
+        "label": "Executive assistant",
+        "boundary": "b:hq-exec",
+        "holders": [
+          "p:ea"
+        ]
+      },
+      {
+        "id": "role:controller",
+        "label": "Financial controller",
+        "boundary": "b:hq-controller",
+        "holders": [
+          "p:controller"
+        ]
+      },
+      {
+        "id": "role:treasury-approver",
+        "label": "Treasury approver",
+        "boundary": "b:bank-treasury",
+        "holders": [
+          "p:treasury1"
+        ]
+      },
+      {
+        "id": "role:treasury-clerk",
+        "label": "Treasury clerk",
+        "boundary": "b:bank-treasury",
+        "holders": [
+          "p:treasury2"
+        ]
+      },
+      {
+        "id": "role:ap-clerk",
+        "label": "AP clerk",
+        "boundary": "b:bank-ap",
+        "holders": [
+          "p:ap1"
+        ]
+      },
+      {
+        "id": "role:servicedesk",
+        "label": "Service desk agent",
+        "boundary": "b:bank-servicedesk",
+        "holders": [
+          "p:sd1"
+        ]
+      },
+      {
+        "id": "role:iam-admin",
+        "label": "IAM administrator",
+        "boundary": "b:bank-iam",
+        "holders": [
+          "p:iam1"
+        ]
+      }
+    ],
+    "grants": [
+      {
+        "id": "g:cfo-erp",
+        "role": "role:cfo",
+        "resource": "sys:erp",
+        "level": "approve"
+      },
+      {
+        "id": "g:cfo-bank-portal",
+        "role": "role:cfo",
+        "resource": "sys:bank-portal",
+        "level": "approve"
+      },
+      {
+        "id": "g:ea-erp",
+        "role": "role:ea",
+        "resource": "sys:erp",
+        "level": "read"
+      },
+      {
+        "id": "g:ea-mail",
+        "role": "role:ea",
+        "resource": "sys:mail",
+        "level": "read"
+      },
+      {
+        "id": "g:controller-erp",
+        "role": "role:controller",
+        "resource": "sys:erp",
+        "level": "admin"
+      },
+      {
+        "id": "g:controller-vendor-master",
+        "role": "role:controller",
+        "resource": "sys:vendor-master",
+        "level": "approve"
+      },
+      {
+        "id": "g:treasury-approver-bank-portal",
+        "role": "role:treasury-approver",
+        "resource": "sys:bank-portal",
+        "level": "approve"
+      },
+      {
+        "id": "g:treasury-approver-payments-hub",
+        "role": "role:treasury-approver",
+        "resource": "sys:payments-hub",
+        "level": "approve"
+      },
+      {
+        "id": "g:treasury-clerk-bank-portal",
+        "role": "role:treasury-clerk",
+        "resource": "sys:bank-portal",
+        "level": "read"
+      },
+      {
+        "id": "g:treasury-clerk-payments-hub",
+        "role": "role:treasury-clerk",
+        "resource": "sys:payments-hub",
+        "level": "read"
+      },
+      {
+        "id": "g:ap-clerk-vendor-master",
+        "role": "role:ap-clerk",
+        "resource": "sys:vendor-master",
+        "level": "approve"
+      },
+      {
+        "id": "g:ap-clerk-erp",
+        "role": "role:ap-clerk",
+        "resource": "sys:erp",
+        "level": "read"
+      },
+      {
+        "id": "g:servicedesk-itsm",
+        "role": "role:servicedesk",
+        "resource": "sys:itsm",
+        "level": "admin"
+      },
+      {
+        "id": "g:servicedesk-idp",
+        "role": "role:servicedesk",
+        "resource": "sys:idp",
+        "level": "approve"
+      },
+      {
+        "id": "g:iam-admin-idp",
+        "role": "role:iam-admin",
+        "resource": "sys:idp",
+        "level": "admin"
+      },
+      {
+        "id": "g:iam-admin-mail",
+        "role": "role:iam-admin",
+        "resource": "sys:mail",
+        "level": "admin"
+      }
+    ],
+    "actors": [
+      {
+        "id": "actor:ext-sender",
+        "label": "External sender (synthetic)",
+        "kind": "external"
+      },
+      {
+        "id": "actor:ext-caller",
+        "label": "External caller (synthetic)",
+        "kind": "external"
+      },
+      {
+        "id": "actor:ext-vendor",
+        "label": "Vendor-portal user (synthetic)",
+        "kind": "external"
+      }
+    ],
+    "channels": [
+      {
+        "id": "ch:email-ea",
+        "kind": "email",
+        "from": "actor:ext-sender",
+        "to": "role:ea",
+        "verification": [
+          "none"
+        ]
+      },
+      {
+        "id": "ch:email-ap",
+        "kind": "email",
+        "from": "actor:ext-sender",
+        "to": "role:ap-clerk",
+        "verification": [
+          "none"
+        ]
+      },
+      {
+        "id": "ch:email-controller",
+        "kind": "email",
+        "from": "actor:ext-sender",
+        "to": "role:controller",
+        "verification": [
+          "callback"
+        ]
+      },
+      {
+        "id": "ch:phone-servicedesk",
+        "kind": "phone",
+        "from": "actor:ext-caller",
+        "to": "role:servicedesk",
+        "verification": [
+          "none"
+        ]
+      },
+      {
+        "id": "ch:phone-treasury-clerk",
+        "kind": "phone",
+        "from": "actor:ext-caller",
+        "to": "role:treasury-clerk",
+        "verification": [
+          "callback"
+        ]
+      },
+      {
+        "id": "ch:portal-ap",
+        "kind": "vendor-portal",
+        "from": "actor:ext-vendor",
+        "to": "role:ap-clerk",
+        "verification": [
+          "mfa"
+        ]
+      },
+      {
+        "id": "ch:chat-ea-controller",
+        "kind": "chat",
+        "from": "role:ea",
+        "to": "role:controller",
+        "verification": [
+          "none"
+        ]
+      },
+      {
+        "id": "ch:email-ea-treasury",
+        "kind": "email",
+        "from": "role:ea",
+        "to": "role:treasury-approver",
+        "verification": [
+          "dual-approval"
+        ]
+      },
+      {
+        "id": "ch:helpdesk-iam",
+        "kind": "helpdesk",
+        "from": "role:servicedesk",
+        "to": "role:iam-admin",
+        "verification": [
+          "none"
+        ]
+      },
+      {
+        "id": "ch:helpdesk-approver-mfa-reset",
+        "kind": "helpdesk",
+        "from": "role:servicedesk",
+        "to": "role:treasury-approver",
+        "verification": [
+          "callback",
+          "mfa"
+        ]
+      },
+      {
+        "id": "ch:chat-ap-treasury",
+        "kind": "chat",
+        "from": "role:ap-clerk",
+        "to": "role:treasury-clerk",
+        "verification": [
+          "none"
+        ]
+      },
+      {
+        "id": "ch:chat-clerk-approver",
+        "kind": "chat",
+        "from": "role:treasury-clerk",
+        "to": "role:treasury-approver",
+        "verification": [
+          "none"
+        ]
+      }
+    ]
+  },
+  "diagram": {
+    "arrangement": "coplanar",
+    "camera": {
+      "mode": "iso",
+      "tilt": 54,
+      "yaw": -28,
+      "zoom": 0.96,
+      "focusPlane": "plane:people"
+    },
+    "selection": null,
+    "planes": [
+      {
+        "id": "plane:people",
+        "layer": "organization",
+        "label": "People",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "tilt": 54,
+          "yaw": -28
+        },
+        "placements": [
+          {
+            "entity": "p:cfo",
+            "x": 0.2,
+            "y": 0.25,
+            "tone": "accent",
+            "showLabel": true
+          },
+          {
+            "entity": "p:ea",
+            "x": 0.45,
+            "y": 0.25
+          },
+          {
+            "entity": "p:controller",
+            "x": 0.7,
+            "y": 0.25
+          },
+          {
+            "entity": "p:treasury1",
+            "x": 0.2,
+            "y": 0.6,
+            "tone": "info"
+          },
+          {
+            "entity": "p:treasury2",
+            "x": 0.4,
+            "y": 0.6
+          },
+          {
+            "entity": "p:ap1",
+            "x": 0.6,
+            "y": 0.6
+          },
+          {
+            "entity": "p:sd1",
+            "x": 0.8,
+            "y": 0.6
+          },
+          {
+            "entity": "p:iam1",
+            "x": 0.5,
+            "y": 0.85
+          }
+        ]
+      },
+      {
+        "id": "plane:network",
+        "layer": "network",
+        "label": "Network zones",
+        "transform": {
+          "x": 320,
+          "y": 16,
+          "z": 0,
+          "tilt": 54,
+          "yaw": -28
+        },
+        "placements": [
+          {
+            "entity": "net:transit",
+            "x": 0.5,
+            "y": 0.25,
+            "tone": "accent",
+            "showLabel": true
+          },
+          {
+            "entity": "net:corp",
+            "x": 0.2,
+            "y": 0.6
+          },
+          {
+            "entity": "net:pay",
+            "x": 0.4,
+            "y": 0.6,
+            "tone": "info"
+          },
+          {
+            "entity": "net:mgmt",
+            "x": 0.6,
+            "y": 0.6
+          },
+          {
+            "entity": "net:dmz",
+            "x": 0.8,
+            "y": 0.6
+          },
+          {
+            "entity": "net:inet",
+            "x": 0.5,
+            "y": 0.88
+          }
+        ]
+      },
+      {
+        "id": "plane:systems",
+        "layer": "server",
+        "label": "Systems & SaaS",
+        "transform": {
+          "x": 640,
+          "y": 0,
+          "z": 0,
+          "tilt": 54,
+          "yaw": -28
+        },
+        "placements": [
+          {
+            "entity": "sys:erp",
+            "x": 0.2,
+            "y": 0.3,
+            "tone": "accent",
+            "showLabel": true
+          },
+          {
+            "entity": "sys:bank-portal",
+            "x": 0.45,
+            "y": 0.3,
+            "tone": "info"
+          },
+          {
+            "entity": "sys:payments-hub",
+            "x": 0.7,
+            "y": 0.3
+          },
+          {
+            "entity": "sys:vendor-master",
+            "x": 0.2,
+            "y": 0.6
+          },
+          {
+            "entity": "sys:idp",
+            "x": 0.45,
+            "y": 0.6
+          },
+          {
+            "entity": "sys:itsm",
+            "x": 0.7,
+            "y": 0.6
+          },
+          {
+            "entity": "sys:mail",
+            "x": 0.85,
+            "y": 0.45
+          },
+          {
+            "entity": "sys:shadow-filesync",
+            "x": 0.3,
+            "y": 0.88
+          },
+          {
+            "entity": "sys:shadow-esign",
+            "x": 0.55,
+            "y": 0.88
+          },
+          {
+            "entity": "sys:shadow-notes",
+            "x": 0.8,
+            "y": 0.88
+          }
+        ]
+      }
+    ],
+    "crossLinks": [
+      {
+        "id": "xl:ap-vendor",
+        "from": "p:ap1",
+        "to": "sys:vendor-master",
+        "kind": "operates"
+      }
+    ]
+  },
+  "inference": {
+    "viz_only": true,
+    "no_runners": true,
+    "hypotheses": []
+  }
+}

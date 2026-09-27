@@ -1,0 +1,2528 @@
+{
+  "layer": "organization",
+  "dataset_kind": "synthetic-demo",
+  "generated_at": "2026-09-27T16:48:55+09:00",
+  "disclaimer": "Fictional Polaris FI (北極星). Not a real institution. People/roles/RACI and group edges are synthetic-demo hypotheses (observation_count=0). No live attack execution.",
+  "counts": {
+    "nodes": 123,
+    "edges": 160
+  },
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "org:polaris-holdings",
+          "label": "北極星フィナンシャル・グループホールディ",
+          "type": "HoldingCompany",
+          "layer": "organization",
+          "sector": "financial-holding"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-bank-core-01",
+          "label": "北極星銀行本体",
+          "type": "BankCore",
+          "layer": "organization",
+          "sector": "bank-core"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-bank-trust-01",
+          "label": "北極星信託銀行",
+          "type": "TrustBank",
+          "layer": "organization",
+          "sector": "bank-trust"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-securities-01",
+          "label": "北極星証券 1",
+          "type": "Securities",
+          "layer": "organization",
+          "sector": "securities"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-securities-02",
+          "label": "北極星証券 2",
+          "type": "Securities",
+          "layer": "organization",
+          "sector": "securities"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-securities-03",
+          "label": "北極星証券 3",
+          "type": "Securities",
+          "layer": "organization",
+          "sector": "securities"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-asset-mgmt-01",
+          "label": "北極星アセットマネジメント 1",
+          "type": "AssetMgmt",
+          "layer": "organization",
+          "sector": "asset-mgmt"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-asset-mgmt-02",
+          "label": "北極星アセットマネジメント 2",
+          "type": "AssetMgmt",
+          "layer": "organization",
+          "sector": "asset-mgmt"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-asset-mgmt-03",
+          "label": "北極星アセットマネジメント 3",
+          "type": "AssetMgmt",
+          "layer": "organization",
+          "sector": "asset-mgmt"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-asset-mgmt-04",
+          "label": "北極星アセットマネジメント 4",
+          "type": "AssetMgmt",
+          "layer": "organization",
+          "sector": "asset-mgmt"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-card-01",
+          "label": "北極星カード 1",
+          "type": "Card",
+          "layer": "organization",
+          "sector": "card"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-card-02",
+          "label": "北極星カード 2",
+          "type": "Card",
+          "layer": "organization",
+          "sector": "card"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-leasing-01",
+          "label": "北極星リース 1",
+          "type": "Leasing",
+          "layer": "organization",
+          "sector": "leasing"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-leasing-02",
+          "label": "北極星リース 2",
+          "type": "Leasing",
+          "layer": "organization",
+          "sector": "leasing"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-leasing-03",
+          "label": "北極星リース 3",
+          "type": "Leasing",
+          "layer": "organization",
+          "sector": "leasing"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-research-01",
+          "label": "北極星総合研究所 1",
+          "type": "Research",
+          "layer": "organization",
+          "sector": "research"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-research-02",
+          "label": "北極星総合研究所 2",
+          "type": "Research",
+          "layer": "organization",
+          "sector": "research"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-it-digital-01",
+          "label": "北極星IT・デジタル 1",
+          "type": "ITDigital",
+          "layer": "organization",
+          "sector": "it-digital"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-it-digital-02",
+          "label": "北極星IT・デジタル 2",
+          "type": "ITDigital",
+          "layer": "organization",
+          "sector": "it-digital"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-it-digital-03",
+          "label": "北極星IT・デジタル 3",
+          "type": "ITDigital",
+          "layer": "organization",
+          "sector": "it-digital"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-it-digital-04",
+          "label": "北極星IT・デジタル 4",
+          "type": "ITDigital",
+          "layer": "organization",
+          "sector": "it-digital"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-it-digital-05",
+          "label": "北極星IT・デジタル 5",
+          "type": "ITDigital",
+          "layer": "organization",
+          "sector": "it-digital"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-it-digital-06",
+          "label": "北極星IT・デジタル 6",
+          "type": "ITDigital",
+          "layer": "organization",
+          "sector": "it-digital"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-it-digital-07",
+          "label": "北極星IT・デジタル 7",
+          "type": "ITDigital",
+          "layer": "organization",
+          "sector": "it-digital"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-it-digital-08",
+          "label": "北極星IT・デジタル 8",
+          "type": "ITDigital",
+          "layer": "organization",
+          "sector": "it-digital"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-payments-01",
+          "label": "北極星決済・送金 1",
+          "type": "Payments",
+          "layer": "organization",
+          "sector": "payments"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-payments-02",
+          "label": "北極星決済・送金 2",
+          "type": "Payments",
+          "layer": "organization",
+          "sector": "payments"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-payments-03",
+          "label": "北極星決済・送金 3",
+          "type": "Payments",
+          "layer": "organization",
+          "sector": "payments"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-insurance-01",
+          "label": "北極星保険代理・関連 1",
+          "type": "Insurance",
+          "layer": "organization",
+          "sector": "insurance"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-insurance-02",
+          "label": "北極星保険代理・関連 2",
+          "type": "Insurance",
+          "layer": "organization",
+          "sector": "insurance"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-insurance-03",
+          "label": "北極星保険代理・関連 3",
+          "type": "Insurance",
+          "layer": "organization",
+          "sector": "insurance"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-insurance-04",
+          "label": "北極星保険代理・関連 4",
+          "type": "Insurance",
+          "layer": "organization",
+          "sector": "insurance"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-real-estate-01",
+          "label": "北極星不動産 1",
+          "type": "RealEstate",
+          "layer": "organization",
+          "sector": "real-estate"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-real-estate-02",
+          "label": "北極星不動産 2",
+          "type": "RealEstate",
+          "layer": "organization",
+          "sector": "real-estate"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-real-estate-03",
+          "label": "北極星不動産 3",
+          "type": "RealEstate",
+          "layer": "organization",
+          "sector": "real-estate"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-venture-01",
+          "label": "北極星ベンチャー投資 1",
+          "type": "Venture",
+          "layer": "organization",
+          "sector": "venture"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-venture-02",
+          "label": "北極星ベンチャー投資 2",
+          "type": "Venture",
+          "layer": "organization",
+          "sector": "venture"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-venture-03",
+          "label": "北極星ベンチャー投資 3",
+          "type": "Venture",
+          "layer": "organization",
+          "sector": "venture"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-01",
+          "label": "北極星地域金融関連 1",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-02",
+          "label": "北極星地域金融関連 2",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-03",
+          "label": "北極星地域金融関連 3",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-04",
+          "label": "北極星地域金融関連 4",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-05",
+          "label": "北極星地域金融関連 5",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-06",
+          "label": "北極星地域金融関連 6",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-07",
+          "label": "北極星地域金融関連 7",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-08",
+          "label": "北極星地域金融関連 8",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-09",
+          "label": "北極星地域金融関連 9",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-10",
+          "label": "北極星地域金融関連 10",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-11",
+          "label": "北極星地域金融関連 11",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-12",
+          "label": "北極星地域金融関連 12",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-13",
+          "label": "北極星地域金融関連 13",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-14",
+          "label": "北極星地域金融関連 14",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-15",
+          "label": "北極星地域金融関連 15",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-16",
+          "label": "北極星地域金融関連 16",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-17",
+          "label": "北極星地域金融関連 17",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-18",
+          "label": "北極星地域金融関連 18",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-19",
+          "label": "北極星地域金融関連 19",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-regional-20",
+          "label": "北極星地域金融関連 20",
+          "type": "Regional",
+          "layer": "organization",
+          "sector": "regional"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-overseas-desk-01",
+          "label": "北極星海外拠点デスク（架空） 1",
+          "type": "OverseasDesk",
+          "layer": "organization",
+          "sector": "overseas-desk"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-overseas-desk-02",
+          "label": "北極星海外拠点デスク（架空） 2",
+          "type": "OverseasDesk",
+          "layer": "organization",
+          "sector": "overseas-desk"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-overseas-desk-03",
+          "label": "北極星海外拠点デスク（架空） 3",
+          "type": "OverseasDesk",
+          "layer": "organization",
+          "sector": "overseas-desk"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-overseas-desk-04",
+          "label": "北極星海外拠点デスク（架空） 4",
+          "type": "OverseasDesk",
+          "layer": "organization",
+          "sector": "overseas-desk"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-overseas-desk-05",
+          "label": "北極星海外拠点デスク（架空） 5",
+          "type": "OverseasDesk",
+          "layer": "organization",
+          "sector": "overseas-desk"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-overseas-desk-06",
+          "label": "北極星海外拠点デスク（架空） 6",
+          "type": "OverseasDesk",
+          "layer": "organization",
+          "sector": "overseas-desk"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-overseas-desk-07",
+          "label": "北極星海外拠点デスク（架空） 7",
+          "type": "OverseasDesk",
+          "layer": "organization",
+          "sector": "overseas-desk"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-overseas-desk-08",
+          "label": "北極星海外拠点デスク（架空） 8",
+          "type": "OverseasDesk",
+          "layer": "organization",
+          "sector": "overseas-desk"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-overseas-desk-09",
+          "label": "北極星海外拠点デスク（架空） 9",
+          "type": "OverseasDesk",
+          "layer": "organization",
+          "sector": "overseas-desk"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-overseas-desk-10",
+          "label": "北極星海外拠点デスク（架空） 10",
+          "type": "OverseasDesk",
+          "layer": "organization",
+          "sector": "overseas-desk"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-overseas-desk-11",
+          "label": "北極星海外拠点デスク（架空） 11",
+          "type": "OverseasDesk",
+          "layer": "organization",
+          "sector": "overseas-desk"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-overseas-desk-12",
+          "label": "北極星海外拠点デスク（架空） 12",
+          "type": "OverseasDesk",
+          "layer": "organization",
+          "sector": "overseas-desk"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-ops-shared-01",
+          "label": "北極星シェアードサービス 1",
+          "type": "SharedOps",
+          "layer": "organization",
+          "sector": "ops-shared"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-ops-shared-02",
+          "label": "北極星シェアードサービス 2",
+          "type": "SharedOps",
+          "layer": "organization",
+          "sector": "ops-shared"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-ops-shared-03",
+          "label": "北極星シェアードサービス 3",
+          "type": "SharedOps",
+          "layer": "organization",
+          "sector": "ops-shared"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-ops-shared-04",
+          "label": "北極星シェアードサービス 4",
+          "type": "SharedOps",
+          "layer": "organization",
+          "sector": "ops-shared"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-ops-shared-05",
+          "label": "北極星シェアードサービス 5",
+          "type": "SharedOps",
+          "layer": "organization",
+          "sector": "ops-shared"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-ops-shared-06",
+          "label": "北極星シェアードサービス 6",
+          "type": "SharedOps",
+          "layer": "organization",
+          "sector": "ops-shared"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-ops-shared-07",
+          "label": "北極星シェアードサービス 7",
+          "type": "SharedOps",
+          "layer": "organization",
+          "sector": "ops-shared"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-ops-shared-08",
+          "label": "北極星シェアードサービス 8",
+          "type": "SharedOps",
+          "layer": "organization",
+          "sector": "ops-shared"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-ops-shared-09",
+          "label": "北極星シェアードサービス 9",
+          "type": "SharedOps",
+          "layer": "organization",
+          "sector": "ops-shared"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-ops-shared-10",
+          "label": "北極星シェアードサービス 10",
+          "type": "SharedOps",
+          "layer": "organization",
+          "sector": "ops-shared"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-compliance-01",
+          "label": "北極星コンプライアンス・監査 1",
+          "type": "Compliance",
+          "layer": "organization",
+          "sector": "compliance"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-compliance-02",
+          "label": "北極星コンプライアンス・監査 2",
+          "type": "Compliance",
+          "layer": "organization",
+          "sector": "compliance"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-compliance-03",
+          "label": "北極星コンプライアンス・監査 3",
+          "type": "Compliance",
+          "layer": "organization",
+          "sector": "compliance"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-compliance-04",
+          "label": "北極星コンプライアンス・監査 4",
+          "type": "Compliance",
+          "layer": "organization",
+          "sector": "compliance"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-compliance-05",
+          "label": "北極星コンプライアンス・監査 5",
+          "type": "Compliance",
+          "layer": "organization",
+          "sector": "compliance"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-data-ai-01",
+          "label": "北極星データ・AI子会社 1",
+          "type": "DataAI",
+          "layer": "organization",
+          "sector": "data-ai"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-data-ai-02",
+          "label": "北極星データ・AI子会社 2",
+          "type": "DataAI",
+          "layer": "organization",
+          "sector": "data-ai"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-data-ai-03",
+          "label": "北極星データ・AI子会社 3",
+          "type": "DataAI",
+          "layer": "organization",
+          "sector": "data-ai"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-data-ai-04",
+          "label": "北極星データ・AI子会社 4",
+          "type": "DataAI",
+          "layer": "organization",
+          "sector": "data-ai"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-data-ai-05",
+          "label": "北極星データ・AI子会社 5",
+          "type": "DataAI",
+          "layer": "organization",
+          "sector": "data-ai"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-custody-01",
+          "label": "北極星カストディ・証券代行 1",
+          "type": "Custody",
+          "layer": "organization",
+          "sector": "custody"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-custody-02",
+          "label": "北極星カストディ・証券代行 2",
+          "type": "Custody",
+          "layer": "organization",
+          "sector": "custody"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-custody-03",
+          "label": "北極星カストディ・証券代行 3",
+          "type": "Custody",
+          "layer": "organization",
+          "sector": "custody"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-market-infra-01",
+          "label": "北極星市場インフラ連携 1",
+          "type": "MarketInfra",
+          "layer": "organization",
+          "sector": "market-infra"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-market-infra-02",
+          "label": "北極星市場インフラ連携 2",
+          "type": "MarketInfra",
+          "layer": "organization",
+          "sector": "market-infra"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-market-infra-03",
+          "label": "北極星市場インフラ連携 3",
+          "type": "MarketInfra",
+          "layer": "organization",
+          "sector": "market-infra"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-market-infra-04",
+          "label": "北極星市場インフラ連携 4",
+          "type": "MarketInfra",
+          "layer": "organization",
+          "sector": "market-infra"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-other-01",
+          "label": "北極星その他グループ会社 1",
+          "type": "Other",
+          "layer": "organization",
+          "sector": "other"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-other-02",
+          "label": "北極星その他グループ会社 2",
+          "type": "Other",
+          "layer": "organization",
+          "sector": "other"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-other-03",
+          "label": "北極星その他グループ会社 3",
+          "type": "Other",
+          "layer": "organization",
+          "sector": "other"
+        }
+      },
+      {
+        "data": {
+          "id": "org:polaris-vendor-mail-01",
+          "label": "北極星契約ベンダー（メール基盤・架空）",
+          "type": "Vendor",
+          "layer": "organization",
+          "sector": "shared-vendor",
+          "hypothesis": "true",
+          "note": "fictional_supplier_for_BEC_demo"
+        }
+      },
+      {
+        "data": {
+          "id": "proc:payments-rail",
+          "label": "決済・送金プロセス",
+          "type": "Process",
+          "layer": "organization",
+          "process_key": "payments",
+          "critical": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "proc:vendor-change",
+          "label": "ベンダー口座変更プロセス",
+          "type": "Process",
+          "layer": "organization",
+          "process_key": "vendor-change",
+          "critical": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "proc:helpdesk",
+          "label": "ヘルプデスク本人確認プロセス",
+          "type": "Process",
+          "layer": "organization",
+          "process_key": "helpdesk",
+          "critical": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "proc:email-admin",
+          "label": "メール管理者プロセス",
+          "type": "Process",
+          "layer": "organization",
+          "process_key": "email-admin",
+          "critical": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "role:ciso",
+          "label": "グループCISO（役割）",
+          "type": "Role",
+          "layer": "organization",
+          "role_key": "ciso"
+        }
+      },
+      {
+        "data": {
+          "id": "role:payments-ao",
+          "label": "決済業務オーナー",
+          "type": "Role",
+          "layer": "organization",
+          "role_key": "payments-ao"
+        }
+      },
+      {
+        "data": {
+          "id": "role:vendor-ao",
+          "label": "ベンダー管理オーナー",
+          "type": "Role",
+          "layer": "organization",
+          "role_key": "vendor-ao"
+        }
+      },
+      {
+        "data": {
+          "id": "role:helpdesk-lead",
+          "label": "ヘルプデスク責任者",
+          "type": "Role",
+          "layer": "organization",
+          "role_key": "helpdesk-lead"
+        }
+      },
+      {
+        "data": {
+          "id": "role:email-admin",
+          "label": "メール基盤管理者",
+          "type": "Role",
+          "layer": "organization",
+          "role_key": "email-admin"
+        }
+      },
+      {
+        "data": {
+          "id": "role:soc-analyst",
+          "label": "SOCアナリスト",
+          "type": "Role",
+          "layer": "organization",
+          "role_key": "soc-analyst"
+        }
+      },
+      {
+        "data": {
+          "id": "role:branch-mgr",
+          "label": "支店事務管理者",
+          "type": "Role",
+          "layer": "organization",
+          "role_key": "branch-mgr"
+        }
+      },
+      {
+        "data": {
+          "id": "role:compliance-officer",
+          "label": "コンプライアンス責任者",
+          "type": "Role",
+          "layer": "organization",
+          "role_key": "compliance-officer"
+        }
+      },
+      {
+        "data": {
+          "id": "person:aoki-ren",
+          "label": "青木 蓮",
+          "type": "Person",
+          "layer": "organization",
+          "title": "グループCISO",
+          "org_ref": "org:polaris-it-digital-01",
+          "fictional": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "person:sato-mei",
+          "label": "佐藤 芽依",
+          "type": "Person",
+          "layer": "organization",
+          "title": "決済業務部長",
+          "org_ref": "org:polaris-payments-01",
+          "fictional": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "person:suzuki-haru",
+          "label": "鈴木 陽",
+          "type": "Person",
+          "layer": "organization",
+          "title": "ベンダー管理課長",
+          "org_ref": "org:polaris-ops-shared-01",
+          "fictional": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "person:tanaka-yui",
+          "label": "田中 結衣",
+          "type": "Person",
+          "layer": "organization",
+          "title": "ヘルプデスク主任",
+          "org_ref": "org:polaris-ops-shared-02",
+          "fictional": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "person:watanabe-kai",
+          "label": "渡辺 海",
+          "type": "Person",
+          "layer": "organization",
+          "title": "メール基盤リード",
+          "org_ref": "org:polaris-it-digital-01",
+          "fictional": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "person:ito-sora",
+          "label": "伊藤 空",
+          "type": "Person",
+          "layer": "organization",
+          "title": "SOCシニア",
+          "org_ref": "org:polaris-compliance-01",
+          "fictional": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "person:yamamoto-hinata",
+          "label": "山本 陽葵",
+          "type": "Person",
+          "layer": "organization",
+          "title": "支店事務長",
+          "org_ref": "org:polaris-regional-01",
+          "fictional": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "person:kobayashi-rio",
+          "label": "小林 莉央",
+          "type": "Person",
+          "layer": "organization",
+          "title": "コンプラ統括",
+          "org_ref": "org:polaris-compliance-01",
+          "fictional": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "person:nakamura-ao",
+          "label": "中村 蒼",
+          "type": "Person",
+          "layer": "organization",
+          "title": "決済オペレータ",
+          "org_ref": "org:polaris-payments-02",
+          "fictional": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "person:mori-hikari",
+          "label": "森 ひかり",
+          "type": "Person",
+          "layer": "organization",
+          "title": "ITデジタル部長",
+          "org_ref": "org:polaris-it-digital-01",
+          "fictional": "true"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "sub-org:polaris-bank-core-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-bank-core-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-bank-trust-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-bank-trust-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-securities-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-securities-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-securities-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-securities-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-securities-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-securities-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-asset-mgmt-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-asset-mgmt-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-asset-mgmt-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-asset-mgmt-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-asset-mgmt-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-asset-mgmt-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-asset-mgmt-04",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-asset-mgmt-04",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-card-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-card-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-card-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-card-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-leasing-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-leasing-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-leasing-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-leasing-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-leasing-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-leasing-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-research-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-research-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-research-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-research-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-it-digital-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-it-digital-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-it-digital-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-it-digital-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-it-digital-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-it-digital-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-it-digital-04",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-it-digital-04",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-it-digital-05",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-it-digital-05",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-it-digital-06",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-it-digital-06",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-it-digital-07",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-it-digital-07",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-it-digital-08",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-it-digital-08",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-payments-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-payments-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-payments-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-payments-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-payments-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-payments-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-insurance-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-insurance-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-insurance-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-insurance-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-insurance-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-insurance-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-insurance-04",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-insurance-04",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-real-estate-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-real-estate-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-real-estate-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-real-estate-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-real-estate-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-real-estate-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-venture-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-venture-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-venture-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-venture-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-venture-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-venture-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-04",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-04",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-05",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-05",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-06",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-06",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-07",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-07",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-08",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-08",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-09",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-09",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-10",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-10",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-11",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-11",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-12",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-12",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-13",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-13",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-14",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-14",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-15",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-15",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-16",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-16",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-17",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-17",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-18",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-18",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-19",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-19",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-regional-20",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-regional-20",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-overseas-desk-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-overseas-desk-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-overseas-desk-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-overseas-desk-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-overseas-desk-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-overseas-desk-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-overseas-desk-04",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-overseas-desk-04",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-overseas-desk-05",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-overseas-desk-05",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-overseas-desk-06",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-overseas-desk-06",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-overseas-desk-07",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-overseas-desk-07",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-overseas-desk-08",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-overseas-desk-08",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-overseas-desk-09",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-overseas-desk-09",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-overseas-desk-10",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-overseas-desk-10",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-overseas-desk-11",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-overseas-desk-11",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-overseas-desk-12",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-overseas-desk-12",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-ops-shared-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-ops-shared-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-ops-shared-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-ops-shared-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-ops-shared-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-ops-shared-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-ops-shared-04",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-ops-shared-04",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-ops-shared-05",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-ops-shared-05",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-ops-shared-06",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-ops-shared-06",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-ops-shared-07",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-ops-shared-07",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-ops-shared-08",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-ops-shared-08",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-ops-shared-09",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-ops-shared-09",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-ops-shared-10",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-ops-shared-10",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-compliance-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-compliance-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-compliance-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-compliance-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-compliance-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-compliance-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-compliance-04",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-compliance-04",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-compliance-05",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-compliance-05",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-data-ai-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-data-ai-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-data-ai-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-data-ai-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-data-ai-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-data-ai-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-data-ai-04",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-data-ai-04",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-data-ai-05",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-data-ai-05",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-custody-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-custody-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-custody-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-custody-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-custody-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-custody-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-market-infra-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-market-infra-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-market-infra-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-market-infra-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-market-infra-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-market-infra-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-market-infra-04",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-market-infra-04",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-other-01",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-other-01",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-other-02",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-other-02",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "sub-org:polaris-other-03",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-other-03",
+          "kind": "subsidiaryOf"
+        }
+      },
+      {
+        "data": {
+          "id": "owns-holdings-bank",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-bank-core-01",
+          "kind": "owns",
+          "hypothesis": "true",
+          "note": "holding_control"
+        }
+      },
+      {
+        "data": {
+          "id": "owns-holdings-trust",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-bank-trust-01",
+          "kind": "owns",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "owns-bank-payments",
+          "source": "org:polaris-bank-core-01",
+          "target": "org:polaris-payments-01",
+          "kind": "owns",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "owns-bank-card",
+          "source": "org:polaris-bank-core-01",
+          "target": "org:polaris-card-01",
+          "kind": "owns",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "owns-holdings-securities",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-securities-01",
+          "kind": "owns",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "consolidates-bank-trust",
+          "source": "org:polaris-bank-core-01",
+          "target": "org:polaris-bank-trust-01",
+          "kind": "consolidates",
+          "hypothesis": "true",
+          "note": "group_reporting"
+        }
+      },
+      {
+        "data": {
+          "id": "consolidates-holdings-bank",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-bank-core-01",
+          "kind": "consolidates",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "consolidates-holdings-sec",
+          "source": "org:polaris-holdings",
+          "target": "org:polaris-securities-01",
+          "kind": "consolidates",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "sharesIT-bank-it",
+          "source": "org:polaris-bank-core-01",
+          "target": "org:polaris-it-digital-01",
+          "kind": "sharesIT",
+          "hypothesis": "true",
+          "note": "group_IT_platform"
+        }
+      },
+      {
+        "data": {
+          "id": "sharesIT-trust-it",
+          "source": "org:polaris-bank-trust-01",
+          "target": "org:polaris-it-digital-01",
+          "kind": "sharesIT",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "sharesIT-pay-it",
+          "source": "org:polaris-payments-01",
+          "target": "org:polaris-it-digital-01",
+          "kind": "sharesIT",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "sharesIT-sec-it",
+          "source": "org:polaris-securities-01",
+          "target": "org:polaris-it-digital-02",
+          "kind": "sharesIT",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "sharesIT-reg-it",
+          "source": "org:polaris-regional-01",
+          "target": "org:polaris-it-digital-01",
+          "kind": "sharesIT",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "sharesIT-ops-it",
+          "source": "org:polaris-ops-shared-01",
+          "target": "org:polaris-it-digital-01",
+          "kind": "sharesIT",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "sharedVendor-pay-ops",
+          "source": "org:polaris-payments-01",
+          "target": "org:polaris-ops-shared-01",
+          "kind": "sharedVendor",
+          "hypothesis": "true",
+          "note": "vendor_master_ops"
+        }
+      },
+      {
+        "data": {
+          "id": "sharedVendor-card-ops",
+          "source": "org:polaris-card-01",
+          "target": "org:polaris-ops-shared-01",
+          "kind": "sharedVendor",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "sharedVendor-reg-ops",
+          "source": "org:polaris-regional-02",
+          "target": "org:polaris-ops-shared-02",
+          "kind": "sharedVendor",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "sharedVendor-bank-ops",
+          "source": "org:polaris-bank-core-01",
+          "target": "org:polaris-ops-shared-01",
+          "kind": "sharedVendor",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "sharedVendor-ops-vendor",
+          "source": "org:polaris-ops-shared-01",
+          "target": "org:polaris-vendor-mail-01",
+          "kind": "sharedVendor",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "operates-pay-proc",
+          "source": "org:polaris-payments-01",
+          "target": "proc:payments-rail",
+          "kind": "operates",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "operates-vendor-proc",
+          "source": "org:polaris-ops-shared-01",
+          "target": "proc:vendor-change",
+          "kind": "operates",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "operates-helpdesk-proc",
+          "source": "org:polaris-ops-shared-02",
+          "target": "proc:helpdesk",
+          "kind": "operates",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "operates-email-proc",
+          "source": "org:polaris-it-digital-01",
+          "target": "proc:email-admin",
+          "kind": "operates",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "guards-vendor-comp",
+          "source": "org:polaris-compliance-01",
+          "target": "proc:vendor-change",
+          "kind": "guards",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "guards-pay-comp",
+          "source": "org:polaris-compliance-02",
+          "target": "proc:payments-rail",
+          "kind": "guards",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "assigned-aoki-ciso",
+          "source": "person:aoki-ren",
+          "target": "role:ciso",
+          "kind": "assignedRole",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "assigned-sato-pay",
+          "source": "person:sato-mei",
+          "target": "role:payments-ao",
+          "kind": "assignedRole",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "assigned-suzuki-vendor",
+          "source": "person:suzuki-haru",
+          "target": "role:vendor-ao",
+          "kind": "assignedRole",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "assigned-tanaka-hd",
+          "source": "person:tanaka-yui",
+          "target": "role:helpdesk-lead",
+          "kind": "assignedRole",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "assigned-watanabe-mail",
+          "source": "person:watanabe-kai",
+          "target": "role:email-admin",
+          "kind": "assignedRole",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "assigned-ito-soc",
+          "source": "person:ito-sora",
+          "target": "role:soc-analyst",
+          "kind": "assignedRole",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "assigned-yama-branch",
+          "source": "person:yamamoto-hinata",
+          "target": "role:branch-mgr",
+          "kind": "assignedRole",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "assigned-koba-comp",
+          "source": "person:kobayashi-rio",
+          "target": "role:compliance-officer",
+          "kind": "assignedRole",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "member-aoki-it",
+          "source": "person:aoki-ren",
+          "target": "org:polaris-it-digital-01",
+          "kind": "memberOf",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "member-sato-pay",
+          "source": "person:sato-mei",
+          "target": "org:polaris-payments-01",
+          "kind": "memberOf",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "member-suzuki-ops",
+          "source": "person:suzuki-haru",
+          "target": "org:polaris-ops-shared-01",
+          "kind": "memberOf",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "member-tanaka-ops",
+          "source": "person:tanaka-yui",
+          "target": "org:polaris-ops-shared-02",
+          "kind": "memberOf",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "member-watanabe-it",
+          "source": "person:watanabe-kai",
+          "target": "org:polaris-it-digital-01",
+          "kind": "memberOf",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "member-ito-comp",
+          "source": "person:ito-sora",
+          "target": "org:polaris-compliance-01",
+          "kind": "memberOf",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "member-yama-reg",
+          "source": "person:yamamoto-hinata",
+          "target": "org:polaris-regional-01",
+          "kind": "memberOf",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "member-koba-comp",
+          "source": "person:kobayashi-rio",
+          "target": "org:polaris-compliance-01",
+          "kind": "memberOf",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "member-naka-pay",
+          "source": "person:nakamura-ao",
+          "target": "org:polaris-payments-02",
+          "kind": "memberOf",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "member-mori-it",
+          "source": "person:mori-hikari",
+          "target": "org:polaris-it-digital-01",
+          "kind": "memberOf",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-a-pay",
+          "source": "person:sato-mei",
+          "target": "proc:payments-rail",
+          "kind": "accountableFor",
+          "raci": "A",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-r-pay",
+          "source": "person:nakamura-ao",
+          "target": "proc:payments-rail",
+          "kind": "responsibleFor",
+          "raci": "R",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-c-pay",
+          "source": "person:kobayashi-rio",
+          "target": "proc:payments-rail",
+          "kind": "consultedOn",
+          "raci": "C",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-i-pay",
+          "source": "person:aoki-ren",
+          "target": "proc:payments-rail",
+          "kind": "informedAbout",
+          "raci": "I",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-a-vendor",
+          "source": "person:suzuki-haru",
+          "target": "proc:vendor-change",
+          "kind": "accountableFor",
+          "raci": "A",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-r-vendor",
+          "source": "person:suzuki-haru",
+          "target": "proc:vendor-change",
+          "kind": "responsibleFor",
+          "raci": "R",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-c-vendor",
+          "source": "person:kobayashi-rio",
+          "target": "proc:vendor-change",
+          "kind": "consultedOn",
+          "raci": "C",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-i-vendor",
+          "source": "person:sato-mei",
+          "target": "proc:vendor-change",
+          "kind": "informedAbout",
+          "raci": "I",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-c2-vendor",
+          "source": "person:watanabe-kai",
+          "target": "proc:vendor-change",
+          "kind": "consultedOn",
+          "raci": "C",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-a-hd",
+          "source": "person:tanaka-yui",
+          "target": "proc:helpdesk",
+          "kind": "accountableFor",
+          "raci": "A",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-r-hd",
+          "source": "person:tanaka-yui",
+          "target": "proc:helpdesk",
+          "kind": "responsibleFor",
+          "raci": "R",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-c-hd",
+          "source": "person:ito-sora",
+          "target": "proc:helpdesk",
+          "kind": "consultedOn",
+          "raci": "C",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-i-hd",
+          "source": "person:aoki-ren",
+          "target": "proc:helpdesk",
+          "kind": "informedAbout",
+          "raci": "I",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-a-mail",
+          "source": "person:watanabe-kai",
+          "target": "proc:email-admin",
+          "kind": "accountableFor",
+          "raci": "A",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-r-mail",
+          "source": "person:watanabe-kai",
+          "target": "proc:email-admin",
+          "kind": "responsibleFor",
+          "raci": "R",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-c-mail",
+          "source": "person:mori-hikari",
+          "target": "proc:email-admin",
+          "kind": "consultedOn",
+          "raci": "C",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-i-mail",
+          "source": "person:aoki-ren",
+          "target": "proc:email-admin",
+          "kind": "informedAbout",
+          "raci": "I",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "raci-c2-mail",
+          "source": "person:ito-sora",
+          "target": "proc:email-admin",
+          "kind": "consultedOn",
+          "raci": "C",
+          "hypothesis": "true"
+        }
+      }
+    ]
+  },
+  "enrichment": {
+    "group_edges": [
+      "owns",
+      "consolidates",
+      "sharesIT",
+      "sharedVendor"
+    ],
+    "raci_kinds": [
+      "accountableFor",
+      "responsibleFor",
+      "consultedOn",
+      "informedAbout"
+    ],
+    "observation_count": 0,
+    "honesty": "hypothesis"
+  }
+}

@@ -1,0 +1,851 @@
+{
+  "layer": "attack-paths",
+  "dataset_kind": "synthetic-demo",
+  "generated_at": "2026-09-27T16:48:55+09:00",
+  "disclaimer": "Illustrative hypothesis attack-path overlay for victim-investigation twin. NOT live exploits, NOT runners, NOT validated detections. observation_count=0.",
+  "viz_only": true,
+  "no_runners": true,
+  "counts": {
+    "nodes": 15,
+    "edges": 38,
+    "scenarios": 5
+  },
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "tech:T1566",
+          "label": "Phishing (T1566)",
+          "type": "Technique",
+          "mitre": "T1566",
+          "layer": "attack-paths",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "tech:T1534",
+          "label": "Internal Spearphishing (T1534)",
+          "type": "Technique",
+          "mitre": "T1534",
+          "layer": "attack-paths",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "tech:T1110",
+          "label": "Brute Force / social reset (T1110-ish)",
+          "type": "Technique",
+          "mitre": "T1110",
+          "layer": "attack-paths",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "tech:T1078",
+          "label": "Valid Accounts (T1078)",
+          "type": "Technique",
+          "mitre": "T1078",
+          "layer": "attack-paths",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "tech:T1566.002",
+          "label": "Spearphishing Link (T1566.002)",
+          "type": "Technique",
+          "mitre": "T1566.002",
+          "layer": "attack-paths",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "tech:T1598",
+          "label": "Phishing for Information / vishing (T1598)",
+          "type": "Technique",
+          "mitre": "T1598",
+          "layer": "attack-paths",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "entry:external-mail",
+          "label": "外部詐称メール入口",
+          "type": "EntryPoint",
+          "layer": "attack-paths",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "entry:phone",
+          "label": "電話詐称入口",
+          "type": "EntryPoint",
+          "layer": "attack-paths",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "entry:insider",
+          "label": "内部関係者入口",
+          "type": "EntryPoint",
+          "layer": "attack-paths",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "entry:support-channel",
+          "label": "サポート窓口入口",
+          "type": "EntryPoint",
+          "layer": "attack-paths",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:bec-vendor-change",
+          "label": "BEC / vendor-change",
+          "type": "AttackPath",
+          "layer": "attack-paths",
+          "category": "BEC",
+          "summary": "Email spoof → vendor bank-account change on shared ops desk (illustrative).",
+          "honesty": "hypothesis",
+          "observation_count": "0"
+        }
+      },
+      {
+        "data": {
+          "id": "path:support-fraud",
+          "label": "Support fraud",
+          "type": "AttackPath",
+          "layer": "attack-paths",
+          "category": "SupportFraud",
+          "summary": "Fraudster abuses helpdesk identity-reset path (illustrative).",
+          "honesty": "hypothesis",
+          "observation_count": "0"
+        }
+      },
+      {
+        "data": {
+          "id": "path:phone-vishing",
+          "label": "Phone spoof / vishing",
+          "type": "AttackPath",
+          "layer": "attack-paths",
+          "category": "Vishing",
+          "summary": "Voice spoof pressures branch staff toward payment diversion (illustrative).",
+          "honesty": "hypothesis",
+          "observation_count": "0"
+        }
+      },
+      {
+        "data": {
+          "id": "path:email-spoof",
+          "label": "Email spoofing",
+          "type": "AttackPath",
+          "layer": "attack-paths",
+          "category": "EmailSpoof",
+          "summary": "Spoofed executive mail into email-admin / payments notify chain (illustrative).",
+          "honesty": "hypothesis",
+          "observation_count": "0"
+        }
+      },
+      {
+        "data": {
+          "id": "path:insider-lateral",
+          "label": "Insider spy / lateral social",
+          "type": "AttackPath",
+          "layer": "attack-paths",
+          "category": "Insider",
+          "summary": "Insider uses internal spearphish toward shared IT and data/AI (illustrative).",
+          "honesty": "hypothesis",
+          "observation_count": "0"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "path:bec-vendor-change:step-0",
+          "source": "entry:external-mail",
+          "target": "tech:T1566",
+          "kind": "usesTechnique",
+          "path_id": "path:bec-vendor-change",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:bec-vendor-change:includes-0",
+          "source": "path:bec-vendor-change",
+          "target": "tech:T1566",
+          "kind": "includesStep",
+          "path_id": "path:bec-vendor-change",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:bec-vendor-change:step-1",
+          "source": "tech:T1566",
+          "target": "proc:email-admin",
+          "kind": "pathStep",
+          "path_id": "path:bec-vendor-change",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:bec-vendor-change:includes-1",
+          "source": "path:bec-vendor-change",
+          "target": "proc:email-admin",
+          "kind": "includesStep",
+          "path_id": "path:bec-vendor-change",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:bec-vendor-change:step-2",
+          "source": "proc:email-admin",
+          "target": "org:polaris-vendor-mail-01",
+          "kind": "pathStep",
+          "path_id": "path:bec-vendor-change",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:bec-vendor-change:includes-2",
+          "source": "path:bec-vendor-change",
+          "target": "org:polaris-vendor-mail-01",
+          "kind": "includesStep",
+          "path_id": "path:bec-vendor-change",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:bec-vendor-change:step-3",
+          "source": "org:polaris-vendor-mail-01",
+          "target": "proc:vendor-change",
+          "kind": "pathStep",
+          "path_id": "path:bec-vendor-change",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:bec-vendor-change:includes-3",
+          "source": "path:bec-vendor-change",
+          "target": "proc:vendor-change",
+          "kind": "includesStep",
+          "path_id": "path:bec-vendor-change",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:bec-vendor-change:step-4",
+          "source": "proc:vendor-change",
+          "target": "org:polaris-payments-01",
+          "kind": "targets",
+          "path_id": "path:bec-vendor-change",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:bec-vendor-change:includes-4",
+          "source": "path:bec-vendor-change",
+          "target": "org:polaris-payments-01",
+          "kind": "includesStep",
+          "path_id": "path:bec-vendor-change",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:support-fraud:step-0",
+          "source": "entry:support-channel",
+          "target": "tech:T1078",
+          "kind": "usesTechnique",
+          "path_id": "path:support-fraud",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:support-fraud:includes-0",
+          "source": "path:support-fraud",
+          "target": "tech:T1078",
+          "kind": "includesStep",
+          "path_id": "path:support-fraud",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:support-fraud:step-1",
+          "source": "tech:T1078",
+          "target": "proc:helpdesk",
+          "kind": "pathStep",
+          "path_id": "path:support-fraud",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:support-fraud:includes-1",
+          "source": "path:support-fraud",
+          "target": "proc:helpdesk",
+          "kind": "includesStep",
+          "path_id": "path:support-fraud",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:support-fraud:step-2",
+          "source": "proc:helpdesk",
+          "target": "org:polaris-it-digital-01",
+          "kind": "targets",
+          "path_id": "path:support-fraud",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:support-fraud:includes-2",
+          "source": "path:support-fraud",
+          "target": "org:polaris-it-digital-01",
+          "kind": "includesStep",
+          "path_id": "path:support-fraud",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:phone-vishing:step-0",
+          "source": "entry:phone",
+          "target": "tech:T1598",
+          "kind": "usesTechnique",
+          "path_id": "path:phone-vishing",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:phone-vishing:includes-0",
+          "source": "path:phone-vishing",
+          "target": "tech:T1598",
+          "kind": "includesStep",
+          "path_id": "path:phone-vishing",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:phone-vishing:step-1",
+          "source": "tech:T1598",
+          "target": "org:polaris-regional-01",
+          "kind": "pathStep",
+          "path_id": "path:phone-vishing",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:phone-vishing:includes-1",
+          "source": "path:phone-vishing",
+          "target": "org:polaris-regional-01",
+          "kind": "includesStep",
+          "path_id": "path:phone-vishing",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:phone-vishing:step-2",
+          "source": "org:polaris-regional-01",
+          "target": "proc:payments-rail",
+          "kind": "pathStep",
+          "path_id": "path:phone-vishing",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:phone-vishing:includes-2",
+          "source": "path:phone-vishing",
+          "target": "proc:payments-rail",
+          "kind": "includesStep",
+          "path_id": "path:phone-vishing",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:phone-vishing:step-3",
+          "source": "proc:payments-rail",
+          "target": "org:polaris-payments-01",
+          "kind": "targets",
+          "path_id": "path:phone-vishing",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:phone-vishing:includes-3",
+          "source": "path:phone-vishing",
+          "target": "org:polaris-payments-01",
+          "kind": "includesStep",
+          "path_id": "path:phone-vishing",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:email-spoof:step-0",
+          "source": "entry:external-mail",
+          "target": "tech:T1566.002",
+          "kind": "usesTechnique",
+          "path_id": "path:email-spoof",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:email-spoof:includes-0",
+          "source": "path:email-spoof",
+          "target": "tech:T1566.002",
+          "kind": "includesStep",
+          "path_id": "path:email-spoof",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:email-spoof:step-1",
+          "source": "tech:T1566.002",
+          "target": "proc:email-admin",
+          "kind": "pathStep",
+          "path_id": "path:email-spoof",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:email-spoof:includes-1",
+          "source": "path:email-spoof",
+          "target": "proc:email-admin",
+          "kind": "includesStep",
+          "path_id": "path:email-spoof",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:email-spoof:step-2",
+          "source": "proc:email-admin",
+          "target": "proc:payments-rail",
+          "kind": "targets",
+          "path_id": "path:email-spoof",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:email-spoof:includes-2",
+          "source": "path:email-spoof",
+          "target": "proc:payments-rail",
+          "kind": "includesStep",
+          "path_id": "path:email-spoof",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:insider-lateral:step-0",
+          "source": "entry:insider",
+          "target": "tech:T1534",
+          "kind": "usesTechnique",
+          "path_id": "path:insider-lateral",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:insider-lateral:includes-0",
+          "source": "path:insider-lateral",
+          "target": "tech:T1534",
+          "kind": "includesStep",
+          "path_id": "path:insider-lateral",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:insider-lateral:step-1",
+          "source": "tech:T1534",
+          "target": "org:polaris-ops-shared-01",
+          "kind": "pathStep",
+          "path_id": "path:insider-lateral",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:insider-lateral:includes-1",
+          "source": "path:insider-lateral",
+          "target": "org:polaris-ops-shared-01",
+          "kind": "includesStep",
+          "path_id": "path:insider-lateral",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:insider-lateral:step-2",
+          "source": "org:polaris-ops-shared-01",
+          "target": "org:polaris-it-digital-01",
+          "kind": "lateralTo",
+          "path_id": "path:insider-lateral",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:insider-lateral:includes-2",
+          "source": "path:insider-lateral",
+          "target": "org:polaris-it-digital-01",
+          "kind": "includesStep",
+          "path_id": "path:insider-lateral",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:insider-lateral:step-3",
+          "source": "org:polaris-it-digital-01",
+          "target": "org:polaris-data-ai-01",
+          "kind": "targets",
+          "path_id": "path:insider-lateral",
+          "hypothesis": "true"
+        }
+      },
+      {
+        "data": {
+          "id": "path:insider-lateral:includes-3",
+          "source": "path:insider-lateral",
+          "target": "org:polaris-data-ai-01",
+          "kind": "includesStep",
+          "path_id": "path:insider-lateral",
+          "hypothesis": "true"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "path:bec-vendor-change",
+      "label": "BEC / vendor-change",
+      "summary": "Email spoof → vendor bank-account change on shared ops desk (illustrative).",
+      "category": "BEC",
+      "honesty": "hypothesis",
+      "observation_count": 0,
+      "node_ids": [
+        "entry:external-mail",
+        "tech:T1566",
+        "proc:email-admin",
+        "org:polaris-vendor-mail-01",
+        "proc:vendor-change",
+        "org:polaris-ops-shared-01",
+        "org:polaris-payments-01"
+      ],
+      "edge_kinds_highlight": [
+        "sharedVendor",
+        "operates",
+        "guards"
+      ],
+      "raci_catch": [
+        {
+          "person_id": "person:suzuki-haru",
+          "raci": "A/R",
+          "process": "proc:vendor-change"
+        },
+        {
+          "person_id": "person:watanabe-kai",
+          "raci": "C",
+          "process": "proc:vendor-change"
+        },
+        {
+          "person_id": "person:kobayashi-rio",
+          "raci": "C",
+          "process": "proc:vendor-change"
+        },
+        {
+          "person_id": "person:sato-mei",
+          "raci": "I",
+          "process": "proc:vendor-change"
+        }
+      ],
+      "steps": [
+        {
+          "from": "entry:external-mail",
+          "to": "tech:T1566",
+          "kind": "usesTechnique"
+        },
+        {
+          "from": "tech:T1566",
+          "to": "proc:email-admin",
+          "kind": "pathStep"
+        },
+        {
+          "from": "proc:email-admin",
+          "to": "org:polaris-vendor-mail-01",
+          "kind": "pathStep"
+        },
+        {
+          "from": "org:polaris-vendor-mail-01",
+          "to": "proc:vendor-change",
+          "kind": "pathStep"
+        },
+        {
+          "from": "proc:vendor-change",
+          "to": "org:polaris-payments-01",
+          "kind": "targets"
+        }
+      ]
+    },
+    {
+      "id": "path:support-fraud",
+      "label": "Support fraud",
+      "summary": "Fraudster abuses helpdesk identity-reset path (illustrative).",
+      "category": "SupportFraud",
+      "honesty": "hypothesis",
+      "observation_count": 0,
+      "node_ids": [
+        "entry:support-channel",
+        "tech:T1078",
+        "proc:helpdesk",
+        "org:polaris-ops-shared-02",
+        "org:polaris-it-digital-01"
+      ],
+      "edge_kinds_highlight": [
+        "operates",
+        "memberOf"
+      ],
+      "raci_catch": [
+        {
+          "person_id": "person:tanaka-yui",
+          "raci": "A/R",
+          "process": "proc:helpdesk"
+        },
+        {
+          "person_id": "person:ito-sora",
+          "raci": "C",
+          "process": "proc:helpdesk"
+        },
+        {
+          "person_id": "person:aoki-ren",
+          "raci": "I",
+          "process": "proc:helpdesk"
+        }
+      ],
+      "steps": [
+        {
+          "from": "entry:support-channel",
+          "to": "tech:T1078",
+          "kind": "usesTechnique"
+        },
+        {
+          "from": "tech:T1078",
+          "to": "proc:helpdesk",
+          "kind": "pathStep"
+        },
+        {
+          "from": "proc:helpdesk",
+          "to": "org:polaris-it-digital-01",
+          "kind": "targets"
+        }
+      ]
+    },
+    {
+      "id": "path:phone-vishing",
+      "label": "Phone spoof / vishing",
+      "summary": "Voice spoof pressures branch staff toward payment diversion (illustrative).",
+      "category": "Vishing",
+      "honesty": "hypothesis",
+      "observation_count": 0,
+      "node_ids": [
+        "entry:phone",
+        "tech:T1598",
+        "org:polaris-regional-01",
+        "proc:payments-rail",
+        "org:polaris-payments-01"
+      ],
+      "edge_kinds_highlight": [
+        "operates",
+        "memberOf"
+      ],
+      "raci_catch": [
+        {
+          "person_id": "person:yamamoto-hinata",
+          "raci": "branch",
+          "process": "proc:payments-rail"
+        },
+        {
+          "person_id": "person:sato-mei",
+          "raci": "A",
+          "process": "proc:payments-rail"
+        },
+        {
+          "person_id": "person:ito-sora",
+          "raci": "SOC",
+          "process": "proc:helpdesk"
+        }
+      ],
+      "steps": [
+        {
+          "from": "entry:phone",
+          "to": "tech:T1598",
+          "kind": "usesTechnique"
+        },
+        {
+          "from": "tech:T1598",
+          "to": "org:polaris-regional-01",
+          "kind": "pathStep"
+        },
+        {
+          "from": "org:polaris-regional-01",
+          "to": "proc:payments-rail",
+          "kind": "pathStep"
+        },
+        {
+          "from": "proc:payments-rail",
+          "to": "org:polaris-payments-01",
+          "kind": "targets"
+        }
+      ]
+    },
+    {
+      "id": "path:email-spoof",
+      "label": "Email spoofing",
+      "summary": "Spoofed executive mail into email-admin / payments notify chain (illustrative).",
+      "category": "EmailSpoof",
+      "honesty": "hypothesis",
+      "observation_count": 0,
+      "node_ids": [
+        "entry:external-mail",
+        "tech:T1566.002",
+        "proc:email-admin",
+        "org:polaris-it-digital-01",
+        "proc:payments-rail"
+      ],
+      "edge_kinds_highlight": [
+        "operates",
+        "informedAbout"
+      ],
+      "raci_catch": [
+        {
+          "person_id": "person:watanabe-kai",
+          "raci": "A/R",
+          "process": "proc:email-admin"
+        },
+        {
+          "person_id": "person:mori-hikari",
+          "raci": "C",
+          "process": "proc:email-admin"
+        },
+        {
+          "person_id": "person:aoki-ren",
+          "raci": "I",
+          "process": "proc:email-admin"
+        }
+      ],
+      "steps": [
+        {
+          "from": "entry:external-mail",
+          "to": "tech:T1566.002",
+          "kind": "usesTechnique"
+        },
+        {
+          "from": "tech:T1566.002",
+          "to": "proc:email-admin",
+          "kind": "pathStep"
+        },
+        {
+          "from": "proc:email-admin",
+          "to": "proc:payments-rail",
+          "kind": "targets"
+        }
+      ]
+    },
+    {
+      "id": "path:insider-lateral",
+      "label": "Insider spy / lateral social",
+      "summary": "Insider uses internal spearphish toward shared IT and data/AI (illustrative).",
+      "category": "Insider",
+      "honesty": "hypothesis",
+      "observation_count": 0,
+      "node_ids": [
+        "entry:insider",
+        "tech:T1534",
+        "org:polaris-ops-shared-01",
+        "org:polaris-it-digital-01",
+        "org:polaris-data-ai-01",
+        "proc:email-admin"
+      ],
+      "edge_kinds_highlight": [
+        "sharesIT",
+        "memberOf"
+      ],
+      "raci_catch": [
+        {
+          "person_id": "person:aoki-ren",
+          "raci": "I/CISO",
+          "process": "proc:email-admin"
+        },
+        {
+          "person_id": "person:ito-sora",
+          "raci": "SOC",
+          "process": "proc:helpdesk"
+        },
+        {
+          "person_id": "person:mori-hikari",
+          "raci": "C",
+          "process": "proc:email-admin"
+        }
+      ],
+      "steps": [
+        {
+          "from": "entry:insider",
+          "to": "tech:T1534",
+          "kind": "usesTechnique"
+        },
+        {
+          "from": "tech:T1534",
+          "to": "org:polaris-ops-shared-01",
+          "kind": "pathStep"
+        },
+        {
+          "from": "org:polaris-ops-shared-01",
+          "to": "org:polaris-it-digital-01",
+          "kind": "lateralTo"
+        },
+        {
+          "from": "org:polaris-it-digital-01",
+          "to": "org:polaris-data-ai-01",
+          "kind": "targets"
+        }
+      ]
+    }
+  ]
+}

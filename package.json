@@ -1,0 +1,29 @@
+{
+  "name": "mithril-twin",
+  "private": true,
+  "type": "module",
+  "description": "Mithril Twin viewer and the .mith diagram language (synthetic demo data, display only).",
+  "license": "Apache-2.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm run dev -w @mithril-twin/viewer",
+    "build": "npm run build -w @mithril-twin/viewer",
+    "preview": "npm run preview -w @mithril-twin/viewer",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.1"
+  }
+}

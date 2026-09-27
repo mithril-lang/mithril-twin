@@ -1,0 +1,138 @@
+/*
+ * Twin chrome tokens.
+ * Color values for light/dark are the enterprise subset of
+ * mithril-lang/design-system `resources/design-system.css`
+ * (`[data-theme="light"]` / `[data-theme="dark"]`).
+ * Interaction rules: upright labels, one task per view, token-driven chrome.
+ * The viewer uses the system sans stack (src/base.css);
+ * Cairo/Manrope from the design-system file are not loaded here.
+ */
+
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
+[data-theme="make"] {
+  color-scheme: light;
+  --accent: #6d4aff;
+  --accent-hover: #5838e0;
+  --accent-subtle: rgba(109, 74, 255, 0.1);
+  --accent-text: #5b3ee0;
+  --bg-active: #ddd4f5;
+  --bg-elevated: #f7f4fc;
+  --bg-hover: #efeaf8;
+  --bg-primary: #e6e0f4;
+  --bg-secondary: #f4f1fb;
+  --bg-tertiary: #ffffff;
+  --border: rgba(120, 96, 180, 0.22);
+  --border-bright: rgba(109, 74, 255, 0.35);
+  --border-focus: #6d4aff;
+  --code-bg: #f7f4fc;
+  --error: #dc2626;
+  --error-bg: rgba(220, 38, 38, 0.06);
+  --primary-yellow: #f5c518;
+  --success: #16a34a;
+  --success-bg: rgba(22, 163, 74, 0.08);
+  --text-muted: #8b849c;
+  --text-primary: #1c1630;
+  --text-secondary: #6d6580;
+  --user-bubble: #6d4aff;
+  --user-bubble-text: #ffffff;
+  --warning: #d97706;
+  --warning-bg: rgba(217, 119, 6, 0.08);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --accent: #003f7a;
+  --accent-hover: #002d58;
+  --accent-subtle: rgba(0, 63, 122, 0.08);
+  --accent-text: #003f7a;
+  --bg-active: #e0e0e0;
+  --bg-elevated: #e8e8e8;
+  --bg-hover: #ebebeb;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f8f8;
+  --bg-tertiary: #f0f0f0;
+  --border: #e5e5e5;
+  --border-bright: #d4d4d4;
+  --border-focus: #003f7a;
+  --code-bg: #f5f5f5;
+  --error: #dc2626;
+  --error-bg: rgba(220, 38, 38, 0.06);
+  --primary-yellow: #f5c518;
+  --success: #16a34a;
+  --success-bg: rgba(22, 163, 74, 0.08);
+  --text-muted: #999999;
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --user-bubble: #003f7a;
+  --user-bubble-text: #ffffff;
+  --warning: #d97706;
+  --warning-bg: rgba(217, 119, 6, 0.08);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --accent: #003f7a;
+  --accent-hover: #0055a4;
+  --accent-subtle: rgba(0, 63, 122, 0.15);
+  --accent-text: #006acd;
+  --bg-active: #424242;
+  --bg-elevated: #303030;
+  --bg-hover: #3a3a3a;
+  --bg-primary: #212121;
+  --bg-secondary: #171717;
+  --bg-tertiary: #2f2f2f;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-bright: rgba(255, 255, 255, 0.16);
+  --border-focus: #006acd;
+  --code-bg: #1a1a1a;
+  --error: #ef4444;
+  --error-bg: rgba(239, 68, 68, 0.1);
+  --primary-yellow: #f5c518;
+  --success: #22c55e;
+  --success-bg: rgba(34, 197, 94, 0.1);
+  --text-muted: #8e8e8e;
+  --text-primary: #ececec;
+  --text-secondary: #b4b4b4;
+  --user-bubble: #003f7a;
+  --user-bubble-text: #ffffff;
+  --warning: #f59e0b;
+  --warning-bg: rgba(245, 158, 11, 0.1);
+}
+
+/* Optional high-contrast ops skin. Same token names so chrome rules stay shared. */
+[data-theme="polar-ops"] {
+  color-scheme: dark;
+  --accent: #00ff9c;
+  --accent-hover: #33ffb0;
+  --accent-subtle: rgba(0, 255, 156, 0.12);
+  --accent-text: #00ff9c;
+  --bg-active: #143028;
+  --bg-elevated: #0a120e;
+  --bg-hover: #10241c;
+  --bg-primary: #000000;
+  --bg-secondary: #050805;
+  --bg-tertiary: #0a120e;
+  --border: #1a3d2e;
+  --border-bright: #245c44;
+  --border-focus: #00ff9c;
+  --code-bg: #050805;
+  --error: #ff3355;
+  --error-bg: rgba(255, 51, 85, 0.12);
+  --primary-yellow: #ffcc00;
+  --success: #00e676;
+  --success-bg: rgba(0, 230, 118, 0.12);
+  --text-muted: #7a9a88;
+  --text-primary: #e8fff4;
+  --text-secondary: #b7d7c8;
+  --user-bubble: #00ff9c;
+  --user-bubble-text: #04140c;
+  --warning: #ffcc00;
+  --warning-bg: rgba(255, 204, 0, 0.12);
+}
