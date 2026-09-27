@@ -1,10 +1,10 @@
 import { orgModel } from './org'
-import type { MithDocument } from './types'
+import type { DiagramFrame, DiagramLens, MithDocument } from './types'
 
 /** Lenses over one document. `layers` is the original plane-board view. */
-export type Lens = 'layers' | 'org' | 'network' | 'access' | 'impersonation' | 'shadow'
+export type Lens = DiagramLens
 /** Which dimension draws the nested frames. */
-export type FrameDim = 'org' | 'network'
+export type FrameDim = DiagramFrame
 
 export const LENSES: { id: Lens; label: string }[] = [
   { id: 'org', label: 'Org' },

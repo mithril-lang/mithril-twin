@@ -8,13 +8,17 @@ import { boardForEntity, coplanarFloor, COPLANAR_BOARD_H, COPLANAR_BOARD_W, cros
 import { MithParseError, parseMith, parseMithrilPackage } from '../src/parse'
 import { hasOrgModel } from '../src/org'
 import type { MithPlane } from '../src/types'
+import { readMithRaw } from '../src/twin'
+
+/** Pre-validation record of a fixture (Form or legacy JSON), loosely typed like JSON.parse. */
+const rawOf = (text: string): ReturnType<typeof JSON.parse> => readMithRaw(text)
 
 const here = dirname(fileURLToPath(import.meta.url))
-const sample = JSON.parse(readFileSync(resolve(here, '../samples/polaris-fi.mith'), 'utf8'))
-const floorSample = JSON.parse(readFileSync(resolve(here, '../samples/polaris-floor.mith'), 'utf8'))
+const sample = rawOf(readFileSync(resolve(here, '../samples/polaris-fi.mith'), 'utf8'))
+const floorSample = rawOf(readFileSync(resolve(here, '../samples/polaris-floor.mith'), 'utf8'))
 const legacySample = JSON.parse(readFileSync(resolve(here, 'fixtures/polaris-fi.v0-stacked.mith'), 'utf8'))
 const pack = JSON.parse(readFileSync(resolve(here, '../samples/polaris-fi.mithril'), 'utf8'))
-const orgSample = JSON.parse(readFileSync(resolve(here, '../samples/polaris-org.mith'), 'utf8'))
+const orgSample = rawOf(readFileSync(resolve(here, '../samples/polaris-org.mith'), 'utf8'))
 
 describe('parseMith', () => {
   it('loads the committed synthetic-demo sample', () => {
@@ -98,10 +102,35 @@ describe('parseMith', () => {
     expect(() => parseMith(flatStack)).toThrow(/distinct transform\.z/)
   })
 
-  it('rejects a bad version, a non-synthetic dataset, and runner keys', () => {
+  it('rejects a bad version and runner keys, and keeps the dataset_kind the file declares', () => {
     expect(() => parseMith({ ...sample, mith: '9' })).toThrow(MithParseError)
-    expect(() => parseMith({ ...sample, dataset_kind: 'live' })).toThrow(/synthetic-demo/)
+    expect(() => parseMith({ ...sample, dataset_kind: '' })).toThrow(/dataset_kind/)
+    expect(() => parseMith({ ...sample, dataset_kind: '  live' })).toThrow(/surrounding space/)
+    expect(parseMith({ ...sample, dataset_kind: 'live' }).dataset_kind).toBe('live')
+    expect(parseMith(sample).dataset_kind).toBe('synthetic-demo')
     expect(() => parseMith({ ...sample, runner: 'nope' })).toThrow(/not allowed/)
+  })
+
+  it('reads optional diagram.lens and diagram.frame, and a selection that names a role', () => {
+    const plain = parseMith(sample)
+    expect(plain.diagram.lens).toBeUndefined()
+    expect(plain.diagram.frame).toBeUndefined()
+    expect('lens' in plain.diagram).toBe(false)
+
+    const viewed = structuredClone(orgSample)
+    viewed.diagram.lens = 'impersonation'
+    viewed.diagram.frame = 'network'
+    viewed.diagram.selection = 'role:cfo'
+    const doc = parseMith(viewed)
+    expect(doc.diagram.lens).toBe('impersonation')
+    expect(doc.diagram.frame).toBe('network')
+    expect(doc.diagram.selection).toBe('role:cfo')
+
+    expect(() => parseMith({ ...sample, diagram: { ...sample.diagram, lens: 'heatmap' } })).toThrow(/diagram\.lens/)
+    expect(() => parseMith({ ...sample, diagram: { ...sample.diagram, frame: 'site' } })).toThrow(/diagram\.frame/)
+    expect(() => parseMith({ ...orgSample, diagram: { ...orgSample.diagram, selection: 'role:missing' } })).toThrow(
+      /not in the model/,
+    )
   })
 })
 
@@ -115,7 +144,7 @@ describe('org sections (boundaries, roles, grants, actors, channels)', () => {
       for (const e of doc.model.entities) expect(Object.keys(e)).toEqual(baseEntityKeys)
       expect(hasOrgModel(doc)).toBe(false)
     }
-    // Arrangement inference is untouched: the v0 stair is still stacked, the floor still coplanar.
+    // Arrangement inference is untouched: the original v0 stair is still stacked, the floor still coplanar.
     expect(parseMith(legacySample).diagram.arrangement).toBe('stacked')
     expect(parseMith(floorSample).diagram.arrangement).toBe('coplanar')
     expect(parseMith(sample).diagram.arrangement).toBe('coplanar')

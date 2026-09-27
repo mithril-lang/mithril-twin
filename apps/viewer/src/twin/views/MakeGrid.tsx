@@ -5,7 +5,9 @@ import type { MithDocument, MithEntity, MithPlacement, MithPlane } from '../mith
 import { LENSES, lensLayout, type FrameDim, type Lens } from '../mith/lensLayout'
 import { lensFocus } from '../mith/lensLinks'
 import { hasOrgModel } from '../mith/org'
+import { buildMithDownload, formatBytes, saveMithFile } from '../mith/io'
 import { SAMPLE_DOCS } from '../mith/load'
+import { MithFileActions, useMithFileDrop } from '../components/MithFileActions'
 import ThemeSwitcher from '../components/ThemeSwitcher'
 import GitHubLink from '../components/GitHubLink'
 import { BoardTags, iconKind, Node3D, useBoardAnchors } from './node3d'
@@ -35,11 +37,17 @@ type Props = {
   doc: MithDocument | null
   loading: boolean
   error: string
-  source: 'mith' | 'json'
+  source: 'mith' | 'file'
   packageId: string | null
   /** Committed sample id (see SAMPLE_DOCS). */
   sampleId?: string
   onPickSample?: (id: string) => void
+  /** Local file name when `source` is `file`. */
+  fileName?: string | null
+  fileNote?: string | null
+  /** Bumps whenever a new document is applied, so lens state follows that file. */
+  docEpoch?: number
+  onImportFiles?: (files: File[]) => void
   focusPlaneId: string | null
   selectedId: string | null
   hypothesisId: string | null
@@ -48,8 +56,6 @@ type Props = {
   onHypothesis: (id: string | null) => void
   onOpenLayer: (layer: TwinLayer) => void
   onOpenBoard: () => void
-  onImportJson: () => void
-  onReloadMith: () => void
 }
 
 const ARC_CAP = 5
@@ -110,9 +116,15 @@ function placementOn(plane: MithPlane, entityId: string) {
   return plane.placements.find((p) => p.entity === entityId)
 }
 
+function lensFromDoc(doc: MithDocument | null): Lens {
+  if (!doc || !hasOrgModel(doc)) return 'layers'
+  return doc.diagram.lens ?? 'org'
+}
+
 export default function MakeGrid({
-  doc, loading, error, source, packageId, sampleId, onPickSample, focusPlaneId, selectedId, hypothesisId,
-  onFocusPlane, onSelect, onHypothesis, onOpenLayer, onOpenBoard, onImportJson, onReloadMith,
+  doc, loading, error, source, packageId, sampleId, onPickSample, fileName, fileNote, docEpoch = 0,
+  onImportFiles, focusPlaneId, selectedId, hypothesisId,
+  onFocusPlane, onSelect, onHypothesis, onOpenLayer, onOpenBoard,
 }: Props) {
   const stageRef = useRef<HTMLDivElement>(null)
   const [tab, setTab] = useState<RailTab>('objects')
@@ -126,14 +138,18 @@ export default function MakeGrid({
   const userMoved = useRef(false)
   const fitPasses = useRef(0)
   const [stageSize, setStageSize] = useState(0)
-  // Lens choice is keyed to the document so a new file starts on its default lens.
-  const [lensPick, setLensPick] = useState<{ docId: string; lens: Lens } | null>(null)
-  const [framePick, setFramePick] = useState<FrameDim>('org')
+  // Lens choice is keyed to the document epoch so a newly opened file restores diagram.lens.
+  const [lensPick, setLensPick] = useState<{ epoch: number; lens: Lens } | null>(null)
+  const [framePick, setFramePick] = useState<{ epoch: number; frame: FrameDim } | null>(null)
+  const [exportNote, setExportNote] = useState<{ epoch: number; text: string } | null>(null)
+  const exportText = exportNote && exportNote.epoch === docEpoch ? exportNote.text : null
+  const { over, handlers: dropHandlers } = useMithFileDrop((files) => onImportFiles?.(files))
 
   const orgMode = hasOrgModel(doc)
-  const lens: Lens = !orgMode ? 'layers' : lensPick && lensPick.docId === doc?.id ? lensPick.lens : 'org'
+  const lens: Lens = lensPick && lensPick.epoch === docEpoch ? lensPick.lens : lensFromDoc(doc)
   const lensOn = lens !== 'layers'
-  const frameDim: FrameDim = lens === 'org' ? 'org' : lens === 'network' ? 'network' : framePick
+  const storedFrame: FrameDim = framePick && framePick.epoch === docEpoch ? framePick.frame : (doc?.diagram.frame ?? 'org')
+  const frameDim: FrameDim = lens === 'org' ? 'org' : lens === 'network' ? 'network' : storedFrame
   // Stack only applies to the layer boards. Lenses always lay frames on one floor.
   const stackedView = stacked && !lensOn
   const layout = useMemo(() => (doc && lensOn ? lensLayout(doc, lens, frameDim) : null), [doc, lensOn, lens, frameDim])
@@ -143,7 +159,7 @@ export default function MakeGrid({
   )
   const pickLens = (next: Lens) => {
     if (!doc) return
-    setLensPick({ docId: doc.id, lens: next })
+    setLensPick({ epoch: docEpoch, lens: next })
   }
   // Org and Network lenses fix the frame dimension. Access / Impersonation / Shadow IT default
   // to org frames and can be re-framed by network zone.
@@ -153,6 +169,28 @@ export default function MakeGrid({
   const focusId = focusPlaneId && planes.some((p) => p.id === focusPlaneId)
     ? focusPlaneId
     : doc?.diagram.camera.focusPlane ?? planes[0]?.id ?? null
+  const onExport = () => {
+    if (!doc) return
+    try {
+      const file = buildMithDownload(doc, {
+        arrangement: stacked ? 'stacked' : 'coplanar',
+        camera: {
+          mode: flat ? 'ortho' : 'iso',
+          tilt: doc.diagram.camera.tilt,
+          yaw: doc.diagram.camera.yaw,
+          zoom,
+          focusPlane: focusId ?? doc.diagram.camera.focusPlane,
+        },
+        selection: selectedId,
+        lens,
+        frame: frameDim,
+      })
+      saveMithFile(file)
+      setExportNote({ epoch: docEpoch, text: `Exported ${file.filename} · ${formatBytes(file.bytes)} · ${file.format === 'form' ? 'Mithril Form' : 'legacy v0 JSON'}.${file.note ? ` ${file.note}` : ''}` })
+    } catch (err) {
+      setExportNote({ epoch: docEpoch, text: err instanceof Error ? err.message : 'Export failed.' })
+    }
+  }
   const shown = useMemo(
     () => (stackedView ? visiblePlanes(planes, focusId) : planes),
     [planes, focusId, stackedView],
@@ -401,17 +439,20 @@ export default function MakeGrid({
   }
 
   const sampleFile = SAMPLE_DOCS.find((d) => d.id === sampleId)?.file ?? 'polaris-fi.mith'
-  const sourceName = source === 'mith' ? sampleFile : 'layers/*.json'
+  const sourceName = source === 'file' && fileName ? fileName : sampleFile
+  const datasetKind = doc?.dataset_kind ?? 'synthetic-demo'
 
   return (
     <div
-      className={`make-app ${flat ? 'is-flat' : 'is-iso'} ${stackedView ? 'is-stacked' : 'is-coplanar'}${lensOn ? ' is-lens' : ''}`}
+      className={`make-app ${flat ? 'is-flat' : 'is-iso'} ${stackedView ? 'is-stacked' : 'is-coplanar'}${lensOn ? ' is-lens' : ''}${over ? ' is-file-drop' : ''}`}
       data-projection={flat ? 'flat' : 'iso'}
       data-arrangement={stackedView ? 'stacked' : 'coplanar'}
       data-lens={lens}
       data-frame-dim={lensOn ? frameDim : ''}
       data-source={source}
+      data-dataset-kind={datasetKind}
       data-focus-plane={focusId ?? ''}
+      {...dropHandlers}
       style={{ ['--iso-tilt' as string]: `${tilt}deg`, ['--iso-yaw' as string]: `${yaw}deg` }}
     >
       <header className="make-top">
@@ -432,7 +473,9 @@ export default function MakeGrid({
           />
         </label>
         <div className="make-top-actions">
-          <span className="make-chip">synthetic-demo</span>
+          <span className="make-chip make-dataset" title={datasetKind === 'synthetic-demo' ? 'Synthetic sample' : 'Label declared by the file'}>
+            {datasetKind}
+          </span>
           <span className="make-chip warn">non-prod</span>
           <span className="make-chip">no-runners</span>
           <span className="make-chip warn">viz only</span>
@@ -454,6 +497,7 @@ export default function MakeGrid({
       >
         {loading && <div className="make-loading">Loading .mith…</div>}
         {error && <div className="make-error" role="alert">{error}</div>}
+        {over && <div className="make-drop-hint">Drop a .mith file</div>}
         {hypothesis && (
           <div className="make-hyp-banner">
             hypothesis · {hypothesis.label} · score {hypothesis.relative_score.toFixed(2)} · no runners
@@ -648,8 +692,12 @@ export default function MakeGrid({
             <div className="make-filters">
               <div className="make-filter-label">Dataset</div>
               <button type="button" className="make-filter-btn active" disabled>
-                synthetic-demo
-                <small>Required label. This twin stays fictional.</small>
+                {datasetKind}
+                <small>
+                  {datasetKind === 'synthetic-demo'
+                    ? 'Synthetic sample. This twin stays fictional.'
+                    : 'Declared by the file. This viewer does not verify it and does not connect to any system.'}
+                </small>
               </button>
               <div className="make-filter-label">Hypotheses</div>
               <button type="button" className={`make-filter-btn ${hypothesisId == null ? 'active' : ''}`} onClick={() => onHypothesis(null)}>
@@ -671,14 +719,17 @@ export default function MakeGrid({
           )}
 
           <div className="make-rail-foot">
-            {source === 'mith' && onPickSample ? (
+            {onPickSample ? (
               <select
                 className="make-sample-select"
                 aria-label="Sample document"
                 title={packageId ?? sourceName}
-                value={sampleId}
-                onChange={(e) => onPickSample(e.target.value)}
+                value={source === 'file' ? '' : (sampleId ?? '')}
+                onChange={(e) => {
+                  if (e.target.value) onPickSample(e.target.value)
+                }}
               >
+                {source === 'file' && fileName && <option value="">{fileName}</option>}
                 {SAMPLE_DOCS.map((d) => (
                   <option key={d.id} value={d.id}>{d.file}</option>
                 ))}
@@ -686,11 +737,13 @@ export default function MakeGrid({
             ) : (
               <span className="make-source" title={packageId ?? sourceName}>{sourceName}</span>
             )}
-            {source === 'mith' ? (
-              <button type="button" className="make-text-btn" onClick={onImportJson}>Import JSON</button>
-            ) : (
-              <button type="button" className="make-text-btn" onClick={onReloadMith}>Load .mith</button>
-            )}
+            <MithFileActions
+              onFiles={(files) => onImportFiles?.(files)}
+              onExport={onExport}
+              exportDisabled={!doc}
+              exportTitle="Download this document as .mith"
+            />
+            {(fileNote || exportText) && <p className="make-file-note" role="status">{exportText ?? fileNote}</p>}
           </div>
         </aside>
 
@@ -708,7 +761,7 @@ export default function MakeGrid({
                 <p className="make-crumb">{selected.type} / {selectedBoard?.label ?? selected.layer}</p>
                 <p className="make-summary">
                   {selected.attrs.cidr ? `${selected.attrs.cidr}. ` : ''}
-                  Synthetic-demo object on the {String(selected.layer)} layer.
+                  {datasetKind === 'synthetic-demo' ? 'Synthetic-demo object' : 'Object'} on the {String(selected.layer)} layer.
                   {hypothesis && hot.has(selected.id) ? ` Hypothesis “${hypothesis.label}” touches this object.` : ''}
                 </p>
                 <div className="make-actions">
@@ -790,7 +843,7 @@ export default function MakeGrid({
                       type="button"
                       className={frameDim === d ? 'active' : ''}
                       aria-pressed={frameDim === d}
-                      onClick={() => setFramePick(d)}
+                      onClick={() => setFramePick({ epoch: docEpoch, frame: d })}
                     >
                       {d === 'org' ? 'Org' : 'Network'}
                     </button>

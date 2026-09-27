@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ThemeProvider } from './themes/ThemeContext'
 import type {
   AttackScenario,
@@ -18,9 +18,9 @@ import TopologyGraph from './components/TopologyGraph'
 import GridOverview from './views/GridOverview'
 import MakeGrid from './views/MakeGrid'
 import ScaleGrid from './views/ScaleGrid'
+import { importLocalFiles, readLocalFiles } from './mith/io'
 import {
   hypothesisToScenario,
-  importJsonLayers,
   loadSampleMith,
   mithLayerItems,
   SAMPLE_DOCS,
@@ -44,8 +44,12 @@ function TwinApp() {
     () => sampleDocFromSearch(typeof window === 'undefined' ? '' : window.location.search).id,
   )
   const [doc, setDoc] = useState<MithDocument | null>(null)
-  const [source, setSource] = useState<'mith' | 'json'>('mith')
+  const [source, setSource] = useState<'mith' | 'file'>('mith')
   const [packageId, setPackageId] = useState<string | null>(null)
+  const [fileName, setFileName] = useState<string | null>(null)
+  const [fileNote, setFileNote] = useState<string | null>(null)
+  const [docEpoch, setDocEpoch] = useState(0)
+  const loadGen = useRef(0)
   const [focusPlaneId, setFocusPlaneId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [hypothesisId, setHypothesisId] = useState<string | null>(null)
@@ -60,7 +64,19 @@ function TwinApp() {
     document.title = 'Mithril Twin | twin.mithril.fund'
   }, [])
 
-  const applyDoc = useCallback((next: MithDocument, src: 'mith' | 'json', pkg: string | null) => {
+  useEffect(() => {
+    const prevent = (event: DragEvent) => {
+      if ([...(event.dataTransfer?.types ?? [])].includes('Files')) event.preventDefault()
+    }
+    window.addEventListener('dragover', prevent)
+    window.addEventListener('drop', prevent)
+    return () => {
+      window.removeEventListener('dragover', prevent)
+      window.removeEventListener('drop', prevent)
+    }
+  }, [])
+
+  const applyDoc = useCallback((next: MithDocument, src: 'mith' | 'file', pkg: string | null) => {
     setDoc(next)
     setSource(src)
     setPackageId(pkg)
@@ -69,25 +85,33 @@ function TwinApp() {
     setHypothesisId(null)
     setSelectedItem(null)
     setError('')
+    setDocEpoch((n) => n + 1)
   }, [])
 
   const sample = SAMPLE_DOCS.find((d) => d.id === sampleId) ?? SAMPLE_DOCS[0]!
-  const isPack = !!sample.pack
+  const fileOpen = fileName != null
+  const isPack = !fileOpen && !!sample.pack
 
   const loadMith = useCallback(async () => {
     // The enterprise pack is generated inside ScaleGrid (Web Worker, seeded; chunks on drill-down).
-    if (isPack) return
+    // A local file stays on screen until the sample picker replaces it.
+    if (sample.pack || fileOpen) return
+    const gen = ++loadGen.current
     setLoading(true)
     setError('')
     try {
       const loaded = await loadSampleMith(fetch, sample.url)
+      if (gen !== loadGen.current) return
+      setFileName(null)
+      setFileNote(null)
       applyDoc(loaded.doc, 'mith', loaded.packageId)
     } catch (err) {
+      if (gen !== loadGen.current) return
       setError(`Could not load .mith: ${err instanceof Error ? err.message : 'unknown'}`)
     } finally {
-      setLoading(false)
+      if (gen === loadGen.current) setLoading(false)
     }
-  }, [applyDoc, isPack, sample])
+  }, [applyDoc, fileOpen, sample])
 
   useEffect(() => {
     // Load the sample once on mount. loadMith sets loading/error state by design.
@@ -95,16 +119,24 @@ function TwinApp() {
     void loadMith()
   }, [loadMith])
 
-  const onImportJson = useCallback(async () => {
-    setLoading(true)
+  const onImportFiles = useCallback(async (files: File[]) => {
+    const gen = ++loadGen.current
     setError('')
     try {
-      const next = await importJsonLayers()
-      applyDoc(next, 'json', null)
-    } catch (err) {
-      setError(`JSON import failed: ${err instanceof Error ? err.message : 'unknown'}`)
-    } finally {
+      const sources = await readLocalFiles(files)
+      if (gen !== loadGen.current) return
+      const result = importLocalFiles(sources)
+      if (!result.ok) {
+        setError(result.message)
+        return
+      }
+      setFileName(result.filename)
+      setFileNote(result.note)
       setLoading(false)
+      applyDoc(result.doc, 'file', result.packageId)
+    } catch (err) {
+      if (gen !== loadGen.current) return
+      setError(err instanceof Error ? err.message : 'Could not read that file.')
     }
   }, [applyDoc])
 
@@ -176,6 +208,8 @@ function TwinApp() {
   }
 
   const pickSample = useCallback((id: string) => {
+    setFileName(null)
+    setFileNote(null)
     setSampleId(id)
     const url = new URL(window.location.href)
     url.searchParams.set('doc', id)
@@ -188,7 +222,14 @@ function TwinApp() {
   )
 
   if (view === 'make' && isPack) {
-    return <ScaleGrid seed={sample.seed ?? 20260927} sampleId={sample.id} onPickSample={pickSample} />
+    return (
+      <ScaleGrid
+        seed={sample.seed ?? 20260927}
+        sampleId={sample.id}
+        onPickSample={pickSample}
+        onImportFiles={(files) => void onImportFiles(files)}
+      />
+    )
   }
 
   if (view === 'make') {
@@ -209,8 +250,10 @@ function TwinApp() {
         onHypothesis={setHypothesisId}
         onOpenLayer={onOpenLayer}
         onOpenBoard={() => setView('board')}
-        onImportJson={() => void onImportJson()}
-        onReloadMith={() => void loadMith()}
+        fileName={fileName}
+        fileNote={fileNote}
+        docEpoch={docEpoch}
+        onImportFiles={(files) => void onImportFiles(files)}
       />
     )
   }
@@ -230,7 +273,7 @@ function TwinApp() {
           </p>
         </div>
         <div className="badges">
-          <span className="badge">synthetic-demo</span>
+          <span className="badge">{doc?.dataset_kind ?? 'synthetic-demo'}</span>
           <span className="badge warn">non-prod</span>
           <span className="badge">no-runners</span>
           <GitHubLink className="badge" />

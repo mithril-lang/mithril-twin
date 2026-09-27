@@ -1,6 +1,6 @@
 import { analyzeExposureGraph, type ExposureReport, type RoleScore } from '../mith/exposure'
 import type { Dijkstra, Graph } from '../mith/graph'
-import { parseMith } from '../mith/parse'
+import { readMith, readMithValue } from '../mith/twin'
 import type { MithDocument } from '../mith/types'
 import type { PackManifest } from './pack'
 
@@ -37,6 +37,17 @@ export type ScaleAnalysis = {
   /** subsidiary → zones with an open-only path into a crown-jewel zone, and zone count. */
   companyNet: Record<string, { zones: number; openToCrownJewel: number }>
   timings: { parseMs: number; analysisMs: number; aggregateMs: number }
+  /** Device software risk / log-coverage aggregates from the chunks (enterprise engine only). */
+  devices?: DeviceAggregates
+}
+
+/** [devices, high-ease devices, log gaps (blind + short), logs unknown] */
+export type DeviceCounts = [number, number, number, number]
+export type DeviceAggregates = {
+  /** A device counts as software-risky at or above this ease. */
+  easeThreshold: number
+  company: Record<string, DeviceCounts>
+  dept: Record<string, DeviceCounts>
 }
 
 export const HOT = 50
@@ -145,8 +156,9 @@ export function analyzeScaleGraph(doc: MithDocument, parseMs = 0): { analysis: S
   return { analysis, graph, dj }
 }
 
+/** Index document: Mithril Form text (primary), twin JSON-LD, or legacy v0 JSON (deprecated). */
 export function parseIndex(raw: unknown): MithDocument {
-  return parseMith(raw)
+  return typeof raw === 'string' ? readMith(raw).doc : readMithValue(raw).doc
 }
 
 export type { RoleScore }

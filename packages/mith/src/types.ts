@@ -26,7 +26,56 @@ export type MithEntity = {
   source?: string
   /** Systems / resources: business criticality. Drives high-value and exposure scores. */
   criticality?: MithCriticality
+  /** Devices (node layer) only: installed software. Synthetic inventory, not a scan. */
+  software?: MithSoftware[]
+  /** Devices only: log sources, forwarding, retention, and a few synthetic sample events. */
+  logs?: MithDeviceLogs
+  /** Devices only: people who use the device. `attrs.owner`, when set, is the primary user. */
+  users?: MithDeviceUser[]
 }
+
+export const VULN_SEVERITIES = ['none', 'low', 'medium', 'high', 'critical'] as const
+export type MithVulnSeverity = (typeof VULN_SEVERITIES)[number]
+
+/** One installed package on a device. `sanctioned` defaults to true; `vulnerability` to none. */
+export type MithSoftware = {
+  name: string
+  version: string
+  vendor?: string
+  sanctioned?: boolean
+  /** Vendor end-of-life: no more security fixes. */
+  eol?: boolean
+  /** Worst known unpatched vulnerability severity for this version. */
+  vulnerability?: MithVulnSeverity
+}
+
+export const LOG_SOURCES = ['edr', 'os-auth', 'process', 'network', 'saas-audit'] as const
+export type MithLogSource = (typeof LOG_SOURCES)[number]
+export const LOG_SEVERITIES = ['info', 'low', 'medium', 'high'] as const
+export type MithLogSeverity = (typeof LOG_SEVERITIES)[number]
+
+/** A synthetic sample event. Illustrative only: never real telemetry. */
+export type MithLogEvent = {
+  at: string
+  source: MithLogSource
+  action: string
+  severity?: MithLogSeverity
+  /** Person id the event is attributed to. */
+  user?: string
+  note?: string
+}
+
+/** Device logging. `forwardTo` is a destination such as `siem`, or `none` (kept on the device only). */
+export type MithDeviceLogs = {
+  sources: MithLogSource[]
+  forwardTo: string
+  retentionDays: number
+  events?: MithLogEvent[]
+}
+
+export const DEVICE_USER_RELATIONS = ['primary', 'user', 'admin'] as const
+export type MithDeviceRelation = (typeof DEVICE_USER_RELATIONS)[number]
+export type MithDeviceUser = { person: string; relation: MithDeviceRelation }
 
 export const CRITICALITIES = ['low', 'medium', 'high', 'crown-jewel'] as const
 export type MithCriticality = (typeof CRITICALITIES)[number]
@@ -142,6 +191,18 @@ export type MithWeights = {
   sync?: { open?: number; conditional?: number }
   /** Tile heat: share of hot roles at which a tile is fully red, in (0, 1] (default 0.25). */
   heatSaturation?: number
+  /**
+   * Device compromise ease from software, each in [0, 1]. Ease = min(maxEase, eol + unsanctioned +
+   * vulnerability[worst]); the role → device pivot costs `pivot × (1 − ease)`.
+   */
+  device?: {
+    eol?: number
+    unsanctioned?: number
+    vulnerability?: Partial<Record<Exclude<MithVulnSeverity, 'none'>, number>>
+    maxEase?: number
+  }
+  /** Forwarded logs kept fewer days than this count as a coverage gap (default 30, 1–3650). */
+  minRetentionDays?: number
 }
 
 /** Where one entity sits on one plane. The same entity may be placed on several planes (shared object). */
@@ -155,6 +216,14 @@ export type MithPlacement = {
 }
 
 export type MithArrangement = 'coplanar' | 'stacked'
+
+/** Lenses the grid can restore from `diagram.lens`. Absent on older files. */
+export const DIAGRAM_LENSES = ['layers', 'org', 'network', 'access', 'impersonation', 'shadow'] as const
+export type DiagramLens = (typeof DIAGRAM_LENSES)[number]
+
+/** Frame dimension for Access, Impersonation, and Shadow IT. Absent means org. */
+export const DIAGRAM_FRAMES = ['org', 'network'] as const
+export type DiagramFrame = (typeof DIAGRAM_FRAMES)[number]
 
 export type MithPlaneTransform = {
   /** Floor position. Coplanar boards share `z` and differ in `x`/`y`. */
@@ -221,7 +290,11 @@ export type MithDocument = {
   kind: 'document'
   id: string
   title: string
-  dataset_kind: 'synthetic-demo'
+  /**
+   * Label the file declares. Committed samples and the generated pack use `synthetic-demo`.
+   * Import keeps any other declared label and export writes it back unchanged.
+   */
+  dataset_kind: string
   generated_at: string
   disclaimer: string
   model: {
@@ -252,6 +325,10 @@ export type MithDocument = {
     selection: string | null
     planes: MithPlane[]
     crossLinks: MithCrossLink[]
+    /** Active lens. Omitted on files from before this field; the grid then uses its default. */
+    lens?: DiagramLens
+    /** Frame dimension for Access, Impersonation, and Shadow IT. Omitted means org frames. */
+    frame?: DiagramFrame
   }
   inference: {
     viz_only: true
@@ -265,7 +342,8 @@ export type MithrilPackage = {
   mithril: typeof MITH_VERSION
   kind: 'package'
   id: string
-  dataset_kind: 'synthetic-demo'
+  /** Same rule as a document: the package keeps the label it declares. */
+  dataset_kind: string
   documents: string[]
   attachments: string[]
   note?: string

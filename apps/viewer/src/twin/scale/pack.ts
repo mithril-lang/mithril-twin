@@ -1,14 +1,18 @@
-import type { MithBoundary, MithEntity } from '../mith/types'
+import type { MithBoundary, MithDeviceLogs, MithDeviceUser, MithEntity, MithLogEvent, MithSoftware } from '../mith/types'
 
 /**
  * Chunked `.mith` pack for enterprise-scale synthetic data.
  *
  *   manifest.json            counts, per-company / per-department aggregates, chunk list
- *   index.mith               a normal .mith 0.1 document: boundaries down to department,
- *                            zones, systems (with criticality), roles, grants, actors,
- *                            channels, shadow-IT `uses` edges. Parsed by `parseMith`.
+ *   index.mith               a twin document in Mithril Form, `(mithril/twin-document …)`:
+ *                            boundaries down to department, zones, systems (with criticality),
+ *                            roles, grants, actors, channels, shadow-IT `uses` edges. Read by
+ *                            `readMith` (twin reader → `parseMith`).
  *   companies/<id>.json      one chunk per subsidiary: teams, people, devices, role holders,
  *                            stored column-wise (integer arrays) because they are 90% of rows.
+ *                            Device software / log coverage are indices into small per-chunk
+ *                            catalogs (`software`, `stacks`, `logProfiles`); sample log events
+ *                            are derived deterministically on expansion.
  *
  * The analysis (roles, grants, channels) only needs the index. People and devices load per
  * company on drill-down, so the UI never holds or renders all of them at once.
@@ -74,7 +78,22 @@ export type PackChunk = {
   /** Column-wise: index i is person i. `team` / `zone` / `title` index the arrays above. */
   people: { team: number[]; zone: number[]; title: number[] }
   /** Column-wise: `owner` is a person index or -1 (shared / server, then `team` says where). */
-  devices: { owner: number[]; team: number[]; kind: number[]; zone: number[] }
+  devices: {
+    owner: number[]
+    team: number[]
+    kind: number[]
+    zone: number[]
+    /** Index into `stacks` (installed software), -1 when not modeled. */
+    stack?: number[]
+    /** Index into `logProfiles`, -1 when unknown (no logs block). */
+    logs?: number[]
+    /** Person index of an extra admin on the device, or -1. */
+    admin?: number[]
+  }
+  /** Software catalog; `stacks[i]` lists catalog indices. */
+  software?: MithSoftware[]
+  stacks?: number[][]
+  logProfiles?: Omit<MithDeviceLogs, 'events'>[]
   /** role id → person indices. */
   holders: Record<string, number[]>
 }
@@ -125,6 +144,10 @@ export function expandChunk(chunk: PackChunk): ExpandedChunk {
     teamPeople.set(team.id, list)
   }
   const devices: MithEntity[] = new Array(m)
+  const stackCol = chunk.devices.stack
+  const logCol = chunk.devices.logs
+  const adminCol = chunk.devices.admin
+  for (const col of [stackCol, logCol, adminCol]) if (col && col.length !== m) throw new Error('chunk device columns differ in length')
   for (let i = 0; i < m; i++) {
     const team = chunk.teams[chunk.devices.team[i]!]!
     const kind = chunk.deviceKinds[chunk.devices.kind[i]!] ?? 'Device'
@@ -139,6 +162,17 @@ export function expandChunk(chunk: PackChunk): ExpandedChunk {
       boundary: team.id,
       zone: chunk.zones[chunk.devices.zone[i]!],
     }
+    const dev = devices[i]!
+    const st = stackCol?.[i] ?? -1
+    if (st >= 0 && chunk.stacks?.[st] && chunk.software) dev.software = chunk.stacks[st]!.map((k) => chunk.software![k]!)
+    const users: MithDeviceUser[] = []
+    if (owner >= 0) users.push({ person: personId(chunk.company, owner), relation: 'primary' })
+    const admin = adminCol?.[i] ?? -1
+    if (admin >= 0 && admin !== owner) users.push({ person: personId(chunk.company, admin), relation: 'admin' })
+    if (users.length) dev.users = users
+    const lp = logCol?.[i] ?? -1
+    const profile = lp >= 0 ? chunk.logProfiles?.[lp] : undefined
+    if (profile) dev.logs = { ...profile, events: sampleEvents(chunk.company, i, profile, users[0]?.person, dev.software) }
     const list = teamDevices.get(team.id) ?? []
     list.push(i)
     teamDevices.set(team.id, list)
@@ -146,4 +180,45 @@ export function expandChunk(chunk: PackChunk): ExpandedChunk {
   const holders = new Map<string, string[]>()
   for (const [role, idx] of Object.entries(chunk.holders)) holders.set(role, idx.map((i) => personId(chunk.company, i)))
   return { teams, people, devices, holders, teamPeople, teamDevices }
+}
+
+const ACTIONS: Record<string, string[]> = {
+  edr: ['agent heartbeat', 'signature update', 'quarantine check'],
+  'os-auth': ['interactive logon', 'screen unlock', 'logoff'],
+  process: ['process started', 'scheduled task ran', 'installer executed'],
+  network: ['outbound connection summary', 'dns query summary'],
+  'saas-audit': ['saas sign-in', 'file shared (synthetic)'],
+}
+
+/**
+ * Deterministic synthetic sample events (3 per device) for the detail panel's timeline.
+ * Derived from ids only; no clock, no randomness, no real telemetry.
+ */
+export function sampleEvents(
+  company: string,
+  i: number,
+  logs: Omit<MithDeviceLogs, 'events'>,
+  user: string | undefined,
+  software: MithSoftware[] | undefined,
+): MithLogEvent[] {
+  if (!logs.sources.length) return []
+  let h = 2166136261
+  for (const ch of `${company}:${i}`) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0
+  const risky = software?.find((s) => s.eol || s.sanctioned === false)
+  const out: MithLogEvent[] = []
+  for (let k = 0; k < 3; k++) {
+    const source = logs.sources[(h + k) % logs.sources.length]!
+    const acts = ACTIONS[source] ?? ['event']
+    const minute = (h >>> (k * 3)) % 50
+    const at = `2026-09-27T${String(8 + k).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00+09:00`
+    const flagged = k === 2 && risky
+    out.push({
+      at,
+      source,
+      action: flagged ? `${risky.eol ? 'EOL' : 'unsanctioned'} software launched: ${risky.name}` : acts[(h >>> k) % acts.length]!,
+      severity: flagged ? 'medium' : 'info',
+      ...(user ? { user } : {}),
+    })
+  }
+  return out
 }

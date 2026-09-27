@@ -1,0 +1,207 @@
+{
+ "@context": "https://mithril.fund/context/twin/v1",
+ "@id": "https://mithril.fund/lib/twin/example/polaris-device",
+ "@type": "TwinDocument",
+ "actors": [
+  {
+   "key": "actor:vendor",
+   "kind": "external",
+   "label": "External vendor (synthetic)"
+  }
+ ],
+ "boundaries": [
+  {
+   "key": "b:polaris",
+   "kind": "company",
+   "label": "北極星 Group"
+  },
+  {
+   "key": "b:fin",
+   "kind": "department",
+   "label": "Finance",
+   "parent": "b:polaris"
+  }
+ ],
+ "channels": [
+  {
+   "from": "actor:vendor",
+   "key": "ch:1",
+   "kind": "email",
+   "to": "role:fin-approver",
+   "verification": [
+    "callback"
+   ]
+  }
+ ],
+ "datasetKind": "synthetic-demo",
+ "disclaimer": "Synthetic demo data. Display-only arithmetic, not real-world success rates.",
+ "entities": [
+  {
+   "entityType": "VLAN",
+   "key": "net:corp",
+   "label": "Corp VLAN",
+   "layer": "network"
+  },
+  {
+   "entityType": "Segment",
+   "key": "net:core",
+   "label": "Core banking segment",
+   "layer": "network"
+  },
+  {
+   "criticality": "crown-jewel",
+   "entityType": "System",
+   "key": "sys:ledger",
+   "label": "General ledger",
+   "layer": "server",
+   "zone": "net:core"
+  },
+  {
+   "boundary": "b:fin",
+   "entityType": "Person",
+   "key": "p:fin-1",
+   "label": "Employee FIN-0001",
+   "layer": "organization",
+   "zone": "net:corp"
+  },
+  {
+   "boundary": "b:fin",
+   "entityType": "Person",
+   "key": "p:it-1",
+   "label": "Employee IT-0001",
+   "layer": "organization",
+   "zone": "net:corp"
+  },
+  {
+   "@type": "Device",
+   "boundary": "b:fin",
+   "entityType": "Laptop",
+   "key": "dev:fin-1",
+   "label": "Laptop · FIN-0001",
+   "layer": "node",
+   "logs": {
+    "@type": "DeviceLogs",
+    "events": [
+     {
+      "@type": "LogEvent",
+      "action": "interactive logon",
+      "at": "2026-09-27T09:02:11+09:00",
+      "severity": "info",
+      "source": "os-auth",
+      "user": "p:fin-1"
+     },
+     {
+      "@type": "LogEvent",
+      "action": "unsigned binary started",
+      "at": "2026-09-27T09:15:40+09:00",
+      "severity": "medium",
+      "source": "process",
+      "user": "p:fin-1"
+     }
+    ],
+    "forwardTo": "none",
+    "retentionDays": 7,
+    "sources": [
+     "edr",
+     "os-auth",
+     "process"
+    ]
+   },
+   "software": [
+    {
+     "@type": "Software",
+     "eol": false,
+     "name": "Office suite",
+     "sanctioned": true,
+     "vendor": "Example Vendor A",
+     "version": "16.0",
+     "vulnerability": "none"
+    },
+    {
+     "@type": "Software",
+     "eol": true,
+     "name": "PDF viewer",
+     "sanctioned": true,
+     "vendor": "Example Vendor B",
+     "version": "9.1",
+     "vulnerability": "high"
+    },
+    {
+     "@type": "Software",
+     "eol": false,
+     "name": "File sync client",
+     "sanctioned": false,
+     "vendor": "Example Vendor C",
+     "version": "3.2",
+     "vulnerability": "medium"
+    }
+   ],
+   "users": [
+    {
+     "@type": "DeviceUser",
+     "person": "p:fin-1",
+     "relation": "primary"
+    },
+    {
+     "@type": "DeviceUser",
+     "person": "p:it-1",
+     "relation": "admin"
+    }
+   ],
+   "zone": "net:corp"
+  }
+ ],
+ "generatedAt": "2026-09-27T23:00:00+09:00",
+ "grants": [
+  {
+   "key": "g:1",
+   "level": "approve",
+   "resource": "sys:ledger",
+   "role": "role:fin-approver"
+  }
+ ],
+ "inference": {
+  "noRunners": true,
+  "vizOnly": true
+ },
+ "reach": [
+  {
+   "from": "net:corp",
+   "key": "rc:1",
+   "kind": "conditional",
+   "to": "net:core"
+  }
+ ],
+ "roles": [
+  {
+   "boundary": "b:fin",
+   "holders": [
+    "p:fin-1"
+   ],
+   "key": "role:fin-approver",
+   "label": "Payment approver"
+  }
+ ],
+ "title": "北極星 device slice (synthetic)",
+ "weights": {
+  "device": {
+   "eol": {
+    "@type": "xsd:decimal",
+    "@value": "0.3"
+   },
+   "maxEase": {
+    "@type": "xsd:decimal",
+    "@value": "0.8"
+   }
+  },
+  "heatSaturation": {
+   "@type": "xsd:decimal",
+   "@value": "0.25"
+  },
+  "minRetentionDays": 30,
+  "networkValue": {
+   "@type": "xsd:decimal",
+   "@value": "0.6"
+  }
+ }
+}

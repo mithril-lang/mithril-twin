@@ -1,8 +1,11 @@
 import type {
   MithChannel,
+  MithDeviceLogs,
   MithDocument,
   MithReachKind,
+  MithSoftware,
   MithVerification,
+  MithVulnSeverity,
   MithWeights,
 } from './types'
 
@@ -58,6 +61,23 @@ export const DEFAULT_JUMP_HOST_COST = 2
 /** Tile heat saturates (fully red) at this share of hot roles. */
 export const DEFAULT_HEAT_SATURATION = 0.25
 
+/** Device compromise ease from installed software (display-only arithmetic, each term in [0, 1]). */
+export const DEFAULT_DEVICE_WEIGHTS = {
+  eol: 0.3,
+  unsanctioned: 0.15,
+  vulnerability: { low: 0.05, medium: 0.15, high: 0.3, critical: 0.45 },
+  maxEase: 0.8,
+} as const
+/** Forwarded logs kept for fewer days than this read as a short-retention gap. */
+export const DEFAULT_MIN_RETENTION_DAYS = 30
+
+export type DeviceWeights = {
+  eol: number
+  unsanctioned: number
+  vulnerability: Record<Exclude<MithVulnSeverity, 'none'>, number>
+  maxEase: number
+}
+
 export type ResolvedWeights = {
   base: number
   controls: Record<MithVerification, number>
@@ -69,6 +89,8 @@ export type ResolvedWeights = {
   jumpHost: number
   sync: { open: number; conditional: number }
   heatSaturation: number
+  device: DeviceWeights
+  minRetentionDays: number
 }
 
 export function resolveWeights(w?: MithWeights): ResolvedWeights {
@@ -85,7 +107,57 @@ export function resolveWeights(w?: MithWeights): ResolvedWeights {
     // Sync defaults follow the (possibly overridden) reach weights, as before.
     sync: { open: w?.sync?.open ?? reach.open, conditional: w?.sync?.conditional ?? reach.conditional },
     heatSaturation: w?.heatSaturation ?? DEFAULT_HEAT_SATURATION,
+    device: {
+      eol: w?.device?.eol ?? DEFAULT_DEVICE_WEIGHTS.eol,
+      unsanctioned: w?.device?.unsanctioned ?? DEFAULT_DEVICE_WEIGHTS.unsanctioned,
+      vulnerability: { ...DEFAULT_DEVICE_WEIGHTS.vulnerability, ...(w?.device?.vulnerability ?? {}) },
+      maxEase: w?.device?.maxEase ?? DEFAULT_DEVICE_WEIGHTS.maxEase,
+    },
+    minRetentionDays: w?.minRetentionDays ?? DEFAULT_MIN_RETENTION_DAYS,
   }
+}
+
+const VULN_RANK: Record<MithVulnSeverity, number> = { none: 0, low: 1, medium: 2, high: 3, critical: 4 }
+
+export type DeviceRisk = {
+  /** 0 … maxEase. The role → device pivot costs `pivot × (1 − ease)`. */
+  ease: number
+  eol: number
+  unsanctioned: number
+  worst: MithVulnSeverity
+  /** Short human reasons, e.g. "EOL: PDF viewer 9.1". */
+  reasons: string[]
+}
+
+/** Light software scoring for one device. No software modeled → ease 0. */
+export function deviceRisk(software: readonly MithSoftware[] | undefined, w: DeviceWeights): DeviceRisk {
+  let eol = 0
+  let unsanctioned = 0
+  let worst: MithVulnSeverity = 'none'
+  const reasons: string[] = []
+  for (const s of software ?? []) {
+    const tag = `${s.name} ${s.version}`
+    if (s.eol) { eol++; reasons.push(`EOL: ${tag}`) }
+    if (s.sanctioned === false) { unsanctioned++; reasons.push(`unsanctioned: ${tag}`) }
+    const v = s.vulnerability ?? 'none'
+    if (v !== 'none') reasons.push(`${v} vuln: ${tag}`)
+    if (VULN_RANK[v] > VULN_RANK[worst]) worst = v
+  }
+  const raw = (eol ? w.eol : 0) + (unsanctioned ? w.unsanctioned : 0) + (worst === 'none' ? 0 : w.vulnerability[worst])
+  return { ease: Math.min(w.maxEase, raw), eol, unsanctioned, worst, reasons }
+}
+
+/**
+ * Log coverage for one device: `forwarded` (to a destination, retention ≥ minimum), `short`
+ * (forwarded but kept < minRetentionDays), `blind` (not forwarded, or no sources), or `unknown`
+ * (no logs block modeled — not flagged, we only report what the document states).
+ */
+export type LogCoverage = 'forwarded' | 'short' | 'blind' | 'unknown'
+export function logCoverage(logs: MithDeviceLogs | undefined, minRetentionDays: number): LogCoverage {
+  if (!logs) return 'unknown'
+  if (logs.forwardTo === 'none' || logs.sources.length === 0) return 'blind'
+  if (logs.retentionDays < minRetentionDays) return 'short'
+  return 'forwarded'
 }
 
 export function channelCost(channel: Pick<MithChannel, 'verification'>, w: ResolvedWeights): number {
@@ -128,6 +200,10 @@ export type Graph = {
   roleZones: Map<number, { zone: number; cost: number; device: number }[]>
   /** Model actor count (the implicit internet actor, when present, is extra). */
   modelActors: number
+  /** Per device node (index − devStart): software ease, its reasons, and log coverage. */
+  devEase: Float64Array
+  devReasons: string[][]
+  devCoverage: LogCoverage[]
 }
 
 type Model = MithDocument['model']
@@ -182,9 +258,23 @@ export function buildGraph(model: Model): Graph {
   // Zone of a role's holders: role.zone wins, else the distinct zones of holder people.
   const entityById = new Map(model.entities.map((e) => [e.id, e]))
   const devicesByOwner = new Map<string, number[]>()
+  const link = (person: string, d: number) => {
+    const list = devicesByOwner.get(person) ?? []
+    if (!list.includes(d)) list.push(d)
+    devicesByOwner.set(person, list)
+  }
+  const devEase = new Float64Array(devices.length)
+  const devReasons: string[][] = new Array(devices.length)
+  const devCoverage: LogCoverage[] = new Array(devices.length)
   devices.forEach((d, k) => {
     const o = d.attrs?.owner
-    if (o) devicesByOwner.set(o, [...(devicesByOwner.get(o) ?? []), devStart + k])
+    if (o) link(o, devStart + k)
+    // Every linked person (primary, shared user, admin) can stand on the device after impersonation.
+    for (const u of d.users ?? []) link(u.person, devStart + k)
+    const risk = deviceRisk(d.software, w.device)
+    devEase[k] = risk.ease
+    devReasons[k] = risk.reasons
+    devCoverage[k] = logCoverage(d.logs, w.minRetentionDays)
   })
   const roleZone = new Map<string, string[]>()
   const roleZones = new Map<number, { zone: number; cost: number; device: number }[]>()
@@ -199,7 +289,11 @@ export function buildGraph(model: Model): Graph {
       const zi = index.get(z)
       if (zi == null) continue
       zs.add(z)
-      if (!list.some((x) => x.zone === zi)) list.push({ zone: zi, cost: w.pivot, device: d })
+      // Per zone keep the easiest device: pivot × (1 − ease).
+      const c = w.pivot * (1 - devEase[d - devStart]!)
+      const at = list.findIndex((x) => x.zone === zi)
+      if (at < 0) list.push({ zone: zi, cost: c, device: d })
+      else if (c < list[at]!.cost) list[at] = { zone: zi, cost: c, device: d }
     }
     if (r.zone) zs.add(r.zone)
     if (!devs.length) for (const h of r.holders) { const z = entityById.get(h)?.zone; if (z) zs.add(z) }
@@ -317,6 +411,7 @@ export function buildGraph(model: Model): Graph {
     roleStart, roleEnd, devStart, devEnd, zoneStart, zoneEnd, sysStart, sysEnd,
     deg, eTo, eCost, eType, eUnv, eRef, weights: w, roleZone, roleZones,
     modelActors: actors.length,
+    devEase, devReasons, devCoverage,
   }
 }
 
@@ -384,7 +479,22 @@ export function dijkstra(g: Graph, sources: number[]): Dijkstra {
 }
 
 /** One hop of a mixed org + network path. `red`: channel without verification, open network reach, open SaaS sync. */
-export type MixedHop = { from: string; to: string; kind: string; edge: EdgeType; cost: number; red: boolean; ref: string }
+export type MixedHop = {
+  from: string
+  to: string
+  kind: string
+  edge: EdgeType
+  cost: number
+  red: boolean
+  ref: string
+  /**
+   * Set on hops that land on a device whose logs are not forwarded (`blind`) or kept too briefly
+   * (`short`): a detection blind spot. Explanation only — it never changes reachability or cost.
+   */
+  blind?: 'blind' | 'short'
+  /** Why this hop is cheaper / notable, e.g. software ease reasons and the coverage gap. */
+  notes?: string[]
+}
 
 const EDGE_KIND: Record<EdgeType, string> = {
   [EDGE.channel]: 'channel',
@@ -406,7 +516,7 @@ export function reconstruct(g: Graph, dj: Dijkstra, target: number): MixedHop[] 
     const p = dj.prevNode[cur]!
     const e = dj.prevEdge[cur]!
     const ty = g.eType[e]! as EdgeType
-    hops.unshift({
+    const hop: MixedHop = {
       from: g.ids[p]!,
       to: g.ids[cur]!,
       kind: ty === EDGE.channel ? channelRef(g, e) : ty === EDGE.pivot ? (g.nodeType[cur] === NODE.device ? 'holder device' : 'pivot to zone') : EDGE_KIND[ty],
@@ -414,10 +524,23 @@ export function reconstruct(g: Graph, dj: Dijkstra, target: number): MixedHop[] 
       cost: g.eCost[e]!,
       red: g.eUnv[e]! === 1,
       ref: g.eRef[e]!,
-    })
+    }
+    if (g.nodeType[cur] === NODE.device) Object.assign(hop, deviceHopNotes(g, cur - g.devStart))
+    hops.unshift(hop)
     cur = p
   }
   return hops
+}
+
+function deviceHopNotes(g: Graph, k: number): Pick<MixedHop, 'blind' | 'notes'> {
+  const notes: string[] = []
+  const ease = g.devEase[k] ?? 0
+  if (ease > 0) notes.push(`device ease ${ease.toFixed(2)} (${(g.devReasons[k] ?? []).slice(0, 3).join('; ')})`)
+  const cov = g.devCoverage[k]
+  let blind: MixedHop['blind']
+  if (cov === 'blind') { blind = 'blind'; notes.push('detection blind spot: device logs are not forwarded') }
+  else if (cov === 'short') { blind = 'short'; notes.push(`detection gap: log retention below ${g.weights.minRetentionDays} days`) }
+  return { ...(blind ? { blind } : {}), ...(notes.length ? { notes } : {}) }
 }
 
 function channelRef(g: Graph, e: number): string {

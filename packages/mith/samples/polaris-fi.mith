@@ -1,514 +1,80 @@
-{
-  "mith": "0.1",
-  "kind": "document",
-  "id": "polaris-fi-synthetic",
-  "title": "北極星 FI",
-  "dataset_kind": "synthetic-demo",
-  "generated_at": "2026-09-27T18:00:00+09:00",
-  "disclaimer": "Fictional Polaris FI (北極星). Not a real institution. Hypothesis overlays are visualization only (observation_count=0). No runners, no secrets.",
-  "model": {
-    "citations": [
-      {
-        "source": "layers/organization.json",
-        "note": "synthetic-demo slice of the fictional group"
-      },
-      {
-        "source": "layers/network.json",
-        "note": "synthetic-demo VLANs and transit"
-      },
-      {
-        "source": "layers/firewall.json",
-        "note": "synthetic-demo edge and subsidiary firewalls"
-      },
-      {
-        "source": "layers/node.json",
-        "note": "synthetic-demo endpoint sample"
-      },
-      {
-        "source": "layers/server.json",
-        "note": "synthetic-demo compute sample"
-      }
-    ],
-    "entities": [
-      {
-        "id": "org:polaris-holdings",
-        "label": "北極星フィナンシャル・グループ",
-        "type": "HoldingCompany",
-        "layer": "organization",
-        "citations": [{ "source": "layers/organization.json" }],
-        "attrs": { "sector": "financial-holding" }
-      },
-      {
-        "id": "org:polaris-bank-core-01",
-        "label": "北極星銀行本体",
-        "type": "BankCore",
-        "layer": "organization",
-        "citations": [{ "source": "layers/organization.json" }],
-        "attrs": { "sector": "bank-core" }
-      },
-      {
-        "id": "org:polaris-bank-trust-01",
-        "label": "北極星信託銀行",
-        "type": "TrustBank",
-        "layer": "organization",
-        "citations": [{ "source": "layers/organization.json" }],
-        "attrs": { "sector": "bank-trust" }
-      },
-      {
-        "id": "org:polaris-securities-01",
-        "label": "北極星証券 1",
-        "type": "Securities",
-        "layer": "organization",
-        "citations": [{ "source": "layers/organization.json" }],
-        "attrs": { "sector": "securities" }
-      },
-      {
-        "id": "org:polaris-card-01",
-        "label": "北極星カード 1",
-        "type": "Card",
-        "layer": "organization",
-        "citations": [{ "source": "layers/organization.json" }],
-        "attrs": { "sector": "card" }
-      },
-      {
-        "id": "org:polaris-payments-01",
-        "label": "北極星決済・送金 1",
-        "type": "Payments",
-        "layer": "organization",
-        "citations": [{ "source": "layers/organization.json" }],
-        "attrs": { "sector": "payments" }
-      },
-      {
-        "id": "org:polaris-it-digital-01",
-        "label": "北極星IT・デジタル 1",
-        "type": "ITDigital",
-        "layer": "organization",
-        "citations": [{ "source": "layers/organization.json" }],
-        "attrs": { "sector": "it-digital" }
-      },
-      {
-        "id": "org:polaris-ops-shared-01",
-        "label": "北極星シェアードサービス 1",
-        "type": "SharedOps",
-        "layer": "organization",
-        "citations": [{ "source": "layers/organization.json" }],
-        "attrs": { "sector": "shared-ops" }
-      },
-      {
-        "id": "org:polaris-compliance-01",
-        "label": "北極星コンプライアンス・監査",
-        "type": "Compliance",
-        "layer": "organization",
-        "citations": [{ "source": "layers/organization.json" }],
-        "attrs": { "sector": "compliance" }
-      },
-      {
-        "id": "org:polaris-regional-01",
-        "label": "北極星地域金融関連 1",
-        "type": "Regional",
-        "layer": "organization",
-        "citations": [{ "source": "layers/organization.json" }],
-        "attrs": { "sector": "regional" }
-      },
-      {
-        "id": "net:polaris-transit",
-        "label": "Polaris Transit",
-        "type": "TransitNetwork",
-        "layer": "network",
-        "citations": [{ "source": "layers/network.json" }],
-        "attrs": { "cidr": "10.0.0.0/16" }
-      },
-      {
-        "id": "net:polaris-inet",
-        "label": "Internet edge",
-        "type": "InternetEdge",
-        "layer": "network",
-        "citations": [{ "source": "layers/network.json" }],
-        "attrs": { "cidr": "0.0.0.0/0" }
-      },
-      {
-        "id": "net:polaris-holdings-corp",
-        "label": "Holdings corp",
-        "type": "CorpVLAN",
-        "layer": "network",
-        "citations": [{ "source": "layers/network.json" }],
-        "attrs": { "org": "org:polaris-holdings", "cidr": "10.156.0.0/24" }
-      },
-      {
-        "id": "net:polaris-holdings-dmz",
-        "label": "Holdings dmz",
-        "type": "DMZ",
-        "layer": "network",
-        "citations": [{ "source": "layers/network.json" }],
-        "attrs": { "org": "org:polaris-holdings", "cidr": "10.156.10.0/24" }
-      },
-      {
-        "id": "net:polaris-bank-core-01-corp",
-        "label": "Bank Core VLAN",
-        "type": "CorpVLAN",
-        "layer": "network",
-        "citations": [{ "source": "layers/network.json" }],
-        "attrs": { "org": "org:polaris-bank-core-01", "cidr": "10.14.0.0/24" }
-      },
-      {
-        "id": "net:polaris-bank-core-01-dmz",
-        "label": "Bank Core dmz",
-        "type": "DMZ",
-        "layer": "network",
-        "citations": [{ "source": "layers/network.json" }],
-        "attrs": { "org": "org:polaris-bank-core-01", "cidr": "10.14.10.0/24" }
-      },
-      {
-        "id": "net:polaris-securities-01-corp",
-        "label": "Securities corp",
-        "type": "CorpVLAN",
-        "layer": "network",
-        "citations": [{ "source": "layers/network.json" }],
-        "attrs": { "org": "org:polaris-securities-01", "cidr": "10.173.0.0/24" }
-      },
-      {
-        "id": "net:polaris-payments-01-corp",
-        "label": "Payments corp",
-        "type": "CorpVLAN",
-        "layer": "network",
-        "citations": [{ "source": "layers/network.json" }],
-        "attrs": { "org": "org:polaris-payments-01", "cidr": "10.139.0.0/24" }
-      },
-      {
-        "id": "net:polaris-it-digital-01-corp",
-        "label": "IT Digital corp",
-        "type": "CorpVLAN",
-        "layer": "network",
-        "citations": [{ "source": "layers/network.json" }],
-        "attrs": { "org": "org:polaris-it-digital-01", "cidr": "10.93.0.0/24" }
-      },
-      {
-        "id": "net:polaris-ops-shared-01-corp",
-        "label": "Shared ops corp",
-        "type": "CorpVLAN",
-        "layer": "network",
-        "citations": [{ "source": "layers/network.json" }],
-        "attrs": { "org": "org:polaris-ops-shared-01", "cidr": "10.74.0.0/24" }
-      },
-      {
-        "id": "net:polaris-regional-01-corp",
-        "label": "Regional corp",
-        "type": "CorpVLAN",
-        "layer": "network",
-        "citations": [{ "source": "layers/network.json" }],
-        "attrs": { "org": "org:polaris-regional-01", "cidr": "10.125.0.0/24" }
-      },
-      {
-        "id": "fw:polaris-edge",
-        "label": "Edge FW",
-        "type": "Firewall",
-        "layer": "firewall",
-        "citations": [{ "source": "layers/firewall.json" }],
-        "attrs": {}
-      },
-      {
-        "id": "fw:polaris-holdings",
-        "label": "Holdings FW",
-        "type": "Firewall",
-        "layer": "firewall",
-        "citations": [{ "source": "layers/firewall.json" }],
-        "attrs": { "org": "org:polaris-holdings" }
-      },
-      {
-        "id": "fw:polaris-bank-core-01",
-        "label": "Bank Core FW",
-        "type": "Firewall",
-        "layer": "firewall",
-        "citations": [{ "source": "layers/firewall.json" }],
-        "attrs": { "org": "org:polaris-bank-core-01" }
-      },
-      {
-        "id": "fw:polaris-payments-01",
-        "label": "Payments FW",
-        "type": "Firewall",
-        "layer": "firewall",
-        "citations": [{ "source": "layers/firewall.json" }],
-        "attrs": { "org": "org:polaris-payments-01" }
-      },
-      {
-        "id": "fw:polaris-it-digital-01",
-        "label": "IT Digital FW",
-        "type": "Firewall",
-        "layer": "firewall",
-        "citations": [{ "source": "layers/firewall.json" }],
-        "attrs": { "org": "org:polaris-it-digital-01" }
-      },
-      {
-        "id": "fw:polaris-ops-shared-01",
-        "label": "Shared ops FW",
-        "type": "Firewall",
-        "layer": "firewall",
-        "citations": [{ "source": "layers/firewall.json" }],
-        "attrs": { "org": "org:polaris-ops-shared-01" }
-      },
-      {
-        "id": "fw:polaris-regional-01",
-        "label": "Regional FW",
-        "type": "Firewall",
-        "layer": "firewall",
-        "citations": [{ "source": "layers/firewall.json" }],
-        "attrs": { "org": "org:polaris-regional-01" }
-      },
-      {
-        "id": "endpoint:polaris-00001",
-        "label": "Server-00001",
-        "type": "Server",
-        "layer": "server",
-        "citations": [{ "source": "layers/server.json" }],
-        "attrs": { "org": "org:polaris-holdings" }
-      },
-      {
-        "id": "endpoint:polaris-00002",
-        "label": "Workstation-00002",
-        "type": "Workstation",
-        "layer": "node",
-        "citations": [{ "source": "layers/node.json" }],
-        "attrs": { "org": "org:polaris-holdings" }
-      },
-      {
-        "id": "endpoint:polaris-00003",
-        "label": "NetworkDevice-00003",
-        "type": "NetworkDevice",
-        "layer": "node",
-        "citations": [{ "source": "layers/node.json" }],
-        "attrs": { "org": "org:polaris-holdings" }
-      },
-      {
-        "id": "endpoint:polaris-00005",
-        "label": "CloudRole-00005",
-        "type": "CloudRole",
-        "layer": "server",
-        "citations": [{ "source": "layers/server.json" }],
-        "attrs": { "org": "org:polaris-holdings" }
-      },
-      {
-        "id": "endpoint:polaris-00006",
-        "label": "Server-00006",
-        "type": "Server",
-        "layer": "server",
-        "citations": [{ "source": "layers/server.json" }],
-        "attrs": { "org": "org:polaris-holdings" }
-      },
-      {
-        "id": "endpoint:polaris-00046",
-        "label": "Server-00046",
-        "type": "Server",
-        "layer": "server",
-        "citations": [{ "source": "layers/server.json" }],
-        "attrs": { "org": "org:polaris-bank-core-01" }
-      },
-      {
-        "id": "endpoint:polaris-00048",
-        "label": "Server-00048",
-        "type": "Server",
-        "layer": "server",
-        "citations": [{ "source": "layers/server.json" }],
-        "attrs": { "org": "org:polaris-bank-core-01" }
-      },
-      {
-        "id": "endpoint:polaris-00062",
-        "label": "NetworkDevice-00062",
-        "type": "NetworkDevice",
-        "layer": "node",
-        "citations": [{ "source": "layers/node.json" }],
-        "attrs": { "org": "org:polaris-bank-core-01" }
-      },
-      {
-        "id": "cluster:nodes:polaris-bank-core-01",
-        "label": "Bank Core nodes",
-        "type": "Cluster",
-        "layer": "node",
-        "citations": [{ "source": "layers/node.json" }],
-        "attrs": { "org": "org:polaris-bank-core-01" }
-      },
-      {
-        "id": "cluster:servers:polaris-bank-core-01",
-        "label": "Bank Core servers",
-        "type": "Cluster",
-        "layer": "server",
-        "citations": [{ "source": "layers/server.json" }],
-        "attrs": { "org": "org:polaris-bank-core-01" }
-      }
-    ],
-    "edges": [
-      { "id": "e:hold-bank", "source": "org:polaris-holdings", "target": "org:polaris-bank-core-01", "kind": "subsidiaryOf" },
-      { "id": "e:hold-trust", "source": "org:polaris-holdings", "target": "org:polaris-bank-trust-01", "kind": "subsidiaryOf" },
-      { "id": "e:hold-sec", "source": "org:polaris-holdings", "target": "org:polaris-securities-01", "kind": "subsidiaryOf" },
-      { "id": "e:hold-pay", "source": "org:polaris-holdings", "target": "org:polaris-payments-01", "kind": "subsidiaryOf" },
-      { "id": "e:hold-it", "source": "org:polaris-holdings", "target": "org:polaris-it-digital-01", "kind": "subsidiaryOf" },
-      { "id": "e:hold-ops", "source": "org:polaris-holdings", "target": "org:polaris-ops-shared-01", "kind": "subsidiaryOf" },
-      { "id": "e:hold-reg", "source": "org:polaris-holdings", "target": "org:polaris-regional-01", "kind": "subsidiaryOf" },
-      { "id": "e:inet-transit", "source": "net:polaris-inet", "target": "net:polaris-transit", "kind": "peersWith" },
-      { "id": "e:hcorp-tr", "source": "net:polaris-holdings-corp", "target": "net:polaris-transit", "kind": "uplinksTo" },
-      { "id": "e:hdmz-hcorp", "source": "net:polaris-holdings-dmz", "target": "net:polaris-holdings-corp", "kind": "extends" },
-      { "id": "e:bcorp-tr", "source": "net:polaris-bank-core-01-corp", "target": "net:polaris-transit", "kind": "uplinksTo" },
-      { "id": "e:bdmz-tr", "source": "net:polaris-bank-core-01-dmz", "target": "net:polaris-transit", "kind": "uplinksTo" },
-      { "id": "e:pcorp-tr", "source": "net:polaris-payments-01-corp", "target": "net:polaris-transit", "kind": "uplinksTo" },
-      { "id": "e:icorp-tr", "source": "net:polaris-it-digital-01-corp", "target": "net:polaris-transit", "kind": "uplinksTo" },
-      { "id": "e:fw-edge-inet", "source": "fw:polaris-edge", "target": "net:polaris-inet", "kind": "guards" },
-      { "id": "e:fw-bank-dmz", "source": "fw:polaris-bank-core-01", "target": "net:polaris-bank-core-01-dmz", "kind": "guards" },
-      { "id": "e:fw-hold", "source": "fw:polaris-holdings", "target": "net:polaris-holdings-dmz", "kind": "guards" },
-      { "id": "e:fw-pay", "source": "fw:polaris-payments-01", "target": "net:polaris-payments-01-corp", "kind": "guards" },
-      { "id": "e:att-00001", "source": "endpoint:polaris-00001", "target": "net:polaris-holdings-corp", "kind": "attachedTo" },
-      { "id": "e:att-00046", "source": "endpoint:polaris-00046", "target": "net:polaris-bank-core-01-corp", "kind": "attachedTo" },
-      { "id": "e:att-00006", "source": "endpoint:polaris-00006", "target": "net:polaris-holdings-corp", "kind": "attachedTo" },
-      { "id": "e:host-00001", "source": "endpoint:polaris-00001", "target": "net:polaris-holdings-dmz", "kind": "hostedOn" },
-      { "id": "e:host-00046", "source": "endpoint:polaris-00046", "target": "net:polaris-bank-core-01-dmz", "kind": "hostedOn" },
-      { "id": "e:talk-01-06", "source": "endpoint:polaris-00001", "target": "endpoint:polaris-00006", "kind": "talksTo" },
-      { "id": "e:talk-46-48", "source": "endpoint:polaris-00046", "target": "endpoint:polaris-00048", "kind": "talksTo" }
-    ]
-  },
-  "diagram": {
-    "arrangement": "coplanar",
-    "camera": {
-      "mode": "iso",
-      "tilt": 54,
-      "yaw": -28,
-      "zoom": 0.96,
-      "focusPlane": "plane:network"
-    },
-    "selection": "net:polaris-bank-core-01-corp",
-    "planes": [
-      {
-        "id": "plane:organization",
-        "layer": "organization",
-        "label": "Holding",
-        "transform": { "x": 0, "y": 0, "z": 0, "tilt": 54, "yaw": -28 },
-        "placements": [
-          { "entity": "org:polaris-securities-01", "x": 0.16, "y": 0.28, "tone": "quiet" },
-          { "entity": "org:polaris-bank-trust-01", "x": 0.34, "y": 0.22, "tone": "quiet" },
-          { "entity": "org:polaris-holdings", "x": 0.24, "y": 0.5, "tone": "accent", "showLabel": true },
-          { "entity": "org:polaris-card-01", "x": 0.48, "y": 0.34, "tone": "quiet" },
-          { "entity": "org:polaris-bank-core-01", "x": 0.64, "y": 0.24, "tone": "info" },
-          { "entity": "org:polaris-it-digital-01", "x": 0.8, "y": 0.32, "tone": "quiet" },
-          { "entity": "org:polaris-payments-01", "x": 0.7, "y": 0.52, "tone": "accent" },
-          { "entity": "org:polaris-ops-shared-01", "x": 0.4, "y": 0.64, "tone": "quiet" },
-          { "entity": "org:polaris-compliance-01", "x": 0.56, "y": 0.76, "tone": "quiet" },
-          { "entity": "org:polaris-regional-01", "x": 0.82, "y": 0.68, "tone": "quiet" }
-        ]
-      },
-      {
-        "id": "plane:network",
-        "layer": "network",
-        "label": "Polaris Core",
-        "transform": { "x": 320, "y": 16, "z": 0, "tilt": 54, "yaw": -28 },
-        "placements": [
-          { "entity": "net:polaris-inet", "x": 0.14, "y": 0.3, "tone": "quiet" },
-          { "entity": "net:polaris-transit", "x": 0.36, "y": 0.2, "tone": "info" },
-          { "entity": "net:polaris-holdings-dmz", "x": 0.22, "y": 0.5, "tone": "quiet" },
-          { "entity": "net:polaris-holdings-corp", "x": 0.38, "y": 0.44, "tone": "quiet" },
-          { "entity": "net:polaris-bank-core-01-dmz", "x": 0.58, "y": 0.28, "tone": "quiet" },
-          { "entity": "net:polaris-bank-core-01-corp", "x": 0.5, "y": 0.54, "tone": "accent", "showLabel": true },
-          { "entity": "net:polaris-securities-01-corp", "x": 0.74, "y": 0.24, "tone": "quiet" },
-          { "entity": "net:polaris-payments-01-corp", "x": 0.82, "y": 0.48, "tone": "accent" },
-          { "entity": "net:polaris-it-digital-01-corp", "x": 0.32, "y": 0.72, "tone": "quiet" },
-          { "entity": "net:polaris-ops-shared-01-corp", "x": 0.54, "y": 0.76, "tone": "quiet" },
-          { "entity": "net:polaris-regional-01-corp", "x": 0.78, "y": 0.72, "tone": "quiet" }
-        ]
-      },
-      {
-        "id": "plane:firewall",
-        "layer": "firewall",
-        "label": "Edge Guards",
-        "transform": { "x": 640, "y": 0, "z": 0, "tilt": 54, "yaw": -28 },
-        "placements": [
-          { "entity": "fw:polaris-edge", "x": 0.18, "y": 0.34, "tone": "info" },
-          { "entity": "net:polaris-inet", "x": 0.16, "y": 0.64, "tone": "quiet" },
-          { "entity": "fw:polaris-holdings", "x": 0.36, "y": 0.3, "tone": "quiet" },
-          { "entity": "fw:polaris-bank-core-01", "x": 0.54, "y": 0.38, "tone": "accent", "showLabel": true },
-          { "entity": "net:polaris-bank-core-01-corp", "x": 0.48, "y": 0.66, "tone": "accent" },
-          { "entity": "fw:polaris-payments-01", "x": 0.76, "y": 0.4, "tone": "quiet" },
-          { "entity": "fw:polaris-it-digital-01", "x": 0.32, "y": 0.74, "tone": "quiet" },
-          { "entity": "fw:polaris-ops-shared-01", "x": 0.62, "y": 0.76, "tone": "quiet" },
-          { "entity": "fw:polaris-regional-01", "x": 0.84, "y": 0.66, "tone": "quiet" }
-        ]
-      },
-      {
-        "id": "plane:node",
-        "layer": "node",
-        "label": "Endpoints",
-        "transform": { "x": 120, "y": 220, "z": 0, "tilt": 54, "yaw": -28 },
-        "placements": [
-          { "entity": "endpoint:polaris-00003", "x": 0.22, "y": 0.32, "tone": "quiet" },
-          { "entity": "endpoint:polaris-00002", "x": 0.4, "y": 0.26, "tone": "quiet" },
-          { "entity": "endpoint:polaris-00001", "x": 0.3, "y": 0.54, "tone": "info" },
-          { "entity": "endpoint:polaris-00006", "x": 0.52, "y": 0.36, "tone": "quiet" },
-          { "entity": "endpoint:polaris-00062", "x": 0.7, "y": 0.28, "tone": "quiet" },
-          { "entity": "endpoint:polaris-00046", "x": 0.74, "y": 0.56, "tone": "accent", "showLabel": true },
-          { "entity": "cluster:nodes:polaris-bank-core-01", "x": 0.46, "y": 0.74, "tone": "quiet" }
-        ]
-      },
-      {
-        "id": "plane:server",
-        "layer": "server",
-        "label": "Compute",
-        "transform": { "x": 440, "y": 236, "z": 0, "tilt": 54, "yaw": -28 },
-        "placements": [
-          { "entity": "endpoint:polaris-00005", "x": 0.2, "y": 0.3, "tone": "quiet" },
-          { "entity": "endpoint:polaris-00001", "x": 0.34, "y": 0.5, "tone": "accent", "showLabel": true },
-          { "entity": "endpoint:polaris-00006", "x": 0.54, "y": 0.32, "tone": "quiet" },
-          { "entity": "endpoint:polaris-00048", "x": 0.72, "y": 0.36, "tone": "quiet" },
-          { "entity": "endpoint:polaris-00046", "x": 0.66, "y": 0.6, "tone": "info" },
-          { "entity": "cluster:servers:polaris-bank-core-01", "x": 0.42, "y": 0.74, "tone": "quiet" }
-        ]
-      }
-    ],
-    "crossLinks": [
-      { "id": "xl:hold-corp", "from": "org:polaris-holdings", "to": "net:polaris-holdings-corp", "kind": "usesNetwork" },
-      { "id": "xl:bank-corp", "from": "org:polaris-bank-core-01", "to": "net:polaris-bank-core-01-corp", "kind": "usesNetwork" },
-      { "id": "xl:pay-corp", "from": "org:polaris-payments-01", "to": "net:polaris-payments-01-corp", "kind": "usesNetwork" },
-      { "id": "xl:it-corp", "from": "org:polaris-it-digital-01", "to": "net:polaris-it-digital-01-corp", "kind": "usesNetwork" },
-      { "id": "xl:reg-corp", "from": "org:polaris-regional-01", "to": "net:polaris-regional-01-corp", "kind": "usesNetwork" },
-      { "id": "xl:fw-edge", "from": "fw:polaris-edge", "to": "net:polaris-inet", "kind": "guards" },
-      { "id": "xl:fw-bank", "from": "fw:polaris-bank-core-01", "to": "net:polaris-bank-core-01-dmz", "kind": "guards" },
-      { "id": "xl:srv-vlan", "from": "endpoint:polaris-00046", "to": "net:polaris-bank-core-01-corp", "kind": "attachedTo" }
-    ]
-  },
-  "inference": {
-    "viz_only": true,
-    "no_runners": true,
-    "hypotheses": [
-      {
-        "id": "path:bec-vendor-change",
-        "label": "BEC / vendor-change",
-        "summary": "Illustrative hypothesis: a spoofed vendor-change request touches payments, its VLAN, and a bank-core server. Not an executed path.",
-        "category": "BEC",
-        "honesty": "hypothesis",
-        "observation_count": 0,
-        "relative_score": 0.34,
-        "score_note": "Illustrative rank among synthetic hypotheses. Not a detection score.",
-        "node_ids": [
-          "org:polaris-payments-01",
-          "net:polaris-payments-01-corp",
-          "fw:polaris-payments-01",
-          "endpoint:polaris-00046"
-        ],
-        "steps": [
-          { "from": "org:polaris-payments-01", "to": "net:polaris-payments-01-corp", "kind": "hypothesis" },
-          { "from": "net:polaris-payments-01-corp", "to": "fw:polaris-payments-01", "kind": "hypothesis" },
-          { "from": "fw:polaris-payments-01", "to": "endpoint:polaris-00046", "kind": "hypothesis" }
-        ]
-      },
-      {
-        "id": "path:support-fraud",
-        "label": "Support fraud",
-        "summary": "Illustrative hypothesis: a helpdesk reset story touching shared ops and IT digital. Visualization only.",
-        "category": "SupportFraud",
-        "honesty": "hypothesis",
-        "observation_count": 0,
-        "relative_score": 0.22,
-        "score_note": "Illustrative rank among synthetic hypotheses. Not a detection score.",
-        "node_ids": ["org:polaris-ops-shared-01", "org:polaris-it-digital-01", "net:polaris-it-digital-01-corp"],
-        "steps": [
-          { "from": "org:polaris-ops-shared-01", "to": "org:polaris-it-digital-01", "kind": "hypothesis" },
-          { "from": "org:polaris-it-digital-01", "to": "net:polaris-it-digital-01-corp", "kind": "hypothesis" }
-        ]
-      }
-    ]
-  }
-}
+(mithril/twin-document
+  ;; Twin vocabulary for Mithril .mith (twin-local terms: https://mithril.fund/lib/twin/v1#). Synthetic, display-only.
+  :id "https://mithril.fund/lib/twin/polaris-fi-synthetic"
+  :title "北極星 FI"
+  :dataset-kind "synthetic-demo"
+  :generated-at "2026-09-27T18:00:00+09:00"
+  :disclaimer "Fictional Polaris FI (北極星). Not a real institution. Hypothesis overlays are visualization only (observation_count=0). No runners, no secrets."
+  :citations
+  [(rdf/node :source "layers/organization.json" :note "synthetic-demo slice of the fictional group")
+   (rdf/node :source "layers/network.json" :note "synthetic-demo VLANs and transit")
+   (rdf/node :source "layers/firewall.json" :note "synthetic-demo edge and subsidiary firewalls")
+   (rdf/node :source "layers/node.json" :note "synthetic-demo endpoint sample")
+   (rdf/node :source "layers/server.json" :note "synthetic-demo compute sample")]
+  :entities
+  [(rdf/node :key "org:polaris-holdings" :label "北極星フィナンシャル・グループ" :entity-type "HoldingCompany" :layer "organization" :citations [(rdf/node :source "layers/organization.json")] :attrs [(rdf/node :key "sector" :value "financial-holding")])
+   (rdf/node :key "org:polaris-bank-core-01" :label "北極星銀行本体" :entity-type "BankCore" :layer "organization" :citations [(rdf/node :source "layers/organization.json")] :attrs [(rdf/node :key "sector" :value "bank-core")])
+   (rdf/node :key "org:polaris-bank-trust-01" :label "北極星信託銀行" :entity-type "TrustBank" :layer "organization" :citations [(rdf/node :source "layers/organization.json")] :attrs [(rdf/node :key "sector" :value "bank-trust")])
+   (rdf/node :key "org:polaris-securities-01" :label "北極星証券 1" :entity-type "Securities" :layer "organization" :citations [(rdf/node :source "layers/organization.json")] :attrs [(rdf/node :key "sector" :value "securities")])
+   (rdf/node :key "org:polaris-card-01" :label "北極星カード 1" :entity-type "Card" :layer "organization" :citations [(rdf/node :source "layers/organization.json")] :attrs [(rdf/node :key "sector" :value "card")])
+   (rdf/node :key "org:polaris-payments-01" :label "北極星決済・送金 1" :entity-type "Payments" :layer "organization" :citations [(rdf/node :source "layers/organization.json")] :attrs [(rdf/node :key "sector" :value "payments")])
+   (rdf/node :key "org:polaris-it-digital-01" :label "北極星IT・デジタル 1" :entity-type "ITDigital" :layer "organization" :citations [(rdf/node :source "layers/organization.json")] :attrs [(rdf/node :key "sector" :value "it-digital")])
+   (rdf/node :key "org:polaris-ops-shared-01" :label "北極星シェアードサービス 1" :entity-type "SharedOps" :layer "organization" :citations [(rdf/node :source "layers/organization.json")] :attrs [(rdf/node :key "sector" :value "shared-ops")])
+   (rdf/node :key "org:polaris-compliance-01" :label "北極星コンプライアンス・監査" :entity-type "Compliance" :layer "organization" :citations [(rdf/node :source "layers/organization.json")] :attrs [(rdf/node :key "sector" :value "compliance")])
+   (rdf/node :key "org:polaris-regional-01" :label "北極星地域金融関連 1" :entity-type "Regional" :layer "organization" :citations [(rdf/node :source "layers/organization.json")] :attrs [(rdf/node :key "sector" :value "regional")])
+   (rdf/node :key "net:polaris-transit" :label "Polaris Transit" :entity-type "TransitNetwork" :layer "network" :citations [(rdf/node :source "layers/network.json")] :attrs [(rdf/node :key "cidr" :value "10.0.0.0/16")])
+   (rdf/node :key "net:polaris-inet" :label "Internet edge" :entity-type "InternetEdge" :layer "network" :citations [(rdf/node :source "layers/network.json")] :attrs [(rdf/node :key "cidr" :value "0.0.0.0/0")])
+   (rdf/node :key "net:polaris-holdings-corp" :label "Holdings corp" :entity-type "CorpVLAN" :layer "network" :citations [(rdf/node :source "layers/network.json")] :attrs [(rdf/node :key "org" :value "org:polaris-holdings") (rdf/node :key "cidr" :value "10.156.0.0/24")])
+   (rdf/node :key "net:polaris-holdings-dmz" :label "Holdings dmz" :entity-type "DMZ" :layer "network" :citations [(rdf/node :source "layers/network.json")] :attrs [(rdf/node :key "org" :value "org:polaris-holdings") (rdf/node :key "cidr" :value "10.156.10.0/24")])
+   (rdf/node :key "net:polaris-bank-core-01-corp" :label "Bank Core VLAN" :entity-type "CorpVLAN" :layer "network" :citations [(rdf/node :source "layers/network.json")] :attrs [(rdf/node :key "org" :value "org:polaris-bank-core-01") (rdf/node :key "cidr" :value "10.14.0.0/24")])
+   (rdf/node :key "net:polaris-bank-core-01-dmz" :label "Bank Core dmz" :entity-type "DMZ" :layer "network" :citations [(rdf/node :source "layers/network.json")] :attrs [(rdf/node :key "org" :value "org:polaris-bank-core-01") (rdf/node :key "cidr" :value "10.14.10.0/24")])
+   (rdf/node :key "net:polaris-securities-01-corp" :label "Securities corp" :entity-type "CorpVLAN" :layer "network" :citations [(rdf/node :source "layers/network.json")] :attrs [(rdf/node :key "org" :value "org:polaris-securities-01") (rdf/node :key "cidr" :value "10.173.0.0/24")])
+   (rdf/node :key "net:polaris-payments-01-corp" :label "Payments corp" :entity-type "CorpVLAN" :layer "network" :citations [(rdf/node :source "layers/network.json")] :attrs [(rdf/node :key "org" :value "org:polaris-payments-01") (rdf/node :key "cidr" :value "10.139.0.0/24")])
+   (rdf/node :key "net:polaris-it-digital-01-corp" :label "IT Digital corp" :entity-type "CorpVLAN" :layer "network" :citations [(rdf/node :source "layers/network.json")] :attrs [(rdf/node :key "org" :value "org:polaris-it-digital-01") (rdf/node :key "cidr" :value "10.93.0.0/24")])
+   (rdf/node :key "net:polaris-ops-shared-01-corp" :label "Shared ops corp" :entity-type "CorpVLAN" :layer "network" :citations [(rdf/node :source "layers/network.json")] :attrs [(rdf/node :key "org" :value "org:polaris-ops-shared-01") (rdf/node :key "cidr" :value "10.74.0.0/24")])
+   (rdf/node :key "net:polaris-regional-01-corp" :label "Regional corp" :entity-type "CorpVLAN" :layer "network" :citations [(rdf/node :source "layers/network.json")] :attrs [(rdf/node :key "org" :value "org:polaris-regional-01") (rdf/node :key "cidr" :value "10.125.0.0/24")])
+   (rdf/node :key "fw:polaris-edge" :label "Edge FW" :entity-type "Firewall" :layer "firewall" :citations [(rdf/node :source "layers/firewall.json")])
+   (rdf/node :key "fw:polaris-holdings" :label "Holdings FW" :entity-type "Firewall" :layer "firewall" :citations [(rdf/node :source "layers/firewall.json")] :attrs [(rdf/node :key "org" :value "org:polaris-holdings")])
+   (rdf/node :key "fw:polaris-bank-core-01" :label "Bank Core FW" :entity-type "Firewall" :layer "firewall" :citations [(rdf/node :source "layers/firewall.json")] :attrs [(rdf/node :key "org" :value "org:polaris-bank-core-01")])
+   (rdf/node :key "fw:polaris-payments-01" :label "Payments FW" :entity-type "Firewall" :layer "firewall" :citations [(rdf/node :source "layers/firewall.json")] :attrs [(rdf/node :key "org" :value "org:polaris-payments-01")])
+   (rdf/node :key "fw:polaris-it-digital-01" :label "IT Digital FW" :entity-type "Firewall" :layer "firewall" :citations [(rdf/node :source "layers/firewall.json")] :attrs [(rdf/node :key "org" :value "org:polaris-it-digital-01")])
+   (rdf/node :key "fw:polaris-ops-shared-01" :label "Shared ops FW" :entity-type "Firewall" :layer "firewall" :citations [(rdf/node :source "layers/firewall.json")] :attrs [(rdf/node :key "org" :value "org:polaris-ops-shared-01")])
+   (rdf/node :key "fw:polaris-regional-01" :label "Regional FW" :entity-type "Firewall" :layer "firewall" :citations [(rdf/node :source "layers/firewall.json")] :attrs [(rdf/node :key "org" :value "org:polaris-regional-01")])
+   (rdf/node :key "endpoint:polaris-00001" :label "Server-00001" :entity-type "Server" :layer "server" :citations [(rdf/node :source "layers/server.json")] :attrs [(rdf/node :key "org" :value "org:polaris-holdings")])
+   (rdf/node :key "endpoint:polaris-00002" :label "Workstation-00002" :entity-type "Workstation" :layer "node" :citations [(rdf/node :source "layers/node.json")] :attrs [(rdf/node :key "org" :value "org:polaris-holdings")])
+   (rdf/node :key "endpoint:polaris-00003" :label "NetworkDevice-00003" :entity-type "NetworkDevice" :layer "node" :citations [(rdf/node :source "layers/node.json")] :attrs [(rdf/node :key "org" :value "org:polaris-holdings")])
+   (rdf/node :key "endpoint:polaris-00005" :label "CloudRole-00005" :entity-type "CloudRole" :layer "server" :citations [(rdf/node :source "layers/server.json")] :attrs [(rdf/node :key "org" :value "org:polaris-holdings")])
+   (rdf/node :key "endpoint:polaris-00006" :label "Server-00006" :entity-type "Server" :layer "server" :citations [(rdf/node :source "layers/server.json")] :attrs [(rdf/node :key "org" :value "org:polaris-holdings")])
+   (rdf/node :key "endpoint:polaris-00046" :label "Server-00046" :entity-type "Server" :layer "server" :citations [(rdf/node :source "layers/server.json")] :attrs [(rdf/node :key "org" :value "org:polaris-bank-core-01")])
+   (rdf/node :key "endpoint:polaris-00048" :label "Server-00048" :entity-type "Server" :layer "server" :citations [(rdf/node :source "layers/server.json")] :attrs [(rdf/node :key "org" :value "org:polaris-bank-core-01")])
+   (rdf/node :key "endpoint:polaris-00062" :label "NetworkDevice-00062" :entity-type "NetworkDevice" :layer "node" :citations [(rdf/node :source "layers/node.json")] :attrs [(rdf/node :key "org" :value "org:polaris-bank-core-01")])
+   (rdf/node :key "cluster:nodes:polaris-bank-core-01" :label "Bank Core nodes" :entity-type "Cluster" :layer "node" :citations [(rdf/node :source "layers/node.json")] :attrs [(rdf/node :key "org" :value "org:polaris-bank-core-01")])
+   (rdf/node :key "cluster:servers:polaris-bank-core-01" :label "Bank Core servers" :entity-type "Cluster" :layer "server" :citations [(rdf/node :source "layers/server.json")] :attrs [(rdf/node :key "org" :value "org:polaris-bank-core-01")])]
+  :edges
+  [(rdf/node :key "e:hold-bank" :from "org:polaris-holdings" :to "org:polaris-bank-core-01" :kind "subsidiaryOf")
+   (rdf/node :key "e:hold-trust" :from "org:polaris-holdings" :to "org:polaris-bank-trust-01" :kind "subsidiaryOf")
+   (rdf/node :key "e:hold-sec" :from "org:polaris-holdings" :to "org:polaris-securities-01" :kind "subsidiaryOf")
+   (rdf/node :key "e:hold-pay" :from "org:polaris-holdings" :to "org:polaris-payments-01" :kind "subsidiaryOf")
+   (rdf/node :key "e:hold-it" :from "org:polaris-holdings" :to "org:polaris-it-digital-01" :kind "subsidiaryOf")
+   (rdf/node :key "e:hold-ops" :from "org:polaris-holdings" :to "org:polaris-ops-shared-01" :kind "subsidiaryOf")
+   (rdf/node :key "e:hold-reg" :from "org:polaris-holdings" :to "org:polaris-regional-01" :kind "subsidiaryOf")
+   (rdf/node :key "e:inet-transit" :from "net:polaris-inet" :to "net:polaris-transit" :kind "peersWith")
+   (rdf/node :key "e:hcorp-tr" :from "net:polaris-holdings-corp" :to "net:polaris-transit" :kind "uplinksTo")
+   (rdf/node :key "e:hdmz-hcorp" :from "net:polaris-holdings-dmz" :to "net:polaris-holdings-corp" :kind "extends")
+   (rdf/node :key "e:bcorp-tr" :from "net:polaris-bank-core-01-corp" :to "net:polaris-transit" :kind "uplinksTo")
+   (rdf/node :key "e:bdmz-tr" :from "net:polaris-bank-core-01-dmz" :to "net:polaris-transit" :kind "uplinksTo")
+   (rdf/node :key "e:pcorp-tr" :from "net:polaris-payments-01-corp" :to "net:polaris-transit" :kind "uplinksTo")
+   (rdf/node :key "e:icorp-tr" :from "net:polaris-it-digital-01-corp" :to "net:polaris-transit" :kind "uplinksTo")
+   (rdf/node :key "e:fw-edge-inet" :from "fw:polaris-edge" :to "net:polaris-inet" :kind "guards")
+   (rdf/node :key "e:fw-bank-dmz" :from "fw:polaris-bank-core-01" :to "net:polaris-bank-core-01-dmz" :kind "guards")
+   (rdf/node :key "e:fw-hold" :from "fw:polaris-holdings" :to "net:polaris-holdings-dmz" :kind "guards")
+   (rdf/node :key "e:fw-pay" :from "fw:polaris-payments-01" :to "net:polaris-payments-01-corp" :kind "guards")
+   (rdf/node :key "e:att-00001" :from "endpoint:polaris-00001" :to "net:polaris-holdings-corp" :kind "attachedTo")
+   (rdf/node :key "e:att-00046" :from "endpoint:polaris-00046" :to "net:polaris-bank-core-01-corp" :kind "attachedTo")
+   (rdf/node :key "e:att-00006" :from "endpoint:polaris-00006" :to "net:polaris-holdings-corp" :kind "attachedTo")
+   (rdf/node :key "e:host-00001" :from "endpoint:polaris-00001" :to "net:polaris-holdings-dmz" :kind "hostedOn")
+   (rdf/node :key "e:host-00046" :from "endpoint:polaris-00046" :to "net:polaris-bank-core-01-dmz" :kind "hostedOn")
+   (rdf/node :key "e:talk-01-06" :from "endpoint:polaris-00001" :to "endpoint:polaris-00006" :kind "talksTo")
+   (rdf/node :key "e:talk-46-48" :from "endpoint:polaris-00046" :to "endpoint:polaris-00048" :kind "talksTo")]
+  :diagram (rdf/node :arrangement "coplanar" :camera (rdf/node :mode "iso" :tilt 54 :yaw -28 :zoom (rdf/literal "0.96" :datatype "xsd:decimal") :focus-plane "plane:network") :selection "net:polaris-bank-core-01-corp" :planes [(rdf/node :key "plane:organization" :layer "organization" :label "Holding" :transform (rdf/node :x 0 :y 0 :z 0 :tilt 54 :yaw -28) :placements [(rdf/node :entity "org:polaris-securities-01" :x (rdf/literal "0.16" :datatype "xsd:decimal") :y (rdf/literal "0.28" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "org:polaris-bank-trust-01" :x (rdf/literal "0.34" :datatype "xsd:decimal") :y (rdf/literal "0.22" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "org:polaris-holdings" :x (rdf/literal "0.24" :datatype "xsd:decimal") :y (rdf/literal "0.5" :datatype "xsd:decimal") :tone "accent" :show-label true) (rdf/node :entity "org:polaris-card-01" :x (rdf/literal "0.48" :datatype "xsd:decimal") :y (rdf/literal "0.34" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "org:polaris-bank-core-01" :x (rdf/literal "0.64" :datatype "xsd:decimal") :y (rdf/literal "0.24" :datatype "xsd:decimal") :tone "info") (rdf/node :entity "org:polaris-it-digital-01" :x (rdf/literal "0.8" :datatype "xsd:decimal") :y (rdf/literal "0.32" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "org:polaris-payments-01" :x (rdf/literal "0.7" :datatype "xsd:decimal") :y (rdf/literal "0.52" :datatype "xsd:decimal") :tone "accent") (rdf/node :entity "org:polaris-ops-shared-01" :x (rdf/literal "0.4" :datatype "xsd:decimal") :y (rdf/literal "0.64" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "org:polaris-compliance-01" :x (rdf/literal "0.56" :datatype "xsd:decimal") :y (rdf/literal "0.76" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "org:polaris-regional-01" :x (rdf/literal "0.82" :datatype "xsd:decimal") :y (rdf/literal "0.68" :datatype "xsd:decimal") :tone "quiet")]) (rdf/node :key "plane:network" :layer "network" :label "Polaris Core" :transform (rdf/node :x 320 :y 16 :z 0 :tilt 54 :yaw -28) :placements [(rdf/node :entity "net:polaris-inet" :x (rdf/literal "0.14" :datatype "xsd:decimal") :y (rdf/literal "0.3" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "net:polaris-transit" :x (rdf/literal "0.36" :datatype "xsd:decimal") :y (rdf/literal "0.2" :datatype "xsd:decimal") :tone "info") (rdf/node :entity "net:polaris-holdings-dmz" :x (rdf/literal "0.22" :datatype "xsd:decimal") :y (rdf/literal "0.5" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "net:polaris-holdings-corp" :x (rdf/literal "0.38" :datatype "xsd:decimal") :y (rdf/literal "0.44" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "net:polaris-bank-core-01-dmz" :x (rdf/literal "0.58" :datatype "xsd:decimal") :y (rdf/literal "0.28" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "net:polaris-bank-core-01-corp" :x (rdf/literal "0.5" :datatype "xsd:decimal") :y (rdf/literal "0.54" :datatype "xsd:decimal") :tone "accent" :show-label true) (rdf/node :entity "net:polaris-securities-01-corp" :x (rdf/literal "0.74" :datatype "xsd:decimal") :y (rdf/literal "0.24" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "net:polaris-payments-01-corp" :x (rdf/literal "0.82" :datatype "xsd:decimal") :y (rdf/literal "0.48" :datatype "xsd:decimal") :tone "accent") (rdf/node :entity "net:polaris-it-digital-01-corp" :x (rdf/literal "0.32" :datatype "xsd:decimal") :y (rdf/literal "0.72" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "net:polaris-ops-shared-01-corp" :x (rdf/literal "0.54" :datatype "xsd:decimal") :y (rdf/literal "0.76" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "net:polaris-regional-01-corp" :x (rdf/literal "0.78" :datatype "xsd:decimal") :y (rdf/literal "0.72" :datatype "xsd:decimal") :tone "quiet")]) (rdf/node :key "plane:firewall" :layer "firewall" :label "Edge Guards" :transform (rdf/node :x 640 :y 0 :z 0 :tilt 54 :yaw -28) :placements [(rdf/node :entity "fw:polaris-edge" :x (rdf/literal "0.18" :datatype "xsd:decimal") :y (rdf/literal "0.34" :datatype "xsd:decimal") :tone "info") (rdf/node :entity "net:polaris-inet" :x (rdf/literal "0.16" :datatype "xsd:decimal") :y (rdf/literal "0.64" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "fw:polaris-holdings" :x (rdf/literal "0.36" :datatype "xsd:decimal") :y (rdf/literal "0.3" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "fw:polaris-bank-core-01" :x (rdf/literal "0.54" :datatype "xsd:decimal") :y (rdf/literal "0.38" :datatype "xsd:decimal") :tone "accent" :show-label true) (rdf/node :entity "net:polaris-bank-core-01-corp" :x (rdf/literal "0.48" :datatype "xsd:decimal") :y (rdf/literal "0.66" :datatype "xsd:decimal") :tone "accent") (rdf/node :entity "fw:polaris-payments-01" :x (rdf/literal "0.76" :datatype "xsd:decimal") :y (rdf/literal "0.4" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "fw:polaris-it-digital-01" :x (rdf/literal "0.32" :datatype "xsd:decimal") :y (rdf/literal "0.74" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "fw:polaris-ops-shared-01" :x (rdf/literal "0.62" :datatype "xsd:decimal") :y (rdf/literal "0.76" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "fw:polaris-regional-01" :x (rdf/literal "0.84" :datatype "xsd:decimal") :y (rdf/literal "0.66" :datatype "xsd:decimal") :tone "quiet")]) (rdf/node :key "plane:node" :layer "node" :label "Endpoints" :transform (rdf/node :x 120 :y 220 :z 0 :tilt 54 :yaw -28) :placements [(rdf/node :entity "endpoint:polaris-00003" :x (rdf/literal "0.22" :datatype "xsd:decimal") :y (rdf/literal "0.32" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "endpoint:polaris-00002" :x (rdf/literal "0.4" :datatype "xsd:decimal") :y (rdf/literal "0.26" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "endpoint:polaris-00001" :x (rdf/literal "0.3" :datatype "xsd:decimal") :y (rdf/literal "0.54" :datatype "xsd:decimal") :tone "info") (rdf/node :entity "endpoint:polaris-00006" :x (rdf/literal "0.52" :datatype "xsd:decimal") :y (rdf/literal "0.36" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "endpoint:polaris-00062" :x (rdf/literal "0.7" :datatype "xsd:decimal") :y (rdf/literal "0.28" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "endpoint:polaris-00046" :x (rdf/literal "0.74" :datatype "xsd:decimal") :y (rdf/literal "0.56" :datatype "xsd:decimal") :tone "accent" :show-label true) (rdf/node :entity "cluster:nodes:polaris-bank-core-01" :x (rdf/literal "0.46" :datatype "xsd:decimal") :y (rdf/literal "0.74" :datatype "xsd:decimal") :tone "quiet")]) (rdf/node :key "plane:server" :layer "server" :label "Compute" :transform (rdf/node :x 440 :y 236 :z 0 :tilt 54 :yaw -28) :placements [(rdf/node :entity "endpoint:polaris-00005" :x (rdf/literal "0.2" :datatype "xsd:decimal") :y (rdf/literal "0.3" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "endpoint:polaris-00001" :x (rdf/literal "0.34" :datatype "xsd:decimal") :y (rdf/literal "0.5" :datatype "xsd:decimal") :tone "accent" :show-label true) (rdf/node :entity "endpoint:polaris-00006" :x (rdf/literal "0.54" :datatype "xsd:decimal") :y (rdf/literal "0.32" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "endpoint:polaris-00048" :x (rdf/literal "0.72" :datatype "xsd:decimal") :y (rdf/literal "0.36" :datatype "xsd:decimal") :tone "quiet") (rdf/node :entity "endpoint:polaris-00046" :x (rdf/literal "0.66" :datatype "xsd:decimal") :y (rdf/literal "0.6" :datatype "xsd:decimal") :tone "info") (rdf/node :entity "cluster:servers:polaris-bank-core-01" :x (rdf/literal "0.42" :datatype "xsd:decimal") :y (rdf/literal "0.74" :datatype "xsd:decimal") :tone "quiet")])] :cross-links [(rdf/node :key "xl:hold-corp" :from "org:polaris-holdings" :to "net:polaris-holdings-corp" :kind "usesNetwork") (rdf/node :key "xl:bank-corp" :from "org:polaris-bank-core-01" :to "net:polaris-bank-core-01-corp" :kind "usesNetwork") (rdf/node :key "xl:pay-corp" :from "org:polaris-payments-01" :to "net:polaris-payments-01-corp" :kind "usesNetwork") (rdf/node :key "xl:it-corp" :from "org:polaris-it-digital-01" :to "net:polaris-it-digital-01-corp" :kind "usesNetwork") (rdf/node :key "xl:reg-corp" :from "org:polaris-regional-01" :to "net:polaris-regional-01-corp" :kind "usesNetwork") (rdf/node :key "xl:fw-edge" :from "fw:polaris-edge" :to "net:polaris-inet" :kind "guards") (rdf/node :key "xl:fw-bank" :from "fw:polaris-bank-core-01" :to "net:polaris-bank-core-01-dmz" :kind "guards") (rdf/node :key "xl:srv-vlan" :from "endpoint:polaris-00046" :to "net:polaris-bank-core-01-corp" :kind "attachedTo")])
+  :inference (rdf/node :viz-only true :no-runners true :hypotheses [(rdf/node :key "path:bec-vendor-change" :label "BEC / vendor-change" :summary "Illustrative hypothesis: a spoofed vendor-change request touches payments, its VLAN, and a bank-core server. Not an executed path." :category "BEC" :honesty "hypothesis" :observation-count 0 :relative-score (rdf/literal "0.34" :datatype "xsd:decimal") :score-note "Illustrative rank among synthetic hypotheses. Not a detection score." :node-ids ["org:polaris-payments-01" "net:polaris-payments-01-corp" "fw:polaris-payments-01" "endpoint:polaris-00046"] :steps [(rdf/node :from "org:polaris-payments-01" :to "net:polaris-payments-01-corp" :kind "hypothesis") (rdf/node :from "net:polaris-payments-01-corp" :to "fw:polaris-payments-01" :kind "hypothesis") (rdf/node :from "fw:polaris-payments-01" :to "endpoint:polaris-00046" :kind "hypothesis")]) (rdf/node :key "path:support-fraud" :label "Support fraud" :summary "Illustrative hypothesis: a helpdesk reset story touching shared ops and IT digital. Visualization only." :category "SupportFraud" :honesty "hypothesis" :observation-count 0 :relative-score (rdf/literal "0.22" :datatype "xsd:decimal") :score-note "Illustrative rank among synthetic hypotheses. Not a detection score." :node-ids ["org:polaris-ops-shared-01" "org:polaris-it-digital-01" "net:polaris-it-digital-01-corp"] :steps [(rdf/node :from "org:polaris-ops-shared-01" :to "org:polaris-it-digital-01" :kind "hypothesis") (rdf/node :from "org:polaris-it-digital-01" :to "net:polaris-it-digital-01-corp" :kind "hypothesis")])]))

@@ -2,7 +2,7 @@
   "name": "mithril-twin",
   "private": true,
   "type": "module",
-  "description": "Mithril Twin viewer and the .mith diagram language (synthetic demo data, display only).",
+  "description": "Twin vocabulary/viewer for Mithril .mith (github.com/mithril-lang/mithril). Synthetic demo data, display only.",
   "license": "Apache-2.0",
   "workspaces": [
     "packages/*",

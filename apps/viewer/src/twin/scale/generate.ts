@@ -8,9 +8,13 @@ import type {
   MithGrant,
   MithGrantLevel,
   MithReach,
+  MithDeviceLogs,
+  MithDocument,
   MithRole,
+  MithSoftware,
   MithVerification,
 } from '../mith/types'
+import { toTwinForm } from '../mith/twin'
 import { deviceId, PACK_VERSION, personId, personLabel, type PackChunk, type PackCompany, type PackManifest } from './pack'
 
 /**
@@ -20,7 +24,7 @@ import { deviceId, PACK_VERSION, personId, personLabel, type PackChunk, type Pac
  */
 
 export const ENTERPRISE_SEED = 20260927
-export const GENERATOR = { name: 'polaris-enterprise', version: 2 }
+export const GENERATOR = { name: 'polaris-enterprise', version: 3 }
 export const TARGETS = {
   subsidiaries: 300,
   departments: 2000,
@@ -30,6 +34,50 @@ export const TARGETS = {
   unsanctioned: 150,
   groupSystems: 30,
 }
+
+
+/** Synthetic software catalog (vendors are placeholders). Indices are used by `STACKS`. */
+export const SOFTWARE: MithSoftware[] = [
+  { name: 'Office suite', version: '16.0', vendor: 'Example Vendor A', sanctioned: true, eol: false, vulnerability: 'none' },
+  { name: 'Browser', version: '128.0', vendor: 'Example Vendor B', sanctioned: true, eol: false, vulnerability: 'low' },
+  { name: 'EDR agent', version: '7.4', vendor: 'Example Vendor C', sanctioned: true, eol: false, vulnerability: 'none' },
+  { name: 'Browser', version: '96.0', vendor: 'Example Vendor B', sanctioned: true, eol: true, vulnerability: 'high' },
+  { name: 'PDF viewer', version: '9.1', vendor: 'Example Vendor D', sanctioned: true, eol: true, vulnerability: 'high' },
+  { name: 'File sync client', version: '3.2', vendor: 'Example Vendor E', sanctioned: false, eol: false, vulnerability: 'medium' },
+  { name: 'Remote support tool', version: '5.5', vendor: 'Example Vendor G', sanctioned: false, eol: false, vulnerability: 'high' },
+  { name: 'Mobile management agent', version: '4.1', vendor: 'Example Vendor H', sanctioned: true, eol: false, vulnerability: 'none' },
+  { name: 'Messaging app', version: '2.9', vendor: 'Example Vendor M', sanctioned: true, eol: false, vulnerability: 'none' },
+  { name: 'Server OS', version: '2016', vendor: 'Example Vendor I', sanctioned: true, eol: true, vulnerability: 'high' },
+  { name: 'Server OS', version: '2022', vendor: 'Example Vendor I', sanctioned: true, eol: false, vulnerability: 'none' },
+  { name: 'Web server', version: '2.4', vendor: 'Example Vendor J', sanctioned: true, eol: false, vulnerability: 'medium' },
+  { name: 'HMI runtime', version: '6.0', vendor: 'Example Vendor K', sanctioned: true, eol: true, vulnerability: 'critical' },
+  { name: 'Trading terminal', version: '11.2', vendor: 'Example Vendor L', sanctioned: true, eol: false, vulnerability: 'none' },
+]
+/** Software stacks: [clean, …risky variants] per device kind (Laptop, Phone, Workstation, Server, OT). */
+export const STACKS: number[][] = [
+  [0, 1, 2, 8], // 0 laptop clean
+  [0, 3, 2, 8], // 1 laptop, outdated browser (EOL)
+  [0, 1, 2, 4], // 2 laptop, EOL PDF viewer
+  [0, 1, 2, 5], // 3 laptop, unsanctioned sync client
+  [0, 1, 6], // 4 laptop, unsanctioned remote tool, no EDR
+  [7, 8], // 5 phone clean
+  [7, 8, 5], // 6 phone, unsanctioned sync client
+  [0, 1, 2, 13], // 7 workstation clean
+  [0, 3, 2, 13], // 8 workstation, EOL browser
+  [10, 2, 11], // 9 server clean
+  [9, 11], // 10 legacy server (EOL OS, no EDR)
+  [12], // 11 OT controller (EOL runtime)
+]
+const KIND_STACKS: [clean: number, risky: number[]][] = [[0, [1, 2, 3, 4]], [5, [6]], [7, [8]], [9, [10]], [11, [11]]]
+export const LOG_PROFILES: Omit<MithDeviceLogs, 'events'>[] = [
+  { sources: ['edr', 'os-auth', 'process'], forwardTo: 'siem', retentionDays: 90 }, // 0 full
+  { sources: ['edr', 'os-auth'], forwardTo: 'siem', retentionDays: 14 }, // 1 short retention
+  { sources: ['os-auth'], forwardTo: 'none', retentionDays: 7 }, // 2 local only (blind)
+  { sources: ['saas-audit'], forwardTo: 'siem', retentionDays: 30 }, // 3 phone
+  { sources: ['os-auth', 'process', 'network'], forwardTo: 'siem', retentionDays: 180 }, // 4 server
+  { sources: ['os-auth'], forwardTo: 'siem', retentionDays: 7 }, // 5 legacy server, short
+  { sources: ['network'], forwardTo: 'none', retentionDays: 0 }, // 6 OT, local only
+]
 
 function mulberry32(seed: number) {
   let a = seed >>> 0
@@ -271,6 +319,7 @@ export type GeneratedPack = {
 
 export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
   const r = mulberry32(seed)
+  const rd = mulberry32(seed ^ 0xde71ce)
   const boundaries: MithBoundary[] = [{ id: 'b:polaris', label: '北極星 Group (synthetic)', kind: 'company' }]
   const entities: MithEntity[] = []
   const edges: MithEdge[] = []
@@ -609,14 +658,28 @@ export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
     }
     const teams: PackChunk['teams'] = []
     const people: PackChunk['people'] = { team: [], zone: [], title: [] }
-    const devices: PackChunk['devices'] = { owner: [], team: [], kind: [], zone: [] }
+    const devices: Required<PackChunk['devices']> = { owner: [], team: [], kind: [], zone: [], stack: [], logs: [], admin: [] }
     const holders: Record<string, number[]> = {}
     const zoneCount: Record<string, number> = {}
+    let itAdmin = -1
+    // Device hygiene uses its own stream so org / reach data stay byte-stable.
+    const bad = 0.28 * (1.2 - c.maturity)
     const addDevice = (owner: number, team: number, kind: number, zoneId: string) => {
       devices.owner.push(owner)
       devices.team.push(team)
       devices.kind.push(kind)
       devices.zone.push(zi(zoneId))
+      const [clean, risky] = KIND_STACKS[kind]!
+      const stack = kind === 4 ? clean : rd() < bad ? risky[Math.floor(rd() * risky.length)]! : clean
+      devices.stack.push(stack)
+      let logs: number
+      if (kind === 1) logs = rd() < 0.5 ? 3 : -1
+      else if (kind === 3) logs = stack === 10 ? 5 : 4
+      else if (kind === 4) logs = 6
+      else if (stack === 4) logs = 2
+      else { const g = rd(); logs = g < bad * 0.4 ? 2 : g < bad ? 1 : 0 }
+      devices.logs.push(logs)
+      devices.admin.push(-1)
       zoneCount[zoneId] = (zoneCount[zoneId] ?? 0) + 1
     }
     for (const d of c.depts) {
@@ -625,6 +688,7 @@ export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
         teams.push({ id: `${d.id}.t${t + 1}`, label: `${d.label} · Team ${String.fromCharCode(65 + t)}`, parent: d.id })
       }
       const deptStart = people.team.length
+      if (d.kind === 'it' && itAdmin < 0 && d.people > 1) itAdmin = deptStart + 1
       const firstDevice: number[] = []
       const devStart = devices.owner.length
       // Everyone sits on the corp user VLAN; the payments segment holds servers only.
@@ -662,11 +726,20 @@ export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
         const p0 = list[0]!
         const pid = personId(c.id, p0)
         entities.push({ id: pid, label: personLabel(c.id, p0), type: 'Person', layer: 'organization', citations: [], attrs: { representative: 'true' }, boundary: d.id, zone: personZone })
-        entities.push({ id: deviceId(c.id, firstDevice[p0 - deptStart]!), label: `Laptop · ${personLabel(c.id, p0)}`, type: 'Laptop', layer: 'node', citations: [], attrs: { owner: pid }, boundary: d.id, zone: personZone })
+        const dev0 = firstDevice[p0 - deptStart]!
+        const laptop: MithEntity = { id: deviceId(c.id, dev0), label: `Laptop · ${personLabel(c.id, p0)}`, type: 'Laptop', layer: 'node', citations: [], attrs: { owner: pid }, boundary: d.id, zone: personZone }
+        entities.push(laptop)
         role.holders = [pid]
         role.zone = personZone
       })
       deptAgg[d.id] = [d.people, devices.owner.length - devStart, d.teams]
+    }
+    // One IT admin per company also administers servers, OT, and ~10% of laptops.
+    if (itAdmin >= 0) {
+      for (let i = 0; i < devices.owner.length; i++) {
+        const k = devices.kind[i]!
+        if (k === 3 || k === 4 || (k === 0 && rd() < 0.1)) devices.admin[i] = itAdmin
+      }
     }
     totalTeams += teams.length
     totalDevices += devices.owner.length
@@ -682,6 +755,9 @@ export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
       people,
       devices,
       holders,
+      software: SOFTWARE,
+      stacks: STACKS,
+      logProfiles: LOG_PROFILES,
     })
     packCompanies.push({
       id: c.id,
@@ -820,12 +896,15 @@ export function generateEnterprise(seed = ENTERPRISE_SEED): GeneratedPack {
   return { manifest, index, chunks }
 }
 
-/** Serialized files, keyed by path relative to the pack root. Compact JSON (no indentation). */
+/**
+ * Serialized files, keyed by path relative to the pack root. `index.mith` is Mithril Form,
+ * `(mithril/twin-document …)`; manifest and chunks are compact JSON.
+ */
 export function enterpriseFiles(seed = ENTERPRISE_SEED): Map<string, string> {
   const pack = generateEnterprise(seed)
   const out = new Map<string, string>()
   out.set('manifest.json', JSON.stringify(pack.manifest))
-  out.set('index.mith', JSON.stringify(pack.index))
+  out.set('index.mith', toTwinForm(pack.index as unknown as MithDocument))
   for (const [file, chunk] of pack.chunks) out.set(file, JSON.stringify(chunk))
   return out
 }

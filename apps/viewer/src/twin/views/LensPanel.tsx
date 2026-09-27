@@ -9,7 +9,9 @@ import {
   shadowSystems,
 } from '../mith/org'
 import { analyzeExposure, type ExposureReport } from '../mith/exposure'
-import type { MithDocument } from '../mith/types'
+import { buildGraph, dijkstra, NODE, reconstruct, resolveWeights } from '../mith/graph'
+import type { MithDocument, MithEntity } from '../mith/types'
+import { DeviceDetail, PersonDevices } from './DeviceDetail'
 
 type Props = {
   doc: MithDocument
@@ -57,6 +59,19 @@ export default function LensPanel({ doc, lens, dim, selectedId, onSelect }: Prop
   const actor = selectedId ? org.actors.find((a) => a.id === selectedId) : undefined
   const boundary = selectedId ? org.boundaries.find((b) => b.id === selectedId) : undefined
   const unverifiedTotal = paths.filter((p) => p.unverified).length
+  const weights = useMemo(() => resolveWeights(doc.model.weights), [doc])
+  // person → devices (owner or any linked user)
+  const personDevices = useMemo(() => {
+    const m = new Map<string, { device: MithEntity; relation: string }[]>()
+    for (const d of doc.model.entities) {
+      if (d.layer !== 'node') continue
+      const links = d.users?.length ? d.users : d.attrs.owner ? [{ person: d.attrs.owner, relation: 'primary' as const }] : []
+      for (const u of links) m.set(u.person, [...(m.get(u.person) ?? []), { device: d, relation: u.relation }])
+    }
+    return m
+  }, [doc])
+  const graph = useMemo(() => buildGraph(doc.model), [doc])
+  const isDevice = !!entity && entity.layer === 'node' && !!(entity.software || entity.logs || entity.users)
 
   return (
     <div className="lens-panel" data-lens-panel={lens}>
@@ -122,6 +137,10 @@ export default function LensPanel({ doc, lens, dim, selectedId, onSelect }: Prop
             <h2>{labelOf(selectedId!)}</h2>
             <button type="button" className="make-icon-btn" aria-label="Clear selection" onClick={() => onSelect(null)}>×</button>
           </div>
+          {entity && isDevice && <DeviceDetail device={entity} weights={weights} labelOf={labelOf} onPick={(id) => onSelect(id)} />}
+          {entity && !isDevice && personDevices.has(entity.id) && (
+            <PersonDevices person={entity} devices={personDevices.get(entity.id)!} weights={weights} onPick={(id) => onSelect(id)} />
+          )}
           {entity && (
             <dl className="lens-kv">
               <div><dt>type</dt><dd>{entity.type}</dd></div>
@@ -164,6 +183,39 @@ export default function LensPanel({ doc, lens, dim, selectedId, onSelect }: Prop
           {role && (lens === 'impersonation' || lens === 'access') && (
             <EasiestPath report={report} roleId={role.id} labelOf={labelOf} />
           )}
+          {role && (lens === 'impersonation' || lens === 'access') && (() => {
+            // After seizing the role: where the impersonator lands (role → holder / user device),
+            // and the path to its top resource when that walks through a device. Device ease and
+            // detection blind spots are explanation only; they never change reachability.
+            const x = report.roles.find((r) => r.role === role.id)
+            const ri = graph.index.get(role.id)
+            if (ri == null) return null
+            const dj = dijkstra(graph, [ri])
+            const ti = x?.topResource ? graph.index.get(x.topResource) : undefined
+            const top = ti == null ? [] : reconstruct(graph, dj, ti)
+            const viaDevice = top.some((h) => graph.nodeType[graph.index.get(h.to)!] === NODE.device)
+            const pivots = (graph.roleZones.get(ri) ?? [])
+              .filter((z) => z.device >= 0)
+              .map((z) => reconstruct(graph, dj, z.device).find((h) => h.to === graph.ids[z.device]))
+              .filter((h): h is NonNullable<typeof h> => !!h)
+            const hops = viaDevice ? top : pivots
+            if (!hops.length) return null
+            return (
+              <>
+                <h3 className="lens-h3">{viaDevice ? 'From the role to its top resource' : 'Devices an impersonator of this role lands on'}</h3>
+                <ol className="device-hops" data-role-device-path={role.id}>
+                  {hops.map((h, i) => (
+                    <li key={`${h.ref}:${h.to}:${i}`}>
+                      <span>{labelOf(h.from)} → {labelOf(h.to)}</span>
+                      <small>{h.kind} · cost {Number.isInteger(h.cost) ? h.cost : h.cost.toFixed(2)}</small>
+                      {h.blind && <em className={`scale-hop-blind blind-${h.blind}`} data-hop-blind={h.blind}>{h.blind === 'blind' ? 'detection blind spot' : 'short log retention'}</em>}
+                      {h.notes?.map((n) => <small key={n} className="scale-hop-note">{n}</small>)}
+                    </li>
+                  ))}
+                </ol>
+              </>
+            )
+          })()}
           {(role || actor) && lens === 'impersonation' && (
             <>
               <h3 className="lens-h3">Paths through this {role ? 'role' : 'actor'}</h3>

@@ -1,115 +1,18 @@
-{
-  "mith": "0.1",
-  "kind": "document",
-  "id": "polaris-floor-synthetic",
-  "title": "Polaris floor",
-  "dataset_kind": "synthetic-demo",
-  "generated_at": "2026-09-27T18:40:00+09:00",
-  "disclaimer": "Tiny coplanar floor. Fictional Polaris FI. Two boards share transform.z and differ in x/y. Hypothesis overlay is visualization only.",
-  "model": {
-    "citations": [
-      { "source": "synthetic-demo", "note": "two-board floor, not a live institution" }
-    ],
-    "entities": [
-      {
-        "id": "org:polaris-holdings",
-        "label": "Polaris Holdings",
-        "type": "HoldingCompany",
-        "layer": "organization",
-        "citations": [{ "source": "synthetic-demo" }],
-        "attrs": {}
-      },
-      {
-        "id": "org:polaris-bank-core-01",
-        "label": "Polaris Bank Core",
-        "type": "BankCore",
-        "layer": "organization",
-        "citations": [{ "source": "synthetic-demo" }],
-        "attrs": {}
-      },
-      {
-        "id": "net:polaris-bank-core-01-corp",
-        "label": "Bank Core VLAN",
-        "type": "CorpVLAN",
-        "layer": "network",
-        "citations": [{ "source": "synthetic-demo" }],
-        "attrs": { "cidr": "10.14.0.0/24" }
-      }
-    ],
-    "edges": [
-      {
-        "id": "e:hold-bank",
-        "source": "org:polaris-holdings",
-        "target": "org:polaris-bank-core-01",
-        "kind": "subsidiaryOf"
-      },
-      {
-        "id": "e:bank-vlan",
-        "source": "org:polaris-bank-core-01",
-        "target": "net:polaris-bank-core-01-corp",
-        "kind": "usesNetwork"
-      }
-    ]
-  },
-  "diagram": {
-    "arrangement": "coplanar",
-    "camera": {
-      "mode": "iso",
-      "tilt": 54,
-      "yaw": -28,
-      "zoom": 1,
-      "focusPlane": "plane:core"
-    },
-    "selection": "net:polaris-bank-core-01-corp",
-    "planes": [
-      {
-        "id": "plane:holding",
-        "layer": "organization",
-        "label": "Holding",
-        "transform": { "x": 0, "y": 0, "z": 0, "tilt": 54, "yaw": -28 },
-        "placements": [
-          { "entity": "org:polaris-holdings", "x": 0.32, "y": 0.42, "tone": "accent", "showLabel": true },
-          { "entity": "org:polaris-bank-core-01", "x": 0.68, "y": 0.48, "tone": "info" }
-        ]
-      },
-      {
-        "id": "plane:core",
-        "layer": "network",
-        "label": "Polaris Core",
-        "transform": { "x": 360, "y": 20, "z": 0, "tilt": 54, "yaw": -28 },
-        "placements": [
-          { "entity": "org:polaris-bank-core-01", "x": 0.28, "y": 0.4, "tone": "info" },
-          { "entity": "net:polaris-bank-core-01-corp", "x": 0.62, "y": 0.5, "tone": "accent", "showLabel": true }
-        ]
-      }
-    ],
-    "crossLinks": [
-      {
-        "id": "xl:bank-vlan",
-        "from": "org:polaris-bank-core-01",
-        "to": "net:polaris-bank-core-01-corp",
-        "kind": "usesNetwork"
-      }
-    ]
-  },
-  "inference": {
-    "viz_only": true,
-    "no_runners": true,
-    "hypotheses": [
-      {
-        "id": "path:vlan-touch",
-        "label": "VLAN touch",
-        "summary": "Illustrative hypothesis that a holding-company story touches the bank-core VLAN. Not an executed path.",
-        "category": "BEC",
-        "honesty": "hypothesis",
-        "observation_count": 0,
-        "relative_score": 0.2,
-        "score_note": "Illustrative rank. Not a detection score.",
-        "node_ids": ["org:polaris-holdings", "net:polaris-bank-core-01-corp"],
-        "steps": [
-          { "from": "org:polaris-holdings", "to": "net:polaris-bank-core-01-corp", "kind": "hypothesis" }
-        ]
-      }
-    ]
-  }
-}
+(mithril/twin-document
+  ;; Twin vocabulary for Mithril .mith (twin-local terms: https://mithril.fund/lib/twin/v1#). Synthetic, display-only.
+  :id "https://mithril.fund/lib/twin/polaris-floor-synthetic"
+  :title "Polaris floor"
+  :dataset-kind "synthetic-demo"
+  :generated-at "2026-09-27T18:40:00+09:00"
+  :disclaimer "Tiny coplanar floor. Fictional Polaris FI. Two boards share transform.z and differ in x/y. Hypothesis overlay is visualization only."
+  :citations
+  [(rdf/node :source "synthetic-demo" :note "two-board floor, not a live institution")]
+  :entities
+  [(rdf/node :key "org:polaris-holdings" :label "Polaris Holdings" :entity-type "HoldingCompany" :layer "organization" :citations [(rdf/node :source "synthetic-demo")])
+   (rdf/node :key "org:polaris-bank-core-01" :label "Polaris Bank Core" :entity-type "BankCore" :layer "organization" :citations [(rdf/node :source "synthetic-demo")])
+   (rdf/node :key "net:polaris-bank-core-01-corp" :label "Bank Core VLAN" :entity-type "CorpVLAN" :layer "network" :citations [(rdf/node :source "synthetic-demo")] :attrs [(rdf/node :key "cidr" :value "10.14.0.0/24")])]
+  :edges
+  [(rdf/node :key "e:hold-bank" :from "org:polaris-holdings" :to "org:polaris-bank-core-01" :kind "subsidiaryOf")
+   (rdf/node :key "e:bank-vlan" :from "org:polaris-bank-core-01" :to "net:polaris-bank-core-01-corp" :kind "usesNetwork")]
+  :diagram (rdf/node :arrangement "coplanar" :camera (rdf/node :mode "iso" :tilt 54 :yaw -28 :zoom 1 :focus-plane "plane:core") :selection "net:polaris-bank-core-01-corp" :planes [(rdf/node :key "plane:holding" :layer "organization" :label "Holding" :transform (rdf/node :x 0 :y 0 :z 0 :tilt 54 :yaw -28) :placements [(rdf/node :entity "org:polaris-holdings" :x (rdf/literal "0.32" :datatype "xsd:decimal") :y (rdf/literal "0.42" :datatype "xsd:decimal") :tone "accent" :show-label true) (rdf/node :entity "org:polaris-bank-core-01" :x (rdf/literal "0.68" :datatype "xsd:decimal") :y (rdf/literal "0.48" :datatype "xsd:decimal") :tone "info")]) (rdf/node :key "plane:core" :layer "network" :label "Polaris Core" :transform (rdf/node :x 360 :y 20 :z 0 :tilt 54 :yaw -28) :placements [(rdf/node :entity "org:polaris-bank-core-01" :x (rdf/literal "0.28" :datatype "xsd:decimal") :y (rdf/literal "0.4" :datatype "xsd:decimal") :tone "info") (rdf/node :entity "net:polaris-bank-core-01-corp" :x (rdf/literal "0.62" :datatype "xsd:decimal") :y (rdf/literal "0.5" :datatype "xsd:decimal") :tone "accent" :show-label true)])] :cross-links [(rdf/node :key "xl:bank-vlan" :from "org:polaris-bank-core-01" :to "net:polaris-bank-core-01-corp" :kind "usesNetwork")])
+  :inference (rdf/node :viz-only true :no-runners true :hypotheses [(rdf/node :key "path:vlan-touch" :label "VLAN touch" :summary "Illustrative hypothesis that a holding-company story touches the bank-core VLAN. Not an executed path." :category "BEC" :honesty "hypothesis" :observation-count 0 :relative-score (rdf/literal "0.2" :datatype "xsd:decimal") :score-note "Illustrative rank. Not a detection score." :node-ids ["org:polaris-holdings" "net:polaris-bank-core-01-corp"] :steps [(rdf/node :from "org:polaris-holdings" :to "net:polaris-bank-core-01-corp" :kind "hypothesis")])]))

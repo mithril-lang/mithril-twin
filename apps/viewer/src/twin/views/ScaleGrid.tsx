@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as REPointerEvent,
   type ReactNode,
   type WheelEvent as REWheelEvent,
@@ -12,8 +13,20 @@ import {
 import GitHubLink from '../components/GitHubLink'
 import ThemeSwitcher from '../components/ThemeSwitcher'
 import { CONTROL_WEIGHTS, type MixedHop, type RoleScore, type ZoneScore } from '../mith/exposure'
-import { DEFAULT_JUMP_HOST_COST, DEFAULT_REACH_WEIGHTS, EDGE, resolveWeights } from '../mith/graph'
+import {
+  DEFAULT_DEVICE_WEIGHTS,
+  DEFAULT_JUMP_HOST_COST,
+  DEFAULT_MIN_RETENTION_DAYS,
+  DEFAULT_REACH_WEIGHTS,
+  deviceRisk,
+  EDGE,
+  logCoverage,
+  resolveWeights,
+  type ResolvedWeights,
+} from '../mith/graph'
 import { fitBoardsInSafeArea } from '../mith/geometry'
+import { MithFileActions, useMithFileDrop } from '../components/MithFileActions'
+import { buildMithDownload, formatBytes, saveMithFile } from '../mith/io'
 import { SAMPLE_DOCS } from '../mith/load'
 import type { MithBoundary, MithChannel, MithDocument, MithEntity, MithReach, MithRole } from '../mith/types'
 import { sharedEngine } from '../scale/client'
@@ -22,19 +35,25 @@ import { HOT, type Heat, type ScaleAnalysis } from '../scale/model'
 import { expandChunk, type ExpandedChunk, type PackCompany, type PackManifest } from '../scale/pack'
 import { inset, treemap, type Rect } from '../scale/treemap'
 import { useBoardAnchors } from './node3d'
+import { chunkDevice, chunkPerson, coverageColor, DeviceDetail, devicesByPerson, easeColor, PersonDevices } from './DeviceDetail'
 import { RankedResources, RankedRoles } from './LensPanel'
 import './make-grid.css'
 import './lens.css'
 import './scale.css'
 
-type ScaleLens = 'org' | 'network' | 'access' | 'impersonation' | 'shadow'
+type ScaleLens = 'org' | 'network' | 'access' | 'impersonation' | 'shadow' | 'software' | 'logs'
 const SCALE_LENSES: { id: ScaleLens; label: string }[] = [
   { id: 'org', label: 'Org' },
   { id: 'network', label: 'Network' },
   { id: 'access', label: 'Access' },
   { id: 'impersonation', label: 'Impersonation' },
   { id: 'shadow', label: 'Shadow IT' },
+  { id: 'software', label: 'Software risk' },
+  { id: 'logs', label: 'Log gaps' },
 ]
+const DEVICE_LENS = (l: ScaleLens) => l === 'software' || l === 'logs'
+/** Device-share heat saturates here (device shares run higher than hot-role shares). */
+const DEVICE_HEAT_SATURATION = 0.5
 type Level = { company: string | null; dept: string | null; team: string | null }
 type PerfRow = { name: string; ms: number; note?: string }
 
@@ -43,6 +62,7 @@ type Props = {
   seed: number
   sampleId: string
   onPickSample: (id: string) => void
+  onImportFiles: (files: File[]) => void
 }
 
 const WORLD_W = 1500
@@ -142,7 +162,7 @@ type FrameSpec = { id: string; label: string; rect: Rect; kind: string; dashed?:
  *   team → virtualized people / device list in the right rail
  * Never more than a few hundred DOM tiles at once. Analysis runs in a Web Worker.
  */
-export default function ScaleGrid({ seed, sampleId, onPickSample }: Props) {
+export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles }: Props) {
   const stageRef = useRef<HTMLDivElement>(null)
   const [manifest, setManifest] = useState<PackManifest | null>(null)
   const [doc, setDoc] = useState<MithDocument | null>(null)
@@ -159,6 +179,8 @@ export default function ScaleGrid({ seed, sampleId, onPickSample }: Props) {
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [perf, setPerf] = useState<PerfRow[]>([])
   const drag = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null)
+  const [exportNote, setExportNote] = useState<string | null>(null)
+  const { over, handlers: dropHandlers } = useMithFileDrop(onImportFiles)
   const userMoved = useRef(false)
   const fitPasses = useRef(0)
   // Timing mark for the next committed view change; recorded two frames later (after paint).
@@ -373,8 +395,18 @@ export default function ScaleGrid({ seed, sampleId, onPickSample }: Props) {
     if (!manifest || !doc) return { frames, tiles, links, width, height }
     const shareOf = (h: Record<string, Heat> | undefined, id: string) => h?.[id]?.share ?? 0
     const maxShadow = Math.max(1, ...Object.values(analysis?.companyShadow ?? {}))
+    const devShare = (counts: [number, number, number, number] | undefined) =>
+      counts && counts[0] ? (lens === 'software' ? counts[1] : counts[2]) / counts[0] : 0
+    const devMeta = (counts: [number, number, number, number] | undefined) =>
+      counts
+        ? lens === 'software'
+          ? `${fmt(counts[1])} of ${fmt(counts[0])} dev high-ease`
+          : `${fmt(counts[2])} of ${fmt(counts[0])} dev log gaps${counts[3] ? ` · ${fmt(counts[3])} unknown` : ''}`
+        : 'device data pending'
     const companyFill = (c: PackCompany) =>
-      lens === 'shadow'
+      DEVICE_LENS(lens)
+        ? shareColor(devShare(analysis?.devices?.company[c.id]), DEVICE_HEAT_SATURATION)
+        : lens === 'shadow'
         ? shadowColor(analysis?.companyShadow[c.id] ?? 0, maxShadow)
         : lens === 'access'
           ? shareColor(shareOf(analysis?.companyAccessHeat, c.id), sat)
@@ -459,11 +491,13 @@ export default function ScaleGrid({ seed, sampleId, onPickSample }: Props) {
             rect: inset(t, 1.2),
             fill: companyFill(c),
             meta:
-              lens === 'shadow'
+              DEVICE_LENS(lens)
+                ? devMeta(analysis?.devices?.company[c.id])
+                : lens === 'shadow'
                 ? `${analysis?.companyShadow[c.id] ?? 0} shadow apps · ${fmt(c.people)} ppl`
                 : `${fmt(c.people)} ppl · ${fmt(c.devices)} dev${hot ? ` · ${hot} hot` : ''}`,
             kind: 'company',
-            hot: hot > 0,
+            hot: DEVICE_LENS(lens) ? devShare(analysis?.devices?.company[c.id]) >= DEVICE_HEAT_SATURATION : hot > 0,
             onClick: () => void goTo({ company: c.id, dept: null, team: null }),
           })
         }
@@ -544,10 +578,14 @@ export default function ScaleGrid({ seed, sampleId, onPickSample }: Props) {
           id: d.id,
           label: d.label,
           rect: inset(t, 3),
-          fill: lens === 'shadow' ? shadowColor(analysis?.deptShadow[d.id]?.length ?? 0, maxDeptShadow) : shareColor(heat?.share ?? 0, sat),
-          meta: lens === 'shadow' ? `${analysis?.deptShadow[d.id]?.length ?? 0} shadow apps` : `${fmt(p)} ppl · ${fmt(dv)} dev · ${tm} teams`,
+          fill: DEVICE_LENS(lens)
+            ? shareColor(devShare(analysis?.devices?.dept[d.id]), DEVICE_HEAT_SATURATION)
+            : lens === 'shadow' ? shadowColor(analysis?.deptShadow[d.id]?.length ?? 0, maxDeptShadow) : shareColor(heat?.share ?? 0, sat),
+          meta: DEVICE_LENS(lens)
+            ? devMeta(analysis?.devices?.dept[d.id])
+            : lens === 'shadow' ? `${analysis?.deptShadow[d.id]?.length ?? 0} shadow apps` : `${fmt(p)} ppl · ${fmt(dv)} dev · ${tm} teams`,
           kind: 'department',
-          hot: (heat?.hot ?? 0) > 0,
+          hot: DEVICE_LENS(lens) ? devShare(analysis?.devices?.dept[d.id]) >= DEVICE_HEAT_SATURATION : (heat?.hot ?? 0) > 0,
           tag: true,
           onClick: () => void goTo({ company: company.id, dept: d.id, team: null }),
         })
@@ -713,10 +751,27 @@ export default function ScaleGrid({ seed, sampleId, onPickSample }: Props) {
   const levelName = level.team ? 'team' : level.dept ? 'department' : level.company ? 'company' : 'group'
   const tileCount = floor.tiles.length
   const ready = !!doc && !!manifest
+  const onExport = () => {
+    if (!doc) return
+    try {
+      const file = buildMithDownload(doc, {
+        arrangement: doc.diagram.arrangement,
+        camera: { ...doc.diagram.camera, zoom },
+        selection: selectedId,
+      })
+      saveMithFile(file)
+      setExportNote(
+        `Exported ${file.filename} · ${formatBytes(file.bytes)} · Mithril Form. This is the index only. People and devices stay in the chunked pack.`,
+      )
+    } catch (err) {
+      setExportNote(err instanceof Error ? err.message : 'Export failed.')
+    }
+  }
 
   return (
     <div
-      className="make-app is-iso is-coplanar is-lens is-scale"
+      className={`make-app is-iso is-coplanar is-lens is-scale${over ? ' is-file-drop' : ''}`}
+      {...dropHandlers}
       data-lens={lens}
       data-scale-level={levelName}
       data-scale-ready={ready ? 'true' : 'false'}
@@ -746,6 +801,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample }: Props) {
         {!ready && !error && <div className="make-loading">Loading synthetic enterprise pack…</div>}
         {busy && <div className="make-loading scale-busy">{busy}</div>}
         {error && <div className="make-error" role="alert">{error}</div>}
+        {over && <div className="make-drop-hint">Drop a .mith file</div>}
 
         <nav className="scale-crumbs" aria-label="Drill path">
           {crumbs.map((c, i) => (
@@ -780,6 +836,8 @@ export default function ScaleGrid({ seed, sampleId, onPickSample }: Props) {
                 chunk={t.canvas && level.company ? chunks.get(level.company) ?? null : null}
                 lens={lens}
                 roleScore={roleScore}
+                weights={weights}
+                onPick={setSelectedId}
               />
             ))}
           </div>
@@ -849,6 +907,13 @@ export default function ScaleGrid({ seed, sampleId, onPickSample }: Props) {
                 <option key={d.id} value={d.id}>{d.file}</option>
               ))}
             </select>
+            <MithFileActions
+              onFiles={onImportFiles}
+              onExport={onExport}
+              exportDisabled={!doc}
+              exportTitle="Download the index as one .mith file. Company chunks stay in the pack."
+            />
+            {exportNote && <p className="make-file-note" role="status">{exportNote}</p>}
           </div>
         </aside>
 
@@ -873,6 +938,13 @@ export default function ScaleGrid({ seed, sampleId, onPickSample }: Props) {
             tileCount={tileCount}
             path={path}
             sat={sat}
+            weights={weights}
+            onPick={setSelectedId}
+            onDrill={(id) => {
+              if (!id) return
+              const company = index.companyOf(id)
+              void goTo({ company, dept: company && company !== id ? id : null, team: null })
+            }}
           />
         </aside>
 
@@ -905,6 +977,8 @@ function ScaleTile({
   chunk,
   lens,
   roleScore,
+  weights,
+  onPick,
 }: {
   tile: TileSpec
   selected: boolean
@@ -912,6 +986,8 @@ function ScaleTile({
   chunk: ExpandedChunk | null
   lens: ScaleLens
   roleScore: Map<string, RoleScore>
+  weights: ResolvedWeights
+  onPick: (id: string) => void
 }) {
   const { rect } = tile
   const showMeta = rect.w > 54 && rect.h > 22
@@ -929,7 +1005,7 @@ function ScaleTile({
         tile.onClick?.()
       }}
     >
-      {tile.canvas && chunk && <TeamCanvas team={tile.canvas.team} chunk={chunk} w={rect.w} h={rect.h} lens={lens} roleScore={roleScore} />}
+      {tile.canvas && chunk && <TeamCanvas team={tile.canvas.team} chunk={chunk} w={rect.w} h={rect.h} lens={lens} roleScore={roleScore} weights={weights} onPick={onPick} interactive={selected} />}
       {showMeta && tile.meta && <span className="scale-tile-meta">{tile.meta}</span>}
       {tile.tag && <i className="scale-anchor" data-board-anchor={tile.id} aria-hidden="true" />}
     </button>
@@ -937,8 +1013,30 @@ function ScaleTile({
 }
 
 /** People (dots) and devices (squares) of one team, drawn on a canvas instead of DOM nodes. */
-function TeamCanvas({ team, chunk, w, h, lens, roleScore }: { team: string; chunk: ExpandedChunk; w: number; h: number; lens: ScaleLens; roleScore: Map<string, RoleScore> }) {
+function TeamCanvas({
+  team,
+  chunk,
+  w,
+  h,
+  lens,
+  roleScore,
+  weights,
+  onPick,
+  interactive,
+}: {
+  team: string
+  chunk: ExpandedChunk
+  w: number
+  h: number
+  lens: ScaleLens
+  roleScore: Map<string, RoleScore>
+  weights: ResolvedWeights
+  onPick: (id: string) => void
+  /** The drilled-into team: its dots / squares become clickable. */
+  interactive: boolean
+}) {
   const ref = useRef<HTMLCanvasElement>(null)
+  const grid = useRef<{ cell: number; cols: number; ids: string[] }>({ cell: 1, cols: 1, ids: [] })
   const top = 26
   const bottom = 18
   const cw = Math.max(10, Math.floor(w - 12))
@@ -967,6 +1065,7 @@ function TeamCanvas({ team, chunk, w, h, lens, roleScore }: { team: string; chun
     const n = people.length + devices.length
     const cell = Math.max(3, Math.min(26, Math.floor(Math.sqrt((cw * ch) / Math.max(1, n)) * 0.8)))
     const cols = Math.max(1, Math.floor(cw / cell))
+    grid.current = { cell, cols, ids: [...people.map((p) => chunk.people[p]!.id), ...devices.map((d) => chunk.devices[d]!.id)] }
     let k = 0
     const zoneColor = (z: string | undefined) => (z === 'net:mobile' ? '#7c9cf5' : z?.endsWith('.pay') ? '#e0a100' : z?.endsWith('.dmz') ? '#d9480f' : z?.endsWith('.mgmt') ? '#495057' : '#3aa37a')
     for (const p of people) {
@@ -987,11 +1086,31 @@ function TeamCanvas({ team, chunk, w, h, lens, roleScore }: { team: string; chun
       if (y > ch) break
       const dev = chunk.devices[d]
       const s = Math.max(1.6, cell * 0.5)
-      ctx.fillStyle = lens === 'network' ? zoneColor(dev?.zone) : dev?.type === 'Server' ? '#343a40' : dev?.type === 'Phone' ? '#94a3d8' : '#adb5c7'
+      ctx.fillStyle =
+        lens === 'network'
+          ? zoneColor(dev?.zone)
+          : lens === 'software'
+            ? easeColor(deviceRisk(dev?.software, weights.device).ease)
+            : lens === 'logs'
+              ? coverageColor(logCoverage(dev?.logs, weights.minRetentionDays))
+              : dev?.type === 'Server' ? '#343a40' : dev?.type === 'Phone' ? '#94a3d8' : '#adb5c7'
       ctx.fillRect(x - s / 2, y - s / 2, s, s)
     }
-  }, [team, chunk, cw, ch, lens, roleScore])
-  return <canvas ref={ref} className="scale-canvas" style={{ left: 6, top, width: cw, height: ch }} aria-hidden="true" />
+  }, [team, chunk, cw, ch, lens, roleScore, weights])
+  // Click a dot / square to open that person or device (the tile click still drills otherwise).
+  const pick = (e: ReactMouseEvent<HTMLCanvasElement>) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    const sx = r.width / cw
+    const g = grid.current
+    const col = Math.floor((e.clientX - r.left) / sx / g.cell)
+    const row = Math.floor((e.clientY - r.top) / sx / g.cell)
+    const id = col < g.cols ? g.ids[row * g.cols + col] : undefined
+    if (id) {
+      e.stopPropagation()
+      onPick(id)
+    }
+  }
+  return <canvas ref={ref} className="scale-canvas" style={{ left: 6, top, width: cw, height: ch, pointerEvents: interactive ? 'auto' : undefined, cursor: interactive ? 'pointer' : undefined }} aria-hidden="true" onClick={pick} data-team-canvas={team} />
 }
 
 type IndexLike = {
@@ -1017,6 +1136,10 @@ const LENS_BLURB: Record<ScaleLens, string> = {
   network: 'Network zones and zone→zone reach (open / conditional / blocked, weighted). Red: an open-only path into a zone hosting a crown jewel. Drill into a subsidiary to see its reach edges.',
   access: 'Resources ranked by exposure: cheapest outside path (org channels, network reach, or shadow-SaaS entry) × criticality × grant level (network-only access counts at 0.6).',
   impersonation: 'Roles ranked by exposure score over mixed org + network paths: actor → channel → role → device → zone → reach → system. Weak controls count; red hops carry no verification or cross open reach.',
+  software:
+    'Share of devices whose installed software makes compromise easier (ease ≥ 0.25: EOL, unsanctioned, or unpatched medium+ vulnerabilities). Ease lowers the role → device pivot cost. Drill to a team and click a device for its software, logs, and people.',
+  logs:
+    'Share of devices with a log-coverage gap: logs not forwarded (blind spot) or kept below the minimum retention. Devices without a logs block count as unknown, not as gaps. Gaps are flagged on paths; they never change reachability.',
   shadow: 'Unsanctioned SaaS sits outside the org boundary, sized by how many departments use it. Selecting one shows its entry path: internet → SaaS → sync into users’ zones → reach.',
 }
 
@@ -1040,9 +1163,15 @@ function ScalePanel(props: {
   tileCount: number
   path: PathResult | null
   sat: number
+  weights: ResolvedWeights
+  /** Select without navigating (devices / people inside the loaded chunk). */
+  onPick: (id: string | null) => void
+  /** Drill to a subsidiary or department tile. */
+  onDrill: (id: string | null) => void
 }) {
   const { lens, manifest, analysis, scopedReport, scopeCompany, level, chunks, index, roleScore, selectedId, onSelect, labelOf, roleLabel, perf } = props
   const chunk = level.company ? chunks.get(level.company) ?? null : null
+  const personDevices = useMemo(() => (chunk ? devicesByPerson(chunk) : new Map<string, never[]>()), [chunk])
   const roleWhere = (id: string) => {
     const r = index.roles.get(id)
     if (r) return `${labelOf(r.boundary)} · ${(index.companyOf(r.boundary) ?? '').replace('b:', '').toUpperCase()}`
@@ -1052,6 +1181,9 @@ function ScalePanel(props: {
   const selectedRole = selectedId ? index.roles.get(selectedId) : undefined
   const selectedEntity = selectedId ? index.entities.get(selectedId) : undefined
   const shadowApp = selectedId ? analysis?.shadowApps.find((a) => a.id === selectedId) : undefined
+  const selectedDevice = selectedId ? chunkDevice(chunk, selectedId) : undefined
+  const selectedPerson = selectedId ? chunkPerson(chunk, selectedId) : undefined
+  const pick = (id: string) => props.onPick(id)
   const scopedShadow = useMemo(() => {
     if (!analysis) return []
     if (!level.company) return analysis.shadowApps
@@ -1062,7 +1194,7 @@ function ScalePanel(props: {
   return (
     <div className="lens-panel scale-panel" data-lens-panel={lens}>
       <div className="lens-panel-head">
-        <strong>{lens === 'shadow' ? 'Shadow IT' : lens.charAt(0).toUpperCase() + lens.slice(1)} lens</strong>
+        <strong>{SCALE_LENSES.find((l) => l.id === lens)?.label ?? lens} lens</strong>
         <span className="lens-badge">display-only · synthetic</span>
       </div>
       <p className="lens-blurb">{LENS_BLURB[lens]}</p>
@@ -1071,7 +1203,7 @@ function ScalePanel(props: {
       {selectedId && (
         <div className="lens-detail" aria-label="Selection">
           <div className="lens-detail-head">
-            <h2>{selectedRole ? selectedRole.label : labelOf(selectedId)}</h2>
+            <h2>{selectedRole ? selectedRole.label : selectedDevice ? selectedDevice.label : selectedPerson ? selectedPerson.label : labelOf(selectedId)}</h2>
             <button type="button" className="make-icon-btn" aria-label="Clear selection" onClick={() => onSelect(null)}>×</button>
           </div>
           {selectedRole && analysis && (
@@ -1084,7 +1216,9 @@ function ScalePanel(props: {
               <MixedPath path={props.path} index={index} labelOf={labelOf} />
             </>
           )}
-          {selectedEntity && !shadowApp && (
+          {selectedDevice && <DeviceDetail device={selectedDevice} weights={props.weights} labelOf={(id) => chunkPerson(chunk, id)?.label ?? labelOf(id)} onPick={pick} />}
+          {selectedPerson && <PersonDevices person={selectedPerson} devices={personDevices.get(selectedPerson.id) ?? []} weights={props.weights} onPick={pick} />}
+          {selectedEntity && !shadowApp && !selectedDevice && !selectedPerson && (
             <dl className="lens-kv">
               <div><dt>type</dt><dd>{selectedEntity.type}</dd></div>
               <div><dt>criticality</dt><dd>{selectedEntity.criticality ?? 'not declared (level fallback)'}</dd></div>
@@ -1148,7 +1282,7 @@ function ScalePanel(props: {
               </div>
             </Section>
           )}
-          {level.team && chunk && <TeamList team={level.team} chunk={chunk} />}
+          {level.team && chunk && <TeamList team={level.team} chunk={chunk} lens={lens} weights={props.weights} selectedId={selectedId} onPick={pick} />}
           <HeatLegend sat={props.sat} />
         </>
       )}
@@ -1181,6 +1315,10 @@ function ScalePanel(props: {
           <RankedRoles report={scopedReport} labelOf={labelOf} subOf={roleWhere} selectedId={selectedId} onSelect={onSelect} limit={40} />
           <WeightsNote />
         </>
+      )}
+
+      {DEVICE_LENS(lens) && (
+        <DeviceLensPanel lens={lens} analysis={analysis} level={level} chunk={chunk} labelOf={labelOf} sat={props.sat} weights={props.weights} selectedId={selectedId} onPick={pick} onOpen={props.onDrill} />
       )}
 
       {lens === 'shadow' && (
@@ -1233,8 +1371,10 @@ function MixedPath({ path, index, labelOf }: { path: PathResult | null; index: I
               </span>
               <small>
                 {ch ? `${ch.kind} · ${h.red ? 'no verification' : ch.verification.join(' + ')}` : h.kind}
-                {h.edge === EDGE.reach ? ` · ${h.red ? 'open' : 'conditional'}` : ''} · cost {h.cost}
+                {h.edge === EDGE.reach ? ` · ${h.red ? 'open' : 'conditional'}` : ''} · cost {Number.isInteger(h.cost) ? h.cost : h.cost.toFixed(2)}
               </small>
+              {h.blind && <em className={`scale-hop-blind blind-${h.blind}`} data-hop-blind={h.blind}>{h.blind === 'blind' ? 'detection blind spot' : 'short log retention'}</em>}
+              {h.notes?.map((n) => <small key={n} className="scale-hop-note">{n}</small>)}
             </li>
           )
         })}
@@ -1362,46 +1502,161 @@ function NetworkPanel(props: {
 function WeightsNote() {
   return (
     <p className="lens-blurb scale-weights">
-      Hop cost = 1 + {Object.entries(CONTROL_WEIGHTS).filter(([k]) => k !== 'none').map(([k, v]) => `${k} ${v}`).join(', ')}; network reach open {DEFAULT_REACH_WEIGHTS.open}, conditional {DEFAULT_REACH_WEIGHTS.conditional}, blocked impassable; jump host {DEFAULT_JUMP_HOST_COST}, device pivot / host 1 (tunable defaults, per-document overrides in model.weights; not real-world success rates). Score = 100 × criticality × level ÷ 8 ÷ (cost to seize the role + network cost to the system).
+      Hop cost = 1 + {Object.entries(CONTROL_WEIGHTS).filter(([k]) => k !== 'none').map(([k, v]) => `${k} ${v}`).join(', ')}; network reach open {DEFAULT_REACH_WEIGHTS.open}, conditional {DEFAULT_REACH_WEIGHTS.conditional}, blocked impassable; jump host {DEFAULT_JUMP_HOST_COST}, device pivot / host 1; device pivot × (1 − ease), ease = min({DEFAULT_DEVICE_WEIGHTS.maxEase}, EOL {DEFAULT_DEVICE_WEIGHTS.eol} + unsanctioned {DEFAULT_DEVICE_WEIGHTS.unsanctioned} + worst vuln {Object.entries(DEFAULT_DEVICE_WEIGHTS.vulnerability).map(([k, v]) => `${k} ${v}`).join(' / ')}); log retention minimum {DEFAULT_MIN_RETENTION_DAYS} days (tunable defaults, per-document overrides in model.weights; not real-world success rates). Score = 100 × criticality × level ÷ 8 ÷ (cost to seize the role + network cost to the system).
     </p>
   )
 }
 
-function HeatLegend({ sat }: { sat: number }) {
+function HeatLegend({ sat, note }: { sat: number; note?: string }) {
   return (
     <div className="scale-legend" aria-label="Heat legend">
       {[0, 0.2, 0.4, 0.6, 0.8, 1].map((k) => (
         <span key={k} style={{ background: shareColor(k * sat, sat) }}>{Math.round(k * sat * 100)}%{k === 1 ? '+' : ''}</span>
       ))}
-      <small>tile = share of roles with score ≥ {HOT}</small>
+      <small>{note ?? `tile = share of roles with score ≥ ${HOT}`}</small>
     </div>
   )
 }
 
 /** Virtualized people / device list for one team. Only visible rows are in the DOM. */
-function TeamList({ team, chunk }: { team: string; chunk: ExpandedChunk }) {
+function TeamList({
+  team,
+  chunk,
+  lens,
+  weights,
+  selectedId,
+  onPick,
+}: {
+  team: string
+  chunk: ExpandedChunk
+  lens: ScaleLens
+  weights: ResolvedWeights
+  selectedId: string | null
+  onPick: (id: string) => void
+}) {
   const rows = useMemo(() => {
     const people = (chunk.teamPeople.get(team) ?? []).map((i) => chunk.people[i]!)
     const devices = (chunk.teamDevices.get(team) ?? []).map((i) => chunk.devices[i]!)
-    return [...people, ...devices]
-  }, [team, chunk])
+    // Device lenses list the riskiest devices first.
+    if (lens === 'software') devices.sort((a, b) => deviceRisk(b.software, weights.device).ease - deviceRisk(a.software, weights.device).ease)
+    if (lens === 'logs') {
+      const rank = { blind: 0, short: 1, unknown: 2, forwarded: 3 } as const
+      devices.sort((a, b) => rank[logCoverage(a.logs, weights.minRetentionDays)] - rank[logCoverage(b.logs, weights.minRetentionDays)])
+    }
+    return DEVICE_LENS(lens) ? [...devices, ...people] : [...people, ...devices]
+  }, [team, chunk, lens, weights])
+  const byPerson = useMemo(() => devicesByPerson(chunk), [chunk])
   const [top, setTop] = useState(0)
-  const ROW = 30
-  const H = 260
+  const ROW = 34
+  const H = 300
   const first = Math.max(0, Math.floor(top / ROW) - 4)
   const last = Math.min(rows.length, first + Math.ceil(H / ROW) + 8)
   return (
     <Section title={`Team members & devices (${rows.length})`}>
       <div className="scale-vlist" style={{ height: H }} onScroll={(e) => setTop(e.currentTarget.scrollTop)} data-vlist-rows={rows.length}>
         <div style={{ height: rows.length * ROW, position: 'relative' }}>
-          {rows.slice(first, last).map((e, i) => (
-            <div key={e.id} className="scale-vrow" style={{ top: (first + i) * ROW, height: ROW }}>
-              <strong>{e.label}</strong>
-              <small>{e.type}{e.attrs.title ? ` · ${e.attrs.title}` : ''}</small>
-            </div>
-          ))}
+          {rows.slice(first, last).map((e, i) => {
+            const isDevice = e.layer === 'node'
+            const mine = isDevice ? [] : byPerson.get(e.id) ?? []
+            const risk = isDevice ? deviceRisk(e.software, weights.device) : null
+            const cov = isDevice ? logCoverage(e.logs, weights.minRetentionDays) : null
+            return (
+              <div
+                key={e.id}
+                className={`scale-vrow is-clickable ${e.id === selectedId ? 'active' : ''}`}
+                style={{ top: (first + i) * ROW, height: ROW }}
+                data-team-row={e.id}
+              >
+                <button type="button" className="scale-vrow-main" onClick={() => onPick(e.id)}>
+                  <strong>{e.label}</strong>
+                  <small>
+                    {e.type}
+                    {e.attrs.title ? ` · ${e.attrs.title}` : ''}
+                    {risk && <> · ease <b style={{ color: easeColor(risk.ease) }}>{risk.ease.toFixed(2)}</b></>}
+                    {cov && <> · logs <b style={{ color: coverageColor(cov) }}>{cov}</b></>}
+                  </small>
+                </button>
+                {mine.length > 0 && (
+                  <span className="scale-vrow-links" aria-label={`Devices of ${e.label}`}>
+                    {mine.slice(0, 3).map(({ device, relation }) => (
+                      <button key={device.id} type="button" className="scale-dev-chip" title={`${device.label} (${relation})`} onClick={() => onPick(device.id)} data-person-device-link={device.id}>
+                        {device.type}
+                        {relation === 'admin' ? ' ⚙' : ''}
+                      </button>
+                    ))}
+                    {mine.length > 3 && <small>+{mine.length - 3}</small>}
+                  </span>
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
     </Section>
+  )
+}
+
+/** Software-risk / log-gap lens panel: ranked subsidiaries or departments, then the team's devices. */
+function DeviceLensPanel(props: {
+  lens: ScaleLens
+  analysis: ScaleAnalysis | null
+  level: Level
+  chunk: ExpandedChunk | null
+  labelOf: (id: string) => string
+  sat: number
+  weights: ResolvedWeights
+  selectedId: string | null
+  onPick: (id: string) => void
+  onOpen: (id: string | null) => void
+}) {
+  const { lens, analysis, level, chunk, labelOf } = props
+  const agg = analysis?.devices
+  const col = lens === 'software' ? 1 : 2
+  const scope = !agg
+    ? []
+    : level.company && !level.dept
+      ? Object.entries(agg.dept).filter(([id]) => id.startsWith(`${level.company}.`))
+      : !level.company
+        ? Object.entries(agg.company)
+        : []
+  const ranked = scope
+    .filter(([, c]) => c[0] > 0)
+    .sort((a, b) => b[1][col]! / b[1][0] - a[1][col]! / a[1][0])
+    .slice(0, 10)
+  const total = agg ? Object.values(agg.company).reduce((a, c) => [a[0] + c[0], a[1] + c[1], a[2] + c[2], a[3] + c[3]], [0, 0, 0, 0]) : null
+  const here = level.dept ? agg?.dept[level.dept] : level.company ? agg?.company[level.company] : total
+  return (
+    <>
+      {here && (
+        <dl className="lens-stats" data-device-lens={lens}>
+          <div><dt>Devices</dt><dd>{fmt(here[0])}</dd></div>
+          {lens === 'software' ? (
+            <div><dt>High-ease</dt><dd>{fmt(here[1])} ({Math.round((here[1] / Math.max(1, here[0])) * 100)}%)</dd></div>
+          ) : (
+            <>
+              <div><dt>Log gaps</dt><dd>{fmt(here[2])} ({Math.round((here[2] / Math.max(1, here[0])) * 100)}%)</dd></div>
+              <div><dt>Unknown</dt><dd>{fmt(here[3])}</dd></div>
+            </>
+          )}
+        </dl>
+      )}
+      {ranked.length > 0 && (
+        <Section title={lens === 'software' ? 'Highest share of high-ease devices' : 'Highest share of log-coverage gaps'}>
+          <div className="lens-list">
+            {ranked.map(([id, c]) => (
+              <button key={id} type="button" className="lens-row" onClick={() => props.onOpen(id)}>
+                <span>
+                  <strong>{labelOf(id)}</strong>
+                  <small>{Math.round((c[col]! / c[0]) * 100)}% · {fmt(c[col]!)} of {fmt(c[0])} devices</small>
+                </span>
+              </button>
+            ))}
+          </div>
+        </Section>
+      )}
+      {level.team && chunk && <TeamList team={level.team} chunk={chunk} lens={lens} weights={props.weights} selectedId={props.selectedId} onPick={props.onPick} />}
+      {level.dept && !level.team && <p className="lens-blurb">Pick a team to list its devices; click a device for software, logs, and people.</p>}
+      <HeatLegend sat={DEVICE_HEAT_SATURATION} note={lens === 'software' ? 'tile = share of devices with ease ≥ 0.25' : 'tile = share of devices with a log gap'} />
+    </>
   )
 }

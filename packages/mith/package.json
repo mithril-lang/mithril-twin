@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": ".mith / .mithril v0: a BPMN-shaped diagram interchange for display-only twin views.",
+  "description": "Twin vocabulary for Mithril .mith (github.com/mithril-lang/mithril): reader, types and analysis for (mithril/twin-document …), display only.",
   "license": "Apache-2.0",
   "exports": {
     ".": "./src/index.ts"

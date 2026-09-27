@@ -7,9 +7,10 @@ import { lensFocus } from '../src/lensLinks'
 import { blastRadius, impersonationPaths, roleExposure, shadowSystems } from '../src/org'
 import { parseMith } from '../src/parse'
 import { analyzeExposure, CONTROL_WEIGHTS, effectiveCriticality, hopCost } from '../src/exposure'
+import { readMith } from '../src/twin'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const orgSample = parseMith(JSON.parse(readFileSync(resolve(here, '../samples/polaris-org.mith'), 'utf8')))
+const orgSample = readMith(readFileSync(resolve(here, '../samples/polaris-org.mith'), 'utf8')).doc
 
 const ent = (id: string, layer = 'server', extra: Record<string, unknown> = {}) => ({
   id, label: id, type: layer === 'organization' ? 'Person' : 'System', layer, citations: [], attrs: {}, ...extra,

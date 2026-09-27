@@ -1,0 +1,29 @@
+/* Device detail (software / logs / people) and device lenses — synthetic, display-only. */
+.device-detail { display: grid; gap: 2px; }
+.device-table { width: calc(100% - 28px); margin: 0 14px 8px; border-collapse: collapse; font-size: 11.5px; }
+.device-table th { text-align: left; font-weight: 600; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--make-muted); padding: 3px 4px; border-bottom: 1px solid rgba(0, 0, 0, 0.08); }
+.device-table td { padding: 3px 4px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); vertical-align: top; }
+.device-table tr.is-risky td:first-child { font-weight: 600; }
+.device-flag { display: inline-block; margin: 0 3px 2px 0; padding: 0 5px; border-radius: 8px; font-size: 10px; line-height: 16px; background: #eef0f5; color: #3b4150; }
+.device-flag.flag-eol { background: #fde2e5; color: #a1182c; }
+.device-flag.flag-unsanctioned { background: #fff0db; color: #9a4f00; }
+.device-flag.flag-vuln-critical, .device-flag.flag-vuln-high { background: #fde2e5; color: #a1182c; }
+.device-flag.flag-vuln-medium { background: #fff4cc; color: #7a5b00; }
+.device-timeline { list-style: none; margin: 0 14px 8px; padding: 0 0 0 10px; border-left: 2px solid #d9dce5; display: grid; gap: 4px; font-size: 11.5px; }
+.device-timeline li { display: grid; grid-template-columns: 42px 1fr; gap: 6px; position: relative; }
+.device-timeline li::before { content: ''; position: absolute; left: -15px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: #9aa3b5; }
+.device-timeline li.sev-medium::before, .device-timeline li.sev-high::before { background: #f08c2e; }
+.device-timeline time { color: var(--make-muted); font-variant-numeric: tabular-nums; }
+.scale-vrow.is-clickable { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 6px; }
+.scale-vrow.is-clickable.active { background: #f3f1f8; }
+.scale-vrow-main { all: unset; cursor: pointer; flex: 1; min-width: 0; display: grid; }
+.scale-vrow-main strong, .scale-vrow-main small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scale-vrow-links { display: flex; gap: 3px; flex-shrink: 0; }
+.scale-dev-chip { all: unset; cursor: pointer; font-size: 10px; padding: 0 5px; line-height: 16px; border-radius: 8px; background: #eef0f5; color: #3b4150; }
+.scale-dev-chip:hover { background: #dfe3ee; }
+.scale-hop-blind { display: inline-block; margin-top: 2px; font-style: normal; font-size: 10px; padding: 0 6px; border-radius: 8px; background: #fde2e5; color: #a1182c; }
+.scale-hop-blind.blind-short { background: #fff0db; color: #9a4f00; }
+.scale-hop-note { display: block; color: var(--make-muted); }
+.device-hops { margin: 0 14px 10px; padding-left: 18px; font-size: 12px; }
+.device-hops li { margin-bottom: 4px; }
+.device-hops li small { display: block; opacity: 0.7; }

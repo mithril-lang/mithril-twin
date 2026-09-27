@@ -1,20 +1,27 @@
-# .mith / .mithril v0
+# @mithril-twin/mith — twin vocabulary for Mithril .mith
 
-`.mith` is a small interchange format for display-only "digital twin" diagrams, shaped like BPMN. v0 is JSON; an XML form may come later. This package contains the TypeScript types, a strict parser, layout geometry helpers, and an importer for the legacy layer-JSON format.
+Twin vocabulary/viewer for Mithril `.mith` ([github.com/mithril-lang/mithril](https://github.com/mithril-lang/mithril)). This is not a separate language. Twin documents are Mithril Form with the upstream top-level tag `mithril/twin-document`, which lowers to JSON-LD `@type TwinDocument` under the pinned context `https://mithril.fund/context/twin/v1` (twin-local terms: `https://mithril.fund/lib/twin/v1#`). The tag, the context and the closed vocabulary were added upstream in [mithril-lang/mithril#7](https://github.com/mithril-lang/mithril/pull/7), merge commit `dd014e419c9dcca2911540f222c735e7d7c3d931`; this package follows that pin.
 
-Specification: [`docs/mith-spec.md`](../../docs/mith-spec.md).
+This package holds the TypeScript reader (Form reader and lowering that mirror upstream `mithril.form`, the closed-vocabulary check that mirrors upstream `mithril.twin`), the in-memory types, the strict validator, the Form writer, layout geometry, the org / network / device analysis, a legacy layer-JSON importer, samples and tests.
+
+Specification: [`docs/mith-spec.md`](../../docs/mith-spec.md). Lenses, device fields and weights: [`ORG-LENSES.md`](./ORG-LENSES.md).
 
 ```ts
-import { parseMith, parseMithrilPackage } from '@mithril-twin/mith'
+import { readMith, toTwinForm } from '@mithril-twin/mith'
 
-const doc = parseMith(JSON.parse(text)) // throws MithParseError with a readable message
+const { doc, format, deprecated } = readMith(text) // Form, twin JSON-LD, or legacy v0 JSON
+const form = toTwinForm(doc) // (mithril/twin-document …)
 ```
 
-Samples live in [`samples/`](./samples):
+`readMith` throws with a readable message (Form errors keep the upstream `mithril.form/*` codes). Legacy v0 JSON (`{"mith": "0.1", …}`) still reads and is reported as `deprecated: true`.
 
-- `polaris-fi.mith`: five boards for a fictional financial group (北極星 / Polaris FI), laid out on one coplanar floor.
+Samples in [`samples/`](./samples), all written as Form:
+
+- `polaris-fi.mith`: five boards for a fictional financial group (北極星 / Polaris FI) on one coplanar floor.
 - `polaris-floor.mith`: a two-board minimal floor.
-- `polaris-org.mith`: org boundaries, roles, grants, channels, actors, and shadow IT for the lenses (see [`ORG-LENSES.md`](./ORG-LENSES.md)).
-- `polaris-fi.mithril`: a v0 package manifest that lists the three documents.
+- `polaris-org.mith`: org boundaries, roles, grants, channels, actors, shadow IT, and per-device software, logs and people for the lenses.
+- `polaris-fi.mithril`: a package manifest that lists the documents.
 
-All sample data is synthetic (`dataset_kind: "synthetic-demo"`) and describes no real institution.
+`test/fixtures/` holds the upstream example `twin-polaris-device.mith` with its upstream-lowered JSON-LD (the Form reader must produce the same document) and one legacy v0 JSON file.
+
+All sample data is synthetic (`dataset_kind` `synthetic-demo`) and describes no real institution. Display only: no runners.

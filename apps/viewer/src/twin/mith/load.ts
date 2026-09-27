@@ -1,7 +1,7 @@
-import type { AttackPathsOverlay, GraphItem, LayerData, TwinLayer } from '../data/types'
+import type { GraphItem } from '../data/types'
 import type { AttackScenario } from '../data/types'
-import { fromLayers } from './fromLayers'
-import { parseMith, parseMithrilPackage } from './parse'
+import { parseMithrilPackage } from './parse'
+import { readMith } from './twin'
 import type { MithDocument, MithHypothesis } from './types'
 
 export const SAMPLE_MITH_URL = '/data/polaris-fi.mith'
@@ -26,8 +26,6 @@ export function sampleDocFromSearch(search: string) {
   return SAMPLE_DOCS.find((d) => d.id === id) ?? SAMPLE_DOCS[0]!
 }
 
-const LAYER_FILES: TwinLayer[] = ['organization', 'network', 'firewall', 'node', 'server']
-
 export type LoadedMith = {
   doc: MithDocument
   packageId: string | null
@@ -39,7 +37,9 @@ export async function loadSampleMith(
 ): Promise<LoadedMith> {
   const response = await fetchImpl(url)
   if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`)
-  const doc = parseMith(await response.json())
+  const read = readMith(await response.text())
+  if (read.deprecated) console.warn('twin: legacy v0 JSON .mith is deprecated; write (mithril/twin-document …) Form instead')
+  const doc = read.doc
   let packageId: string | null = null
   try {
     const pkg = await fetchImpl(SAMPLE_PACKAGE_URL)
@@ -48,25 +48,6 @@ export async function loadSampleMith(
     packageId = null
   }
   return { doc, packageId }
-}
-
-/** Secondary import. Layer JSON stays on disk; it is not the primary document. */
-export async function importJsonLayers(fetchImpl: typeof fetch = fetch): Promise<MithDocument> {
-  const layers = await Promise.all(
-    LAYER_FILES.map(async (layer) => {
-      const response = await fetchImpl(`/data/layers/${layer}.json`)
-      if (!response.ok) throw new Error(`HTTP ${response.status} for ${layer}.json`)
-      return (await response.json()) as LayerData
-    }),
-  )
-  let attack: AttackPathsOverlay | null = null
-  try {
-    const response = await fetchImpl('/data/layers/attack-paths.json')
-    if (response.ok) attack = (await response.json()) as AttackPathsOverlay
-  } catch {
-    attack = null
-  }
-  return fromLayers(layers, attack)
 }
 
 export function mithLayerItems(

@@ -1,0 +1,55 @@
+(mithril/twin-document
+  ;; Twin document profile (mithril.twin): a display-only, synthetic 北極星
+  ;; (Polaris) slice. Every person, device, system and event is made up. No
+  ;; runners, no scanning, no telemetry: log events are synthetic samples.
+  :id "https://mithril.fund/lib/twin/example/polaris-device"
+  :title "北極星 device slice (synthetic)"
+  :dataset-kind "synthetic-demo"
+  :generated-at "2026-09-27T23:00:00+09:00"
+  :disclaimer "Synthetic demo data. Display-only arithmetic, not real-world success rates."
+  :boundaries
+  [(rdf/node :key "b:polaris" :label "北極星 Group" :kind "company")
+   (rdf/node :key "b:fin" :label "Finance" :kind "department" :parent "b:polaris")]
+  :entities
+  [(rdf/node :key "net:corp" :label "Corp VLAN" :entity-type "VLAN" :layer "network")
+   (rdf/node :key "net:core" :label "Core banking segment" :entity-type "Segment" :layer "network")
+   (rdf/node :key "sys:ledger" :label "General ledger" :entity-type "System" :layer "server"
+             :zone "net:core" :criticality "crown-jewel")
+   (rdf/node :key "p:fin-1" :label "Employee FIN-0001" :entity-type "Person"
+             :layer "organization" :boundary "b:fin" :zone "net:corp")
+   (rdf/node :key "p:it-1" :label "Employee IT-0001" :entity-type "Person"
+             :layer "organization" :boundary "b:fin" :zone "net:corp")
+   (rdf/node :type "Device" :key "dev:fin-1" :label "Laptop · FIN-0001" :entity-type "Laptop"
+             :layer "node" :boundary "b:fin" :zone "net:corp"
+             :users [(rdf/node :type "DeviceUser" :person "p:fin-1" :relation "primary")
+                     (rdf/node :type "DeviceUser" :person "p:it-1" :relation "admin")]
+             :software [(rdf/node :type "Software" :name "Office suite" :version "16.0"
+                                  :vendor "Example Vendor A" :sanctioned true :eol false
+                                  :vulnerability "none")
+                        (rdf/node :type "Software" :name "PDF viewer" :version "9.1"
+                                  :vendor "Example Vendor B" :sanctioned true :eol true
+                                  :vulnerability "high")
+                        (rdf/node :type "Software" :name "File sync client" :version "3.2"
+                                  :vendor "Example Vendor C" :sanctioned false :eol false
+                                  :vulnerability "medium")]
+             :logs (rdf/node :type "DeviceLogs" :sources ["edr" "os-auth" "process"]
+                             :forward-to "none" :retention-days 7
+                             :events [(rdf/node :type "LogEvent" :at "2026-09-27T09:02:11+09:00"
+                                                :source "os-auth" :action "interactive logon"
+                                                :severity "info" :user "p:fin-1")
+                                      (rdf/node :type "LogEvent" :at "2026-09-27T09:15:40+09:00"
+                                                :source "process" :action "unsigned binary started"
+                                                :severity "medium" :user "p:fin-1")]))]
+  :roles [(rdf/node :key "role:fin-approver" :label "Payment approver" :boundary "b:fin"
+                    :holders ["p:fin-1"])]
+  :grants [(rdf/node :key "g:1" :role "role:fin-approver" :resource "sys:ledger" :level "approve")]
+  :actors [(rdf/node :key "actor:vendor" :label "External vendor (synthetic)" :kind "external")]
+  :channels [(rdf/node :key "ch:1" :kind "email" :from "actor:vendor" :to "role:fin-approver"
+                       :verification ["callback"])]
+  :reach [(rdf/node :key "rc:1" :from "net:corp" :to "net:core" :kind "conditional")]
+  :weights (rdf/node :network-value (rdf/literal "0.6" :datatype "xsd:decimal")
+                     :heat-saturation (rdf/literal "0.25" :datatype "xsd:decimal")
+                     :device (rdf/node :eol (rdf/literal "0.3" :datatype "xsd:decimal")
+                                       :max-ease (rdf/literal "0.8" :datatype "xsd:decimal"))
+                     :min-retention-days 30)
+  :inference (rdf/node :viz-only true :no-runners true))

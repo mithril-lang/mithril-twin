@@ -3,6 +3,8 @@ import {
   CRITICALITIES,
   type MithCriticality,
   GRANT_LEVELS,
+  DIAGRAM_FRAMES,
+  DIAGRAM_LENSES,
   MITH_VERSION,
   VERIFICATION_CONTROLS,
   type MithActor,
@@ -17,6 +19,8 @@ import {
   type MithReach,
   type MithReachKind,
   type MithWeights,
+  type DiagramFrame,
+  type DiagramLens,
   type MithArrangement,
   type MithCamera,
   type MithCrossLink,
@@ -28,6 +32,16 @@ import {
   type MithPlacement,
   type MithrilPackage,
   type MithCitation,
+  DEVICE_USER_RELATIONS,
+  LOG_SEVERITIES,
+  LOG_SOURCES,
+  VULN_SEVERITIES,
+  type MithDeviceLogs,
+  type MithDeviceRelation,
+  type MithLogSeverity,
+  type MithLogSource,
+  type MithSoftware,
+  type MithVulnSeverity,
 } from './types'
 import { COPLANAR_BOARD_H, COPLANAR_BOARD_W } from './geometry'
 
@@ -49,14 +63,49 @@ function str(v: unknown, path: string): string {
   return v
 }
 
+/**
+ * The file's own label. Samples use `synthetic-demo`; any other declared label is kept.
+ * Empty, huge, or control-character values are rejected so the chip stays a label.
+ */
+function datasetKind(v: unknown, path: string): string {
+  if (typeof v !== 'string') throw new MithParseError(`${path} must be a string`)
+  if (!v.trim() || v !== v.trim()) {
+    throw new MithParseError(`${path} must be a non-empty label without surrounding space`)
+  }
+  if (v.length > 64) throw new MithParseError(`${path} must be at most 64 characters`)
+  for (let i = 0; i < v.length; i++) {
+    if (v.charCodeAt(i) < 32) throw new MithParseError(`${path} must not contain control characters`)
+  }
+  return v
+}
+
 function num(v: unknown, path: string): number {
   if (typeof v !== 'number' || !Number.isFinite(v)) throw new MithParseError(`${path} must be a finite number`)
   return v
 }
 
-function rejectForbidden(value: unknown, path: string) {
+const FORBIDDEN_SET = new Set(FORBIDDEN)
+/** Fast pre-check (no path strings); the path-building walk runs only to name the offender. */
+function hasForbidden(value: unknown): boolean {
   if (Array.isArray(value)) {
-    value.forEach((item, i) => rejectForbidden(item, `${path}[${i}]`))
+    for (const item of value) if (hasForbidden(item)) return true
+    return false
+  }
+  if (!isObj(value)) return false
+  for (const key in value) {
+    if (FORBIDDEN_SET.has(key.toLowerCase()) || hasForbidden(value[key])) return true
+  }
+  return false
+}
+
+function rejectForbidden(value: unknown, path: string) {
+  if (!hasForbidden(value)) return
+  rejectForbiddenAt(value, path)
+}
+
+function rejectForbiddenAt(value: unknown, path: string) {
+  if (Array.isArray(value)) {
+    value.forEach((item, i) => rejectForbiddenAt(item, `${path}[${i}]`))
     return
   }
   if (!isObj(value)) return
@@ -64,7 +113,7 @@ function rejectForbidden(value: unknown, path: string) {
     if (FORBIDDEN.includes(key.toLowerCase())) {
       throw new MithParseError(`${path}.${key} is not allowed in a .mith document`)
     }
-    rejectForbidden(child, `${path}.${key}`)
+    rejectForbiddenAt(child, `${path}.${key}`)
   }
 }
 
@@ -113,7 +162,83 @@ function entity(v: unknown, i: number): MithEntity {
     ...(v.criticality != null
       ? { criticality: oneOf<MithCriticality>(v.criticality, CRITICALITIES, `${path}.criticality`) }
       : {}),
+    ...deviceFields(v, path),
   }
+}
+
+export const MAX_SAMPLE_EVENTS = 50
+
+/** Device-only sections: software inventory, logging, and the people who use the device. */
+function deviceFields(v: Record<string, unknown>, path: string): Pick<MithEntity, 'software' | 'logs' | 'users'> {
+  const out: Pick<MithEntity, 'software' | 'logs' | 'users'> = {}
+  if (v.software == null && v.logs == null && v.users == null) return out
+  if (v.layer !== 'node') {
+    throw new MithParseError(`${path} has software / logs / users, which are only allowed on node-layer devices`)
+  }
+  if (v.software != null) out.software = section(v.software, `${path}.software`, softwareItem)
+  if (v.logs != null) out.logs = deviceLogs(v.logs, `${path}.logs`)
+  if (v.users != null) {
+    out.users = section(v.users, `${path}.users`, (u, at) => ({
+      person: str(u.person, `${at}.person`),
+      relation: oneOf<MithDeviceRelation>(u.relation, DEVICE_USER_RELATIONS, `${at}.relation`),
+    }))
+    const primaries = out.users.filter((u) => u.relation === 'primary')
+    if (primaries.length > 1) throw new MithParseError(`${path}.users has ${primaries.length} primary users (at most one)`)
+    const seen = new Set<string>()
+    for (const u of out.users) {
+      if (seen.has(u.person)) throw new MithParseError(`${path}.users lists ${u.person} twice`)
+      seen.add(u.person)
+    }
+    const owner = isObj(v.attrs) && typeof v.attrs.owner === 'string' ? v.attrs.owner : null
+    if (owner && primaries[0] && primaries[0].person !== owner) {
+      throw new MithParseError(`${path}.users primary ${primaries[0].person} differs from attrs.owner ${owner}`)
+    }
+  }
+  return out
+}
+
+function softwareItem(sw: Record<string, unknown>, at: string): MithSoftware {
+  return {
+    name: str(sw.name, `${at}.name`),
+    version: str(sw.version, `${at}.version`),
+    ...(sw.vendor != null ? { vendor: str(sw.vendor, `${at}.vendor`) } : {}),
+    ...(sw.sanctioned != null ? { sanctioned: bool(sw.sanctioned, `${at}.sanctioned`) } : {}),
+    ...(sw.eol != null ? { eol: bool(sw.eol, `${at}.eol`) } : {}),
+    ...(sw.vulnerability != null ? { vulnerability: oneOf<MithVulnSeverity>(sw.vulnerability, VULN_SEVERITIES, `${at}.vulnerability`) } : {}),
+  }
+}
+
+function deviceLogs(v: unknown, path: string): MithDeviceLogs {
+  if (!isObj(v)) throw new MithParseError(`${path} must be an object`)
+  if (!Array.isArray(v.sources)) throw new MithParseError(`${path}.sources must be an array (may be empty)`)
+  const sources = v.sources.map((x, j) => oneOf<MithLogSource>(x, LOG_SOURCES, `${path}.sources[${j}]`))
+  if (new Set(sources).size !== sources.length) throw new MithParseError(`${path}.sources lists a source twice`)
+  const forwardTo = str(v.forwardTo, `${path}.forwardTo`)
+  if (!/^[a-z0-9][a-z0-9:._-]*$/.test(forwardTo)) {
+    throw new MithParseError(`${path}.forwardTo must be a destination id such as "siem" or "none"`)
+  }
+  const retentionDays = num(v.retentionDays, `${path}.retentionDays`)
+  if (!Number.isInteger(retentionDays) || retentionDays < 0 || retentionDays > 3650) {
+    throw new MithParseError(`${path}.retentionDays must be a whole number of days from 0 to 3650`)
+  }
+  const out: MithDeviceLogs = { sources, forwardTo, retentionDays }
+  if (v.events != null) {
+    if (!Array.isArray(v.events)) throw new MithParseError(`${path}.events must be an array`)
+    if (v.events.length > MAX_SAMPLE_EVENTS) throw new MithParseError(`${path}.events keeps at most ${MAX_SAMPLE_EVENTS} synthetic samples`)
+    out.events = section(v.events, `${path}.events`, (e, at) => {
+      const when = str(e.at, `${at}.at`)
+      if (Number.isNaN(Date.parse(when))) throw new MithParseError(`${at}.at must be an ISO 8601 timestamp`)
+      return {
+        at: when,
+        source: oneOf<MithLogSource>(e.source, LOG_SOURCES, `${at}.source`),
+        action: str(e.action, `${at}.action`),
+        ...(e.severity != null ? { severity: oneOf<MithLogSeverity>(e.severity, LOG_SEVERITIES, `${at}.severity`) } : {}),
+        ...(e.user != null ? { user: str(e.user, `${at}.user`) } : {}),
+        ...(e.note != null ? { note: str(e.note, `${at}.note`) } : {}),
+      }
+    })
+  }
+  return out
 }
 
 function oneOf<T extends string>(v: unknown, allowed: readonly T[], path: string): T {
@@ -121,6 +246,11 @@ function oneOf<T extends string>(v: unknown, allowed: readonly T[], path: string
     throw new MithParseError(`${path} must be one of ${allowed.join(', ')}`)
   }
   return v as T
+}
+
+function optionalOne<T extends string>(v: unknown, allowed: readonly T[], path: string): T | undefined {
+  if (v == null) return undefined
+  return oneOf(v, allowed, path)
 }
 
 function section<T>(v: unknown, path: string, each: (item: Record<string, unknown>, at: string) => T): T[] {
@@ -173,7 +303,7 @@ function weightMap<K extends string>(v: unknown, allowed: readonly K[], path: st
 /** Optional per-document weight overrides. Unknown keys are rejected so typos surface. */
 function weights(v: unknown): MithWeights {
   if (!isObj(v)) throw new MithParseError('model.weights must be an object')
-  const known = ['base', 'controls', 'reach', 'pivot', 'host', 'blastRadius', 'networkValue', 'jumpHost', 'sync', 'heatSaturation']
+  const known = ['base', 'controls', 'reach', 'pivot', 'host', 'blastRadius', 'networkValue', 'jumpHost', 'sync', 'heatSaturation', 'device', 'minRetentionDays']
   for (const key of Object.keys(v)) {
     if (!known.includes(key)) throw new MithParseError(`model.weights.${key} is not a known weight (${known.join(', ')})`)
   }
@@ -188,7 +318,42 @@ function weights(v: unknown): MithWeights {
     ...(v.jumpHost != null ? { jumpHost: nonNeg(v.jumpHost, 'model.weights.jumpHost') } : {}),
     ...(v.sync != null ? { sync: weightMap<'open' | 'conditional'>(v.sync, ['open', 'conditional'] as const, 'model.weights.sync') } : {}),
     ...(v.heatSaturation != null ? { heatSaturation: inRange(v.heatSaturation, 'model.weights.heatSaturation', 0, 1, false) } : {}),
+    ...(v.device != null ? { device: deviceWeights(v.device) } : {}),
+    ...(v.minRetentionDays != null ? { minRetentionDays: wholeDays(v.minRetentionDays, 'model.weights.minRetentionDays') } : {}),
   }
+}
+
+function wholeDays(v: unknown, path: string): number {
+  const n = num(v, path)
+  if (!Number.isInteger(n) || n < 1 || n > 3650) throw new MithParseError(`${path} must be a whole number of days from 1 to 3650`)
+  return n
+}
+
+/** Device compromise-ease weights: every value in [0, 1]; unknown keys rejected. */
+function deviceWeights(v: unknown): NonNullable<MithWeights['device']> {
+  const path = 'model.weights.device'
+  if (!isObj(v)) throw new MithParseError(`${path} must be an object`)
+  const known = ['eol', 'unsanctioned', 'vulnerability', 'maxEase']
+  for (const key of Object.keys(v)) {
+    if (!known.includes(key)) throw new MithParseError(`${path}.${key} is not a known weight (${known.join(', ')})`)
+  }
+  const unit = (x: unknown, at: string) => inRange(x, at, 0, 1, true)
+  const out: NonNullable<MithWeights['device']> = {}
+  if (v.eol != null) out.eol = unit(v.eol, `${path}.eol`)
+  if (v.unsanctioned != null) out.unsanctioned = unit(v.unsanctioned, `${path}.unsanctioned`)
+  if (v.maxEase != null) out.maxEase = unit(v.maxEase, `${path}.maxEase`)
+  if (v.vulnerability != null) {
+    const vv = v.vulnerability
+    if (!isObj(vv)) throw new MithParseError(`${path}.vulnerability must be an object`)
+    const sev = ['low', 'medium', 'high', 'critical'] as const
+    const m: Partial<Record<(typeof sev)[number], number>> = {}
+    for (const [key, value] of Object.entries(vv)) {
+      const k = oneOf(key, sev, `${path}.vulnerability key`)
+      m[k] = unit(value, `${path}.vulnerability.${key}`)
+    }
+    out.vulnerability = m
+  }
+  return out
 }
 
 /** Number in [lo, hi] (or (lo, hi] when `loInclusive` is false). */
@@ -243,6 +408,15 @@ function orgSections(model: Record<string, unknown>, entities: MithEntity[]): Or
         throw new MithParseError(`entity ${e.id} names zone ${e.zone}, which is not a network-layer entity`)
       }
       if (e.zone === e.id) throw new MithParseError(`entity ${e.id} cannot be its own zone`)
+    }
+  }
+
+  for (const e of entities) {
+    for (const u of e.users ?? []) {
+      if (!entityById.has(u.person)) throw new MithParseError(`device ${e.id} user ${u.person} is not in model.entities`)
+    }
+    for (const ev of e.logs?.events ?? []) {
+      if (ev.user != null && !entityById.has(ev.user)) throw new MithParseError(`device ${e.id} log event user ${ev.user} is not in model.entities`)
     }
   }
 
@@ -518,9 +692,7 @@ export function parseMith(input: unknown): MithDocument {
   if (!isObj(input)) throw new MithParseError('document must be an object')
   if (input.mith !== MITH_VERSION) throw new MithParseError(`unsupported mith version: ${String(input.mith)}`)
   if (input.kind !== 'document') throw new MithParseError('kind must be document')
-  if (input.dataset_kind !== 'synthetic-demo') {
-    throw new MithParseError('dataset_kind must be synthetic-demo')
-  }
+  const declaredKind = datasetKind(input.dataset_kind, 'dataset_kind')
   if (!isObj(input.model)) throw new MithParseError('model must be an object')
   if (!Array.isArray(input.model.entities)) throw new MithParseError('model.entities must be an array')
   if (!Array.isArray(input.model.edges)) throw new MithParseError('model.edges must be an array')
@@ -557,16 +729,22 @@ export function parseMith(input: unknown): MithDocument {
   if (selection != null && typeof selection !== 'string') {
     throw new MithParseError('diagram.selection must be a string or null')
   }
-  if (typeof selection === 'string' && selection && !ids.has(selection)) {
+  const known = new Set(ids)
+  for (const list of [org.boundaries, org.roles, org.grants, org.actors, org.channels, org.reach]) {
+    for (const item of list ?? []) known.add(item.id)
+  }
+  if (typeof selection === 'string' && selection && !known.has(selection)) {
     throw new MithParseError('diagram.selection is not in the model')
   }
+  const lens = optionalOne<DiagramLens>(input.diagram.lens, DIAGRAM_LENSES, 'diagram.lens')
+  const frame = optionalOne<DiagramFrame>(input.diagram.frame, DIAGRAM_FRAMES, 'diagram.frame')
 
   return {
     mith: MITH_VERSION,
     kind: 'document',
     id: str(input.id, 'id'),
     title: str(input.title, 'title'),
-    dataset_kind: 'synthetic-demo',
+    dataset_kind: declaredKind,
     generated_at: str(input.generated_at, 'generated_at'),
     disclaimer: str(input.disclaimer, 'disclaimer'),
     model: {
@@ -581,6 +759,8 @@ export function parseMith(input: unknown): MithDocument {
       selection: selection ? selection : null,
       planes,
       crossLinks: input.diagram.crossLinks.map(crossLink),
+      ...(lens ? { lens } : {}),
+      ...(frame ? { frame } : {}),
     },
     inference: {
       viz_only: true,
@@ -592,10 +772,11 @@ export function parseMith(input: unknown): MithDocument {
 
 /** Parse a .mithril v0 package manifest (stub; not a zip). */
 export function parseMithrilPackage(input: unknown): MithrilPackage {
+  rejectForbidden(input, 'mithril')
   if (!isObj(input)) throw new MithParseError('package must be an object')
   if (input.mithril !== MITH_VERSION) throw new MithParseError(`unsupported mithril version: ${String(input.mithril)}`)
   if (input.kind !== 'package') throw new MithParseError('kind must be package')
-  if (input.dataset_kind !== 'synthetic-demo') throw new MithParseError('dataset_kind must be synthetic-demo')
+  const declaredKind = datasetKind(input.dataset_kind, 'dataset_kind')
   if (!Array.isArray(input.documents) || input.documents.length === 0) {
     throw new MithParseError('documents must be a non-empty array')
   }
@@ -603,7 +784,7 @@ export function parseMithrilPackage(input: unknown): MithrilPackage {
     mithril: MITH_VERSION,
     kind: 'package',
     id: str(input.id, 'id'),
-    dataset_kind: 'synthetic-demo',
+    dataset_kind: declaredKind,
     documents: input.documents.map((d, i) => str(d, `documents[${i}]`)),
     attachments: Array.isArray(input.attachments)
       ? input.attachments.map((d, i) => str(d, `attachments[${i}]`))

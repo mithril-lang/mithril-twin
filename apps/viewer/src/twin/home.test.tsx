@@ -7,6 +7,7 @@ import { TwinHome } from './home'
 import { labelLines } from './components/TokenNode'
 import { orthoPath } from './components/ortho'
 import { twinSymbol } from './themes/symbols'
+import { readMith, readMithRaw } from './mith/twin'
 
 const tinyMith = {
   mith: '0.1',
@@ -67,8 +68,9 @@ const tinyMith = {
   },
 }
 
-const orgMith = JSON.parse(
-  readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../../public/data/polaris-org.mith'), 'utf8'),
+const orgMith = readFileSync(
+  resolve(dirname(fileURLToPath(import.meta.url)), '../../public/data/polaris-org.mith'),
+  'utf8',
 )
 
 const tinyPackage = {
@@ -174,7 +176,7 @@ describe('Twin lenses', () => {
       vi.fn(async (input: RequestInfo | URL) => {
         const url = String(input)
         if (url.includes('.mithril')) return new Response(JSON.stringify(tinyPackage), { status: 200 })
-        return new Response(JSON.stringify(orgMith), { status: 200 })
+        return new Response(orgMith, { status: 200 })
       }),
     )
     setDoc('polaris-org')
@@ -256,6 +258,131 @@ describe('Enterprise-scale pack', () => {
     expect(document.querySelector('[data-lens-panel="impersonation"]')?.textContent).toMatch(/unverified of [\d,]+ paths/)
     fireEvent.click(lens.querySelector('button:nth-child(5)')!)
     expect(document.querySelectorAll('[data-tile-kind="shadow"]').length).toBeGreaterThan(50)
+  })
+})
+
+describe('.mith import and export', () => {
+  it('imports a local .mith from the picker and from a drop, then round-trips export', async () => {
+    render(<TwinHome />)
+    await waitFor(() => expect(screen.getByRole('heading', { name: '北極星 FI' })).toBeTruthy())
+    expect(screen.queryByRole('button', { name: 'Import JSON' })).toBeNull()
+
+    const custom = {
+      ...tinyMith,
+      title: 'Imported Floor',
+      id: 'imported-floor',
+      dataset_kind: 'workshop-export',
+    }
+    const file = new File([JSON.stringify(custom)], 'imported-floor.mith', {
+      type: 'application/vnd.mithril.mith+json',
+    })
+    fireEvent.change(screen.getByLabelText('Import .mith file'), { target: { files: [file] } })
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Imported Floor' })).toBeTruthy())
+    const app = () => document.querySelector('.make-app')!
+    expect(app().getAttribute('data-source')).toBe('file')
+    expect(app().getAttribute('data-dataset-kind')).toBe('workshop-export')
+    expect(screen.getByText('workshop-export')).toBeTruthy()
+
+    const blobs: Blob[] = []
+    const createUrl = vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
+      blobs.push(blob as Blob)
+      return 'blob:mith'
+    })
+    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    fireEvent.click(screen.getByRole('button', { name: 'Export' }))
+    await waitFor(() => expect(screen.getByRole('status').textContent).toMatch(/Exported imported-floor\.mith/))
+    expect(blobs[0]?.type).toBe('application/vnd.mithril.mith+json')
+    const text = await blobs[0]!.text()
+    const round = JSON.parse(text) as { dataset_kind: string; diagram: { lens?: string }; title: string }
+    expect(round.title).toBe('Imported Floor')
+    expect(round.dataset_kind).toBe('workshop-export')
+    expect(round.diagram.lens).toBe('layers')
+
+    const again = new File([text], 'imported-floor.mith', { type: 'application/vnd.mithril.mith+json' })
+    fireEvent.change(screen.getByLabelText('Import .mith file'), { target: { files: [again] } })
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Imported Floor' })).toBeTruthy())
+    expect(app().getAttribute('data-dataset-kind')).toBe('workshop-export')
+
+    const dropped = { ...custom, title: 'Dropped Floor' }
+    fireEvent.drop(app(), {
+      dataTransfer: {
+        files: [new File([JSON.stringify(dropped)], 'dropped.mith', { type: 'application/vnd.mithril.mith+json' })],
+        types: ['Files'],
+      },
+    })
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Dropped Floor' })).toBeTruthy())
+
+    createUrl.mockRestore()
+    revoke.mockRestore()
+    click.mockRestore()
+  })
+
+  it('imports a Form .mith, exports upstream Form, and re-imports the export', async () => {
+    render(<TwinHome />)
+    await waitFor(() => expect(screen.getByLabelText('Import .mith file')).toBeTruthy())
+    const title = readMith(orgMith).doc.title
+    fireEvent.change(screen.getByLabelText('Import .mith file'), {
+      target: { files: [new File([orgMith], 'polaris-org.mith', { type: 'application/vnd.mithril.form' })] },
+    })
+    await waitFor(() => expect(screen.getByRole('heading', { name: title })).toBeTruthy())
+    const blobs: Blob[] = []
+    const createUrl = vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
+      blobs.push(blob as Blob)
+      return 'blob:mith'
+    })
+    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    fireEvent.click(screen.getByRole('button', { name: 'Export' }))
+    await waitFor(() => expect(screen.getByRole('status').textContent).toMatch(/Mithril Form/))
+    expect(blobs[0]?.type).toBe('application/vnd.mithril.form')
+    const text = await blobs[0]!.text()
+    expect(text.startsWith('(mithril/twin-document')).toBe(true)
+    expect(readMith(text).doc.model).toEqual(readMith(orgMith).doc.model)
+    fireEvent.change(screen.getByLabelText('Import .mith file'), {
+      target: { files: [new File([text], 'again.mith', { type: 'application/vnd.mithril.form' })] },
+    })
+    await waitFor(() => expect(document.querySelector('.make-app')?.getAttribute('data-source')).toBe('file'))
+    expect(screen.getByRole('heading', { name: title })).toBeTruthy()
+    createUrl.mockRestore()
+    revoke.mockRestore()
+    click.mockRestore()
+  })
+
+  it('says so when a .mithril package has no member files', async () => {
+    render(<TwinHome />)
+    await waitFor(() => expect(screen.getByLabelText('Import .mith file')).toBeTruthy())
+    const pack = new File(
+      [JSON.stringify({
+        mithril: '0.1',
+        kind: 'package',
+        id: 'local-pack',
+        dataset_kind: 'synthetic-demo',
+        documents: ['missing-member.mith'],
+        attachments: [],
+      })],
+      'local-pack.mithril',
+      { type: 'application/vnd.mithril.mithril+json' },
+    )
+    fireEvent.change(screen.getByLabelText('Import .mith file'), { target: { files: [pack] } })
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toMatch(/missing-member\.mith/))
+    expect(screen.getByRole('alert').textContent).toMatch(/were not included/)
+    expect(screen.getByRole('heading', { name: '北極星 FI' })).toBeTruthy()
+  })
+
+  it('restores diagram.lens from an imported org document', async () => {
+    render(<TwinHome />)
+    await waitFor(() => expect(screen.getByLabelText('Import .mith file')).toBeTruthy())
+    // Legacy v0 JSON still carries diagram.lens / diagram.frame (twin Form has no terms for them).
+    const raw = readMithRaw(orgMith) as { diagram: Record<string, unknown> }
+    const org = { ...raw, diagram: { ...raw.diagram, lens: 'shadow', frame: 'network' } }
+    fireEvent.change(screen.getByLabelText('Import .mith file'), {
+      target: {
+        files: [new File([JSON.stringify(org)], 'polaris-org.mith', { type: 'application/vnd.mithril.mith+json' })],
+      },
+    })
+    await waitFor(() => expect(document.querySelector('.make-app')?.getAttribute('data-lens')).toBe('shadow'))
+    expect(document.querySelector('.make-app')?.getAttribute('data-frame-dim')).toBe('network')
   })
 })
 
