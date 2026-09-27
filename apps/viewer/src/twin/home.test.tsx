@@ -224,6 +224,9 @@ describe('Enterprise-scale pack', () => {
     })
     expect(app().getAttribute('data-scale-level')).toBe('group')
     expect(app().getAttribute('data-lens')).toBe('org')
+    const gh = screen.getByRole('link', { name: /GitHub repository mithril-lang\/mithril-twin/ })
+    expect(gh.getAttribute('href')).toBe('https://github.com/mithril-lang/mithril-twin')
+    expect(gh.closest('.make-top-actions')).toBeTruthy()
     // 300 subsidiary tiles, never one DOM node per person or device.
     expect(document.querySelectorAll('[data-tile-kind="company"]')).toHaveLength(300)
     expect(document.querySelectorAll('[data-scale-tile]').length).toBeLessThan(500)

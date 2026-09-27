@@ -9,6 +9,7 @@ import {
   type ReactNode,
   type WheelEvent as REWheelEvent,
 } from 'react'
+import GitHubLink from '../components/GitHubLink'
 import ThemeSwitcher from '../components/ThemeSwitcher'
 import { CONTROL_WEIGHTS, hopCost, isUnverified, type RoleScore } from '../mith/exposure'
 import { fitBoardsInSafeArea } from '../mith/geometry'
@@ -652,6 +653,7 @@ export default function ScaleGrid({ manifestUrl, sampleId, onPickSample }: Props
           <span className="make-chip">no-runners</span>
           <span className="make-chip warn">viz only</span>
           <ThemeSwitcher />
+          <GitHubLink className="make-github-link" />
         </div>
       </header>
 
