@@ -12,6 +12,8 @@ import {
 } from 'react'
 import GitHubLink from '../components/GitHubLink'
 import ThemeSwitcher from '../components/ThemeSwitcher'
+import { useViewerLocale } from '../../locale'
+import { twinCopy } from '../twin-copy'
 import { CONTROL_WEIGHTS, type MixedHop, type RoleScore, type ZoneScore } from '../mith/exposure'
 import {
   DEFAULT_DEVICE_WEIGHTS,
@@ -164,7 +166,10 @@ type FrameSpec = { id: string; label: string; rect: Rect; kind: string; dashed?:
  * Never more than a few hundred DOM tiles at once. Analysis runs in a Web Worker.
  */
 export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles }: Props) {
+  const locale = useViewerLocale()
+  const t = (english: string, values?: Record<string, string | number>) => twinCopy(locale, english, values)
   const stageRef = useRef<HTMLDivElement>(null)
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
   const [manifest, setManifest] = useState<PackManifest | null>(null)
   const [doc, setDoc] = useState<MithDocument | null>(null)
   const [analysis, setAnalysis] = useState<ScaleAnalysis | null>(null)
@@ -173,6 +178,10 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
   const [lens, setLens] = useState<ScaleLens>('org')
   const [level, setLevel] = useState<Level>({ company: null, dept: null, team: null })
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const selectAndReveal = useCallback((id: string | null) => {
+    setSelectedId(id)
+    setMobileDetailOpen(id !== null)
+  }, [])
   const [chunks, setChunks] = useState<Map<string, ExpandedChunk>>(new Map())
   const [busy, setBusy] = useState('')
   const [query, setQuery] = useState('')
@@ -356,14 +365,14 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
       }
       setMark({ name, t0, note })
       setLevel(next)
-      setSelectedId(select)
+      selectAndReveal(select)
     },
-    [loadChunk],
+    [loadChunk, selectAndReveal],
   )
 
   const openRole = useCallback(
     (id: string | null) => {
-      if (!id) return setSelectedId(null)
+      if (!id) return selectAndReveal(null)
       const r = index.roles.get(id)
       if (r) {
         const company = index.companyOf(r.boundary)
@@ -376,9 +385,9 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
         void goTo({ company, dept: null, team: null }, id)
         return
       }
-      setSelectedId(id)
+      selectAndReveal(id)
     },
-    [index, goTo],
+    [index, goTo, selectAndReveal],
   )
 
   const pickLens = (next: ScaleLens) => {
@@ -428,7 +437,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
           fill: shadowColor(t.item.n, maxN),
           meta: `${t.item.n} dept${t.item.n === 1 ? '' : 's'} · ${t.item.a.source}`,
           kind: 'shadow',
-          onClick: () => setSelectedId(t.item.a.id),
+          onClick: () => selectAndReveal(t.item.a.id),
         })
       }
     }
@@ -554,7 +563,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
             kind: 'zone',
             hot: !!zs?.openToCrownJewel,
             tag: true,
-            onClick: () => setSelectedId(z),
+            onClick: () => selectAndReveal(z),
           })
         }
         for (const z of own) {
@@ -614,7 +623,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
         kind: 'role',
         hot: (s?.score ?? 0) >= HOT,
         tag: true,
-        onClick: () => setSelectedId(r.id),
+        onClick: () => selectAndReveal(r.id),
       })
     })
     const teams = (chunk?.teams ?? []).filter((t) => t.parent === level.dept)
@@ -635,7 +644,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
       })
     }
     return { frames, tiles, links, width, height }
-  }, [manifest, doc, analysis, lens, level, companies, chunks, index, roleScore, labelOf, goTo, zoneScore, weights, sat])
+  }, [manifest, doc, analysis, lens, level, companies, chunks, index, roleScore, labelOf, goTo, zoneScore, weights, sat, selectAndReveal])
 
   // ---- Fit to the safe area (same rule as the Make grid) -------------------------------
   const viewKey = `${level.company}|${level.dept}|${level.team}|${lens}|${floor.width}`
@@ -792,21 +801,28 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
         </div>
         <div className="make-top-actions">
           <span className="make-chip">synthetic-demo</span>
-          <span className="make-chip warn">generated</span>
-          <span className="make-chip">no-runners</span>
-          <span className="make-chip warn">viz only</span>
+          <span className="make-chip warn">{t('generated')}</span>
+          <span className="make-chip">{t('no-runners')}</span>
+          <span className="make-chip warn">{t('viz only')}</span>
           <ThemeSwitcher />
           <GitHubLink className="make-github-link" />
+          <button
+            type="button"
+            className="make-detail-toggle"
+            aria-controls="scale-lens-detail"
+            aria-expanded={mobileDetailOpen}
+            onClick={() => setMobileDetailOpen((open) => !open)}
+          >{t('Details')}</button>
         </div>
       </header>
 
       <div className="make-stage" ref={stageRef} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={() => { drag.current = null }} onWheel={onWheel}>
-        {!ready && !error && <div className="make-loading">Loading synthetic enterprise pack…</div>}
+        {!ready && !error && <div className="make-loading">{t('Loading synthetic enterprise pack…')}</div>}
         {busy && <div className="make-loading scale-busy">{busy}</div>}
         {error && <div className="make-error" role="alert">{error}</div>}
-        {over && <div className="make-drop-hint">Drop a .mith file</div>}
+        {over && <div className="make-drop-hint">{t('Drop a .mith file')}</div>}
 
-        <nav className="scale-crumbs" aria-label="Drill path">
+        <nav className="scale-crumbs" aria-label={t('Drill path')}>
           {crumbs.map((c, i) => (
             <button key={c.id} type="button" className={i === crumbs.length - 1 ? 'active' : ''} onClick={c.go} disabled={i === crumbs.length - 1}>
               {c.label}
@@ -840,7 +856,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
                 lens={lens}
                 roleScore={roleScore}
                 weights={weights}
-                onPick={setSelectedId}
+                onPick={selectAndReveal}
               />
             ))}
           </div>
@@ -852,7 +868,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
             if (!a) return null
             return (
               <span key={f.id} className={`lens-frame-tag kind-${f.kind} ${f.dashed ? 'is-dashed' : ''}`} data-frame-tag={f.id} style={{ left: a.x, top: a.y }}>
-                <em>{f.kind === 'subsidiary' && !f.root ? 'sector' : f.kind === 'company' ? 'group' : f.kind === 'shadow' ? 'shadow IT' : f.kind === 'team' ? 'roles' : f.kind}</em>
+                <em>{t(f.kind === 'subsidiary' && !f.root ? 'sector' : f.kind === 'company' ? 'group' : f.kind === 'shadow' ? 'shadow IT' : f.kind === 'team' ? 'roles' : f.kind)}</em>
                 {f.label}
               </span>
             )
@@ -868,44 +884,44 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
           })}
         </div>
 
-        <aside className="make-rail make-rail-left" aria-label="Search">
+        <aside className="make-rail make-rail-left" aria-label={t('Search')}>
           <label className="make-rail-search">
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search companies, depts, roles, systems" aria-label="Search the enterprise" />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('Search companies, depts, roles, systems')} aria-label={t('Search the enterprise')} />
           </label>
           <div className="make-list scale-results" role="list">
-            {q && results.length === 0 && <p className="lens-blurb">No match.</p>}
+            {q && results.length === 0 && <p className="lens-blurb">{t('No match.')}</p>}
             {results.map((r) => (
               <button key={`${r.kind}:${r.id}`} type="button" className="make-row" onClick={r.go}>
                 <span className="make-row-copy">
                   <strong>{r.label}</strong>
-                  <span>{r.kind}</span>
+                  <span>{t(r.kind)}</span>
                 </span>
               </button>
             ))}
             {!q && manifest && (
-              <dl className="lens-stats scale-counts" aria-label="Dataset counts">
-                <div><dt>Subsidiaries</dt><dd>{fmt(manifest.counts.subsidiaries)}</dd></div>
-                <div><dt>Departments</dt><dd>{fmt(manifest.counts.departments)}</dd></div>
-                <div><dt>Teams</dt><dd>{fmt(manifest.counts.teams)}</dd></div>
-                <div><dt>Employees</dt><dd>{fmt(manifest.counts.employees)}</dd></div>
-                <div><dt>Devices</dt><dd>{fmt(manifest.counts.devices)}</dd></div>
-                <div><dt>Systems / SaaS</dt><dd>{fmt(manifest.counts.systems)}</dd></div>
-                <div><dt>Unsanctioned</dt><dd>{fmt(manifest.counts.unsanctioned)}</dd></div>
-                <div><dt>Zones</dt><dd>{fmt(manifest.counts.zones)}</dd></div>
-                <div><dt>Roles</dt><dd>{fmt(manifest.counts.roles)}</dd></div>
-                <div><dt>Grants</dt><dd>{fmt(manifest.counts.grants)}</dd></div>
-                <div><dt>Channels</dt><dd>{fmt(manifest.counts.channels)}</dd></div>
-                <div><dt>Ext. actors</dt><dd>{fmt(manifest.counts.actors)}</dd></div>
+              <dl className="lens-stats scale-counts" aria-label={t('Dataset counts')}>
+                <div><dt>{t('Subsidiaries')}</dt><dd>{fmt(manifest.counts.subsidiaries)}</dd></div>
+                <div><dt>{t('Departments')}</dt><dd>{fmt(manifest.counts.departments)}</dd></div>
+                <div><dt>{t('Teams')}</dt><dd>{fmt(manifest.counts.teams)}</dd></div>
+                <div><dt>{t('Employees')}</dt><dd>{fmt(manifest.counts.employees)}</dd></div>
+                <div><dt>{t('Devices')}</dt><dd>{fmt(manifest.counts.devices)}</dd></div>
+                <div><dt>{t('Systems / SaaS')}</dt><dd>{fmt(manifest.counts.systems)}</dd></div>
+                <div><dt>{t('Unsanctioned')}</dt><dd>{fmt(manifest.counts.unsanctioned)}</dd></div>
+                <div><dt>{t('Zones')}</dt><dd>{fmt(manifest.counts.zones)}</dd></div>
+                <div><dt>{t('Roles')}</dt><dd>{fmt(manifest.counts.roles)}</dd></div>
+                <div><dt>{t('Grants')}</dt><dd>{fmt(manifest.counts.grants)}</dd></div>
+                <div><dt>{t('Channels')}</dt><dd>{fmt(manifest.counts.channels)}</dd></div>
+                <div><dt>{t('Ext. actors')}</dt><dd>{fmt(manifest.counts.actors)}</dd></div>
               </dl>
             )}
             {!q && manifest && (
               <p className="lens-blurb">
-                Seeded synthetic generator {manifest.generator.name} v{manifest.generator.version} (seed {manifest.generator.seed}). No real people, companies, or systems.
+                {t('Seeded synthetic generator {name} v{version} (seed {seed}). No real people, companies, or systems.', { name: manifest.generator.name, version: manifest.generator.version, seed: manifest.generator.seed })}
               </p>
             )}
           </div>
           <div className="make-rail-foot">
-            <select className="make-sample-select" aria-label="Sample document" value={sampleId} onChange={(e) => onPickSample(e.target.value)}>
+            <select className="make-sample-select" aria-label={t('Sample document')} value={sampleId} onChange={(e) => onPickSample(e.target.value)}>
               {SAMPLE_DOCS.map((d) => (
                 <option key={d.id} value={d.id}>{d.file}</option>
               ))}
@@ -914,13 +930,18 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
               onFiles={onImportFiles}
               onExport={onExport}
               exportDisabled={!doc}
-              exportTitle="Download the index as one .mith file. Company chunks stay in the pack."
+              exportTitle={t('Download the index as one .mith file. Company chunks stay in the pack.')}
             />
             {exportNote && <p className="make-file-note" role="status">{exportNote}</p>}
           </div>
         </aside>
 
-        <aside className="make-rail make-rail-right" aria-label="Lens detail">
+        <aside
+          id="scale-lens-detail"
+          className={`make-rail make-rail-right${mobileDetailOpen ? ' is-mobile-open' : ''}`}
+          aria-label={t('Lens detail')}
+        >
+          <button type="button" className="make-mobile-detail-close" aria-label={t('Close details')} onClick={() => setMobileDetailOpen(false)}>×</button>
           <ScalePanel
             lens={lens}
             levelName={levelName}
@@ -942,7 +963,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
             path={path}
             sat={sat}
             weights={weights}
-            onPick={setSelectedId}
+            onPick={selectAndReveal}
             onDrill={(id) => {
               if (!id) return
               const company = index.companyOf(id)
@@ -952,21 +973,21 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
         </aside>
 
         <div className="make-bottom">
-          <div className="lens-switch" role="group" aria-label="Lens">
+          <div className="lens-switch" role="group" aria-label={t('Lens')}>
             {SCALE_LENSES.map((l) => (
               <button key={l.id} type="button" className={lens === l.id ? 'active' : ''} aria-pressed={lens === l.id} onClick={() => pickLens(l.id)}>
-                {l.label}
+                {t(l.label)}
               </button>
             ))}
           </div>
-          <span className="scale-level-chip" data-level={levelName}>{levelName} · {tileCount} tiles</span>
+          <span className="scale-level-chip" data-level={levelName}>{t('{level} · {count} tiles', { level: t(levelName), count: tileCount })}</span>
         </div>
 
         <div className="make-zoom">
-          <button type="button" onClick={() => { userMoved.current = false; fitPasses.current = 0; setZoom((z) => z * 0.999) }}>Fit</button>
-          <button type="button" aria-label="Zoom out" onClick={() => { userMoved.current = true; setZoom((z) => Math.max(0.25, z / 1.15)) }}>−</button>
+          <button type="button" onClick={() => { userMoved.current = false; fitPasses.current = 0; setZoom((z) => z * 0.999) }}>{t('Fit')}</button>
+          <button type="button" aria-label={t('Zoom out')} onClick={() => { userMoved.current = true; setZoom((z) => Math.max(0.25, z / 1.15)) }}>−</button>
           <span>{Math.round(zoom * 100)}%</span>
-          <button type="button" aria-label="Zoom in" onClick={() => { userMoved.current = true; setZoom((z) => Math.min(3, z * 1.15)) }}>+</button>
+          <button type="button" aria-label={t('Zoom in')} onClick={() => { userMoved.current = true; setZoom((z) => Math.min(3, z * 1.15)) }}>+</button>
         </div>
       </div>
     </div>
@@ -1173,6 +1194,8 @@ function ScalePanel(props: {
   onDrill: (id: string | null) => void
 }) {
   const { lens, manifest, analysis, scopedReport, scopeCompany, level, chunks, index, roleScore, selectedId, onSelect, labelOf, roleLabel, perf } = props
+  const locale = useViewerLocale()
+  const t = (english: string, values?: Record<string, string | number>) => twinCopy(locale, english, values)
   const chunk = level.company ? chunks.get(level.company) ?? null : null
   const personDevices = useMemo(() => (chunk ? devicesByPerson(chunk) : new Map<string, never[]>()), [chunk])
   const roleWhere = (id: string) => {
@@ -1197,17 +1220,17 @@ function ScalePanel(props: {
   return (
     <div className="lens-panel scale-panel" data-lens-panel={lens}>
       <div className="lens-panel-head">
-        <strong>{SCALE_LENSES.find((l) => l.id === lens)?.label ?? lens} lens</strong>
-        <span className="lens-badge">display-only · synthetic</span>
+        <strong>{t('{lens} lens', { lens: t(SCALE_LENSES.find((l) => l.id === lens)?.label ?? lens) })}</strong>
+        <span className="lens-badge">{t('display-only · synthetic')}</span>
       </div>
-      <p className="lens-blurb">{LENS_BLURB[lens]}</p>
-      {!analysis && <p className="lens-blurb" data-analysis-pending>Exposure analysis running in a Web Worker…</p>}
+      <p className="lens-blurb">{t(LENS_BLURB[lens])}</p>
+      {!analysis && <p className="lens-blurb" data-analysis-pending>{t('Exposure analysis running in a Web Worker…')}</p>}
 
       {selectedId && (
-        <div className="lens-detail" aria-label="Selection">
+        <div className="lens-detail" aria-label={t('Selection')}>
           <div className="lens-detail-head">
             <h2>{selectedRole ? selectedRole.label : selectedDevice ? selectedDevice.label : selectedPerson ? selectedPerson.label : labelOf(selectedId)}</h2>
-            <button type="button" className="make-icon-btn" aria-label="Clear selection" onClick={() => onSelect(null)}>×</button>
+            <button type="button" className="make-icon-btn" aria-label={t('Clear selection')} onClick={() => onSelect(null)}>×</button>
           </div>
           {selectedRole && analysis && (
             <>
@@ -1254,32 +1277,32 @@ function ScalePanel(props: {
       {lens === 'org' && (
         <>
           {level.dept && manifest?.departments[level.dept] && (
-            <Section title={`Department · ${labelOf(level.dept)}`}>
+            <Section title={t('Department · {name}', { name: labelOf(level.dept) })}>
               <dl className="lens-stats">
-                <div><dt>People</dt><dd>{fmt(manifest.departments[level.dept]![0])}</dd></div>
-                <div><dt>Devices</dt><dd>{fmt(manifest.departments[level.dept]![1])}</dd></div>
-                <div><dt>Teams</dt><dd>{manifest.departments[level.dept]![2]}</dd></div>
-                <div><dt>Roles ≥ {HOT}</dt><dd>{analysis?.deptHeat[level.dept] ? `${analysis.deptHeat[level.dept]!.hot} of ${analysis.deptHeat[level.dept]!.roles}` : '—'}</dd></div>
+                <div><dt>{t('People')}</dt><dd>{fmt(manifest.departments[level.dept]![0])}</dd></div>
+                <div><dt>{t('Devices')}</dt><dd>{fmt(manifest.departments[level.dept]![1])}</dd></div>
+                <div><dt>{t('Teams')}</dt><dd>{manifest.departments[level.dept]![2]}</dd></div>
+                <div><dt>{t('Roles ≥ {threshold}', { threshold: HOT })}</dt><dd>{analysis?.deptHeat[level.dept] ? t('{hot} of {roles}', { hot: analysis.deptHeat[level.dept]!.hot, roles: analysis.deptHeat[level.dept]!.roles }) : '—'}</dd></div>
               </dl>
             </Section>
           )}
           {scopeCompany && !level.dept && (
             <dl className="lens-stats">
-              <div><dt>People</dt><dd>{fmt(scopeCompany.people)}</dd></div>
-              <div><dt>Devices</dt><dd>{fmt(scopeCompany.devices)}</dd></div>
-              <div><dt>Departments</dt><dd>{scopeCompany.departments}</dd></div>
-              <div><dt>Teams</dt><dd>{scopeCompany.teams}</dd></div>
+              <div><dt>{t('People')}</dt><dd>{fmt(scopeCompany.people)}</dd></div>
+              <div><dt>{t('Devices')}</dt><dd>{fmt(scopeCompany.devices)}</dd></div>
+              <div><dt>{t('Departments')}</dt><dd>{scopeCompany.departments}</dd></div>
+              <div><dt>{t('Teams')}</dt><dd>{scopeCompany.teams}</dd></div>
             </dl>
           )}
           {!scopeCompany && analysis && (
-            <Section title={`Hottest subsidiaries (share of roles ≥ ${HOT})`}>
+            <Section title={t('Hottest subsidiaries (share of roles ≥ {threshold})', { threshold: HOT })}>
               <div className="lens-list">
                 {Object.entries(analysis.companyHeat)
                   .sort((a, b) => b[1].share - a[1].share || b[1].max - a[1].max)
                   .slice(0, 8)
                   .map(([id, h]) => (
                     <button key={id} type="button" className="lens-row" onClick={() => h.top && onSelect(h.top)}>
-                      <span><strong>{labelOf(id)}</strong><small>{Math.round(h.share * 100)}% · {h.hot} of {h.roles} roles ≥ {HOT} · max {h.max} · top {h.top ? labelOf(h.top) : '—'}</small></span>
+                      <span><strong>{labelOf(id)}</strong><small>{t('{share}% · {hot} of {roles} roles ≥ {threshold} · max {max} · top {top}', { share: Math.round(h.share * 100), hot: h.hot, roles: h.roles, threshold: HOT, max: h.max, top: h.top ? labelOf(h.top) : '—' })}</small></span>
                     </button>
                   ))}
               </div>
@@ -1336,16 +1359,16 @@ function ScalePanel(props: {
         </Section>
       )}
 
-      <Section title="Measured in this browser">
+      <Section title={t('Measured in this browser')}>
         <ul className="scale-perf" data-scale-perf>
           {perf.map((p) => (
             <li key={p.name}><span>{p.name}</span><b>{p.ms.toFixed(1)} ms</b>{p.note && <small>{p.note}</small>}</li>
           ))}
-          <li><span>DOM tiles at this level</span><b>{props.tileCount}</b></li>
-          {props.analysisVia && <li><span>analysis ran in</span><b>{props.analysisVia}</b></li>}
+          <li><span>{t('DOM tiles at this level')}</span><b>{props.tileCount}</b></li>
+          {props.analysisVia && <li><span>{t('analysis ran in')}</span><b>{props.analysisVia}</b></li>}
         </ul>
       </Section>
-      <p className="lens-foot">Measures exposure in the synthetic model only. No runners, no scanning, no credential collection.</p>
+      <p className="lens-foot">{t('Measures exposure in the synthetic model only. No runners, no scanning, no credential collection.')}</p>
     </div>
   )
 }

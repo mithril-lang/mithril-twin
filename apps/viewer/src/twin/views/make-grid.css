@@ -981,6 +981,8 @@
     cursor: pointer;
   }
   .make-rail-right.is-mobile-open .make-detail-head .make-icon-btn { display: none; }
+  .make-rail-right.is-mobile-open ~ .make-bottom,
+  .make-rail-right.is-mobile-open ~ .make-zoom { display: none; }
   .make-bottom { max-width: calc(100% - 24px); left: 12px; transform: none; flex-wrap: wrap; }
   .make-top-search { display: none; }
 }
@@ -1017,10 +1019,13 @@
   .make-bottom {
     right: 12px;
     bottom: 12px;
+    width: calc(100% - 24px);
     max-width: none;
     flex-wrap: nowrap;
     overflow-x: auto;
   }
+  .make-bottom .lens-switch,
+  .make-bottom .lens-switch button { flex-shrink: 0; }
   .make-zoom { bottom: 62px; right: 12px; }
   .scale-crumbs { max-width: calc(100% - 24px); }
 }

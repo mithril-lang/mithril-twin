@@ -241,6 +241,20 @@ describe('Twin lenses', () => {
 })
 
 describe('Enterprise-scale pack', () => {
+  it('uses the selected locale for the default pack controls and keeps generated labels as source data', async () => {
+    window.history.replaceState(null, '', '/twin?lang=ja')
+    render(<TwinLocaleProvider><TwinHome /></TwinLocaleProvider>)
+    await waitFor(() => expect(document.querySelector('.make-app')?.getAttribute('data-scale-ready')).toBe('true'))
+    expect(screen.getByRole('button', { name: '詳細' })).toBeTruthy()
+    expect(screen.getByLabelText('データ件数')).toBeTruthy()
+    expect(screen.getByRole('group', { name: 'レンズ' })).toBeTruthy()
+    expect(screen.getByText('組織 レンズ')).toBeTruthy()
+    expect(screen.getByText(/子会社を業種別にまとめ/)).toBeTruthy()
+    expect(screen.getByText('このブラウザでの測定値')).toBeTruthy()
+    expect(screen.queryByText('Measured in this browser')).toBeNull()
+    expect(screen.getAllByText(/北極星/).length).toBeGreaterThan(0)
+  })
+
   it('generates the 北極星 pack in the browser, drills company → department → team, and ranks exposure', async () => {
     const fetchMock = vi.fn(async () => new Response('', { status: 404 }))
     vi.stubGlobal('fetch', fetchMock)
@@ -253,6 +267,14 @@ describe('Enterprise-scale pack', () => {
     })
     expect(app().getAttribute('data-scale-level')).toBe('group')
     expect(app().getAttribute('data-lens')).toBe('org')
+    const details = screen.getByRole('button', { name: 'Details' })
+    const detailPanel = screen.getByRole('complementary', { name: 'Lens detail' })
+    expect(details.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(details)
+    expect(details.getAttribute('aria-expanded')).toBe('true')
+    expect(detailPanel.className).toContain('is-mobile-open')
+    fireEvent.click(screen.getByRole('button', { name: 'Close details' }))
+    expect(detailPanel.className).not.toContain('is-mobile-open')
     const gh = screen.getByRole('link', { name: /GitHub repository mithril-lang\/mithril-twin/ })
     expect(gh.getAttribute('href')).toBe('https://github.com/mithril-lang/mithril-twin')
     expect(gh.closest('.make-top-actions')).toBeTruthy()
