@@ -1,5 +1,7 @@
 import type { AttackScenario, GraphItem } from '../data/types'
 import { useTheme } from '../themes/ThemeContext'
+import { useViewerLocale } from '../../locale'
+import { twinCopy } from '../twin-copy'
 
 type Props = {
   selected: GraphItem | null
@@ -9,33 +11,35 @@ type Props = {
 
 export default function Inspector({ selected, attackScenario = null, personLabel }: Props) {
   const { theme } = useTheme()
+  const locale = useViewerLocale()
+  const t = (english: string) => twinCopy(locale, english)
   const nodeEntries = Object.entries(theme.nodes).slice(0, 24)
   const edgeEntries = Object.entries(theme.edges)
 
   return (
     <aside className="card panel">
-      <h2>Selection inspector</h2>
-      <p className="panel-hint">Select a node or edge to inspect its JSON payload.</p>
+      <h2>{t('Selection inspector')}</h2>
+      <p className="panel-hint">{t('Select a node or edge to inspect its JSON payload.')}</p>
       {selected ? (
         <pre className="json">{JSON.stringify(selected.data, null, 2)}</pre>
       ) : (
         <div className="empty">
-          Nothing selected.
+          {t('Nothing selected.')}
           <br />
-          The graph is synthetic and safe for local exploration.
+          {t('The graph is synthetic and safe for local exploration.')}
         </div>
       )}
 
       {attackScenario && (
         <>
-          <h2 className="legend-title">AttackPath · {attackScenario.label}</h2>
+          <h2 className="legend-title">{t('AttackPath')} · {attackScenario.label}</h2>
           <p className="panel-hint">
             {attackScenario.summary}
             <br />
-            <strong>honesty:</strong> {attackScenario.honesty} · observation_count=
+            <strong>{t('honesty')}:</strong> {attackScenario.honesty} · observation_count=
             {attackScenario.observation_count} · <strong>viz only / no runners</strong>
           </p>
-          <h2 className="legend-title">RACI owners who should catch it</h2>
+          <h2 className="legend-title">{t('RACI owners who should catch it')}</h2>
           <ul className="legend raci-catch-list">
             {attackScenario.raci_catch.map((r) => (
               <li key={`${r.person_id}-${r.process}`}>
@@ -50,7 +54,7 @@ export default function Inspector({ selected, attackScenario = null, personLabel
               </li>
             ))}
           </ul>
-          <h2 className="legend-title">Path steps</h2>
+          <h2 className="legend-title">{t('Path steps')}</h2>
           <ol className="attack-step-list">
             {attackScenario.steps.map((s, i) => (
               <li key={i}>
@@ -61,7 +65,7 @@ export default function Inspector({ selected, attackScenario = null, personLabel
         </>
       )}
 
-      <h2 className="legend-title">Node legend · {theme.label}</h2>
+      <h2 className="legend-title">{t('Node legend')} · {theme.label}</h2>
       <ul className="legend">
         {nodeEntries.map(([type, st]) => (
           <li key={type}>
@@ -75,7 +79,7 @@ export default function Inspector({ selected, attackScenario = null, personLabel
         ))}
       </ul>
 
-      <h2 className="legend-title">Edge legend</h2>
+      <h2 className="legend-title">{t('Edge legend')}</h2>
       <ul className="legend">
         {edgeEntries.map(([kind, color]) => (
           <li key={kind}>
@@ -85,7 +89,7 @@ export default function Inspector({ selected, attackScenario = null, personLabel
         ))}
       </ul>
 
-      <h2 className="legend-title">Mode halos</h2>
+      <h2 className="legend-title">{t('Mode halos')}</h2>
       <ul className="legend">
         {Object.entries(theme.halos).map(([mode, color]) => (
           <li key={mode}>

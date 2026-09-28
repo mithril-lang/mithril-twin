@@ -167,7 +167,7 @@
   color: var(--tw-muted); font-size: 12px; line-height: 1.45; padding: 0 4px;
 }
 .strategy-toolbar {
-  display: flex; align-items: center; gap: 10px; padding: 0 4px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 0 4px;
 }
 .strategy-tool-btn {
   border: 1px solid var(--tw-panel-border); border-radius: 6px;
@@ -176,6 +176,7 @@
 }
 .strategy-tool-btn:hover { background: var(--tw-accent); color: var(--tw-bg); }
 .strategy-zoom-label { font-size: 11px; color: var(--tw-muted); font-variant-numeric: tabular-nums; }
+.strategy-zone-summary { display: none; }
 
 .strategy-viewport {
   position: relative;
@@ -311,6 +312,15 @@
   .graph-card { min-height: 500px; }
   .graph { min-height: 440px; }
   .strategy-viewport { min-height: 380px; height: 55vh; }
+  .strategy-zone-open { display: none; }
+  .strategy-zone-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .strategy-zone-summary-item {
+    display: grid; align-content: start; gap: 2px; min-width: 0; padding: 9px 10px;
+    border: 1px solid var(--tw-panel-border); border-radius: 7px;
+    background: var(--tw-chrome); color: var(--tw-text);
+  }
+  .strategy-zone-summary-item strong { font-size: 12px; line-height: 1.3; overflow-wrap: anywhere; }
+  .strategy-zone-summary-item span { color: var(--tw-muted); font-size: 10px; line-height: 1.35; overflow-wrap: anywhere; }
   .layer-viewport { max-height: 62vh; }
 }
 

@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Lens, LensFrame, LensItem, LensLayout } from '../mith/lensLayout'
+import { useViewerLocale } from '../../locale'
+import { twinCopy } from '../twin-copy'
 import { Node3D } from './node3d'
 import './lens.css'
 
@@ -64,6 +66,8 @@ export function LensGlyph({ item, glyph }: { item: Pick<LensItem, 'kind' | 'type
 
 /** Nested boundary / zone frames and their items on the shared isometric floor. */
 export default function LensFloor({ layout, lens, selectedId, hot, query, onSelect, glyph }: Props) {
+  const locale = useViewerLocale()
+  const t = (english: string) => twinCopy(locale, english)
   const q = query.trim().toLowerCase()
   return (
     <>
@@ -82,7 +86,7 @@ export default function LensFloor({ layout, lens, selectedId, hot, query, onSele
             ['--lens-depth' as string]: String(frame.depth),
           }}
           role="group"
-          aria-label={`${frame.label} ${KIND_TAG[frame.kind] ?? frame.kind}`}
+          aria-label={`${frame.label} ${t(KIND_TAG[frame.kind] ?? frame.kind)}`}
         >
           <i className="lens-anchor" data-entity={frame.id} data-plane="lens" aria-hidden="true" />
           {/* Measured by useBoardAnchors; LensFrameTags draws the label in screen space above everything. */}
@@ -145,6 +149,8 @@ export function LensFrameTags({
   /** Grid zoom. Tags shrink with it (down to 70%) so a zoomed-out floor stays legible. */
   zoom?: number
 }) {
+  const locale = useViewerLocale()
+  const t = (english: string) => twinCopy(locale, english)
   const scale = Math.min(1, Math.max(0.7, zoom + 0.15))
   return (
     <div className="make-board-tags lens-frame-tags" aria-hidden="true" style={{ ['--tag-scale' as string]: scale.toFixed(2) }}>
@@ -158,7 +164,7 @@ export function LensFrameTags({
             data-frame-tag={frame.id}
             style={{ left: a.x, top: a.y }}
           >
-            <em>{KIND_TAG[frame.kind] ?? frame.kind}</em>
+            <em>{t(KIND_TAG[frame.kind] ?? frame.kind)}</em>
             {frame.label}
           </span>
         )

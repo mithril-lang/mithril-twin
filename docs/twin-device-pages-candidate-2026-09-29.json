@@ -1,0 +1,59 @@
+{
+  "checkedAt": "2026-09-28T16:29:10.295Z",
+  "scope": "draft generated device details in JA/AR only; not a locale receipt",
+  "results": [
+    {
+      "locale": "ja",
+      "status": 200,
+      "observed": {
+        "headings": [
+          "ソフトウェア（4 件）",
+          "ログ",
+          "人員（2 人）"
+        ],
+        "terms": [
+          "種類",
+          "ゾーン",
+          "侵害の容易さ",
+          "ログ収集状況",
+          "ログの出所",
+          "転送先",
+          "保存期間"
+        ],
+        "overflow": false
+      },
+      "expected": [
+        "ソフトウェア（4 件）",
+        "ログ"
+      ],
+      "errors": []
+    },
+    {
+      "locale": "ar",
+      "status": 200,
+      "observed": {
+        "headings": [
+          "البرمجيات (4)",
+          "السجلات",
+          "الأشخاص (2)"
+        ],
+        "terms": [
+          "النوع",
+          "المنطقة",
+          "سهولة الاختراق",
+          "نطاق تغطية السجلات",
+          "المصادر",
+          "مُعاد توجيهه إلى",
+          "مدة الاحتفاظ"
+        ],
+        "overflow": false
+      },
+      "expected": [
+        "البرمجيات (4)",
+        "السجلات"
+      ],
+      "errors": []
+    }
+  ],
+  "failures": []
+}

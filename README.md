@@ -6,6 +6,8 @@ Live demo: **https://twin.mithril.fund**
 
 GitHub Pages mirror: **https://mithril-lang.github.io/mithril-twin/**. The mirror is built from this repository's `main` branch by GitHub Actions. `twin.mithril.fund` remains hosted separately.
 
+The in-progress [locale and mobile candidate](docs/pages-locale-candidate-2026-09-28.md) lives on a review branch. It must pass the remaining viewer translation and interaction review before merging into the auto-publishing branch.
+
 ```clojure
 (mithril/twin-document
   :id "https://mithril.fund/lib/twin/polaris-floor"
