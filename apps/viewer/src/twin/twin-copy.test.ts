@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { LOCALES } from '../locale'
 import translations from './twin-copy.json'
-import { twinCopy } from './twin-copy'
+import { loadTwinCopy, twinCopy } from './twin-copy'
 
 describe('Twin viewer chrome translations', () => {
   it('has copy for every authored control in all 22 public locales', () => {
@@ -21,5 +21,10 @@ describe('Twin viewer chrome translations', () => {
       .toBe('仮説「Bank Core VLAN」はこのオブジェクトに関係します。')
     expect(twinCopy('ja', 'Bank Core VLAN')).toBe('Bank Core VLAN')
     expect(twinCopy('en', 'Open')).toBe('Open')
+  })
+
+  it('loads a selected locale from its own chunk', async () => {
+    await loadTwinCopy('ar')
+    expect(twinCopy('ar', 'Details')).toBe(translations.copy.ar.Details)
   })
 })

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, use, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ThemeProvider } from './themes/ThemeContext'
 import type {
   AttackScenario,
@@ -18,6 +18,8 @@ import TopologyGraph from './components/TopologyGraph'
 import GridOverview from './views/GridOverview'
 import MakeGrid from './views/MakeGrid'
 import ScaleGrid from './views/ScaleGrid'
+import { useViewerLocale } from '../locale'
+import { loadTwinCopy } from './twin-copy'
 import { importLocalFiles, readLocalFiles } from './mith/io'
 import {
   hypothesisToScenario,
@@ -368,10 +370,18 @@ function TwinApp() {
 }
 
 /** Viewer root: Polaris synthetic-demo twin. */
+function LocaleReadyTwinApp() {
+  const locale = useViewerLocale()
+  if (locale !== 'en' && locale !== 'ja') use(loadTwinCopy(locale))
+  return <TwinApp />
+}
+
 export function TwinHome() {
   return (
     <ThemeProvider>
-      <TwinApp />
+      <Suspense fallback={<div role="status" aria-busy="true">Mithril Twin…</div>}>
+        <LocaleReadyTwinApp />
+      </Suspense>
     </ThemeProvider>
   )
 }
