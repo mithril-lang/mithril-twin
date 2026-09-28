@@ -241,6 +241,18 @@ describe('Twin lenses', () => {
 })
 
 describe('Enterprise-scale pack', () => {
+  it('localizes the document lens and its exposure ranking in Japanese', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => String(input).includes('.mithril')
+      ? new Response(JSON.stringify(tinyPackage), { status: 200 })
+      : new Response(orgMith, { status: 200 })))
+    window.history.replaceState(null, '', '/twin?doc=polaris-org&lang=ja')
+    render(<TwinLocaleProvider><TwinHome /></TwinLocaleProvider>)
+    await waitFor(() => expect(document.querySelector('[data-lens-panel="org"]')).toBeTruthy())
+    expect(screen.getByText('区切りの軸')).toBeTruthy()
+    fireEvent.click(screen.getByRole('group', { name: 'レンズ' }).querySelector('button:nth-child(3)')!)
+    expect(screen.getByRole('table', { name: '露出スコア順の資源' })).toBeTruthy()
+  })
+
   it('uses the selected locale for the default pack controls and keeps generated labels as source data', async () => {
     window.history.replaceState(null, '', '/twin?lang=ja')
     render(<TwinLocaleProvider><TwinHome /></TwinLocaleProvider>)

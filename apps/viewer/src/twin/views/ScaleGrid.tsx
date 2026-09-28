@@ -54,6 +54,10 @@ const SCALE_LENSES: { id: ScaleLens; label: string }[] = [
   { id: 'software', label: 'Software risk' },
   { id: 'logs', label: 'Log gaps' },
 ]
+function useScaleCopy() {
+  const locale = useViewerLocale()
+  return (english: string, values?: Record<string, string | number>) => twinCopy(locale, english, values)
+}
 const DEVICE_LENS = (l: ScaleLens) => l === 'software' || l === 'logs'
 /** Device-share heat saturates here (device shares run higher than hot-role shares). */
 const DEVICE_HEAT_SATURATION = 0.5
@@ -166,8 +170,7 @@ type FrameSpec = { id: string; label: string; rect: Rect; kind: string; dashed?:
  * Never more than a few hundred DOM tiles at once. Analysis runs in a Web Worker.
  */
 export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles }: Props) {
-  const locale = useViewerLocale()
-  const t = (english: string, values?: Record<string, string | number>) => twinCopy(locale, english, values)
+  const t = useScaleCopy()
   const stageRef = useRef<HTMLDivElement>(null)
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
   const [manifest, setManifest] = useState<PackManifest | null>(null)
@@ -1194,8 +1197,7 @@ function ScalePanel(props: {
   onDrill: (id: string | null) => void
 }) {
   const { lens, manifest, analysis, scopedReport, scopeCompany, level, chunks, index, roleScore, selectedId, onSelect, labelOf, roleLabel, perf } = props
-  const locale = useViewerLocale()
-  const t = (english: string, values?: Record<string, string | number>) => twinCopy(locale, english, values)
+  const t = useScaleCopy()
   const chunk = level.company ? chunks.get(level.company) ?? null : null
   const personDevices = useMemo(() => (chunk ? devicesByPerson(chunk) : new Map<string, never[]>()), [chunk])
   const roleWhere = (id: string) => {
@@ -1235,9 +1237,9 @@ function ScalePanel(props: {
           {selectedRole && analysis && (
             <>
               <dl className="lens-kv">
-                <div><dt>where</dt><dd>{roleLabel(selectedRole.id)}</dd></div>
-                <div><dt>holders</dt><dd>{chunk?.holders.get(selectedRole.id)?.length ?? '—'} (synthetic people)</dd></div>
-                <div><dt>unverified paths</dt><dd>{roleScore.get(selectedRole.id)?.unverifiedPaths ?? 0} of {roleScore.get(selectedRole.id)?.paths ?? 0} (≤4 hops) · min hops {roleScore.get(selectedRole.id)?.minHops ?? '—'}</dd></div>
+                <div><dt>{t('where')}</dt><dd>{roleLabel(selectedRole.id)}</dd></div>
+                <div><dt>{t('holders')}</dt><dd>{t('{count} synthetic people', { count: chunk?.holders.get(selectedRole.id)?.length ?? '—' })}</dd></div>
+                <div><dt>{t('unverified paths')}</dt><dd>{t('{unverified} of {paths} (≤4 hops) · min hops {minimum}', { unverified: roleScore.get(selectedRole.id)?.unverifiedPaths ?? 0, paths: roleScore.get(selectedRole.id)?.paths ?? 0, minimum: roleScore.get(selectedRole.id)?.minHops ?? '—' })}</dd></div>
               </dl>
               <MixedPath path={props.path} index={index} labelOf={labelOf} />
             </>
@@ -1246,28 +1248,28 @@ function ScalePanel(props: {
           {selectedPerson && <PersonDevices person={selectedPerson} devices={personDevices.get(selectedPerson.id) ?? []} weights={props.weights} onPick={pick} />}
           {selectedEntity && !shadowApp && !selectedDevice && !selectedPerson && (
             <dl className="lens-kv">
-              <div><dt>type</dt><dd>{selectedEntity.type}</dd></div>
-              <div><dt>criticality</dt><dd>{selectedEntity.criticality ?? 'not declared (level fallback)'}</dd></div>
-              <div><dt>zone</dt><dd>{selectedEntity.zone ? labelOf(selectedEntity.zone) : '—'}</dd></div>
+              <div><dt>{t('type')}</dt><dd>{selectedEntity.type}</dd></div>
+              <div><dt>{t('criticality')}</dt><dd>{selectedEntity.criticality ? t(selectedEntity.criticality) : t('not declared (level fallback)')}</dd></div>
+              <div><dt>{t('zone')}</dt><dd>{selectedEntity.zone ? labelOf(selectedEntity.zone) : '—'}</dd></div>
               {analysis && (
-                <div><dt>exposure</dt><dd>{(() => { const r = analysis.report.resources.find((x) => x.resource === selectedEntity.id); return r ? `score ${r.score} via ${r.viaRole ? roleLabel(r.viaRole) : r.viaNetwork ? 'network / shadow SaaS' : '—'}${r.viaNetwork ? ' · network-reachable' : ''}` : 'no grants' })()}</dd></div>
+                <div><dt>{t('exposure')}</dt><dd>{(() => { const r = analysis.report.resources.find((x) => x.resource === selectedEntity.id); return r ? t('score {score} via {route}{reach}', { score: r.score, route: r.viaRole ? roleLabel(r.viaRole) : r.viaNetwork ? t('network / shadow SaaS') : '—', reach: r.viaNetwork ? t(' · network-reachable') : '' }) : t('no grants') })()}</dd></div>
               )}
               {selectedEntity.layer === 'network' && (() => {
                 const z = analysis?.report.zones.find((x) => x.zone === selectedEntity.id)
-                return z ? <div><dt>reach</dt><dd>{z.reachableZones} zones reachable · crown jewel {z.crownJewelCost != null ? `at cost ${z.crownJewelCost} (${labelOf(z.crownJewel!)})` : 'not reachable'}{z.openToCrownJewel ? ' · OPEN path' : ''}</dd></div> : null
+                return z ? <div><dt>{t('reach')}</dt><dd>{t('{count} zones reachable · crown jewel {target}{open}', { count: z.reachableZones, target: z.crownJewelCost != null ? t('at cost {cost} ({name})', { cost: z.crownJewelCost, name: labelOf(z.crownJewel!) }) : t('not reachable'), open: z.openToCrownJewel ? t(' · OPEN path') : '' })}</dd></div> : null
               })()}
             </dl>
           )}
           {selectedEntity?.layer === 'server' && !shadowApp && <MixedPath path={props.path} index={index} labelOf={labelOf} />}
           {shadowApp && (
             <dl className="lens-kv">
-              <div><dt>source</dt><dd>{shadowApp.source}</dd></div>
-              <div><dt>criticality</dt><dd>{shadowApp.criticality}</dd></div>
-              <div><dt>used by</dt><dd>{shadowApp.departments.length} departments in {shadowApp.companies.length} subsidiaries</dd></div>
-              <div><dt>first users</dt><dd>{shadowApp.departments.slice(0, 6).map((d) => `${labelOf(d)} (${d.split('.')[0]!.replace('b:', '').toUpperCase()})`).join(', ')}</dd></div>
+              <div><dt>{t('source')}</dt><dd>{shadowApp.source}</dd></div>
+              <div><dt>{t('criticality')}</dt><dd>{t(shadowApp.criticality)}</dd></div>
+              <div><dt>{t('used by')}</dt><dd>{t('{departments} departments in {subsidiaries} subsidiaries', { departments: shadowApp.departments.length, subsidiaries: shadowApp.companies.length })}</dd></div>
+              <div><dt>{t('first users')}</dt><dd>{shadowApp.departments.slice(0, 6).map((d) => `${labelOf(d)} (${d.split('.')[0]!.replace('b:', '').toUpperCase()})`).join(', ')}</dd></div>
               {(() => {
                 const x = analysis?.report.shadowEntries.find((e) => e.system === shadowApp.id)
-                return x ? <div><dt>entry path</dt><dd>syncs into {x.syncZones} zones · {x.reachableZones} reachable · crown jewel {x.crownJewelCost != null ? `at cost ${x.crownJewelCost} (${labelOf(x.crownJewel!)})` : 'not reachable'}</dd></div> : null
+                return x ? <div><dt>{t('entry path')}</dt><dd>{t('syncs into {zones} zones · {reachable} reachable · crown jewel {target}', { zones: x.syncZones, reachable: x.reachableZones, target: x.crownJewelCost != null ? t('at cost {cost} ({name})', { cost: x.crownJewelCost, name: labelOf(x.crownJewel!) }) : t('not reachable') })}</dd></div> : null
               })()}
             </dl>
           )}
@@ -1324,16 +1326,16 @@ function ScalePanel(props: {
       {lens === 'impersonation' && scopedReport && (
         <>
           <p className="lens-metric">
-            <b className="lens-num-hot">{fmt(scopedReport.totals.unverifiedPaths)}</b> unverified of {fmt(scopedReport.totals.paths)} paths (≤{scopedReport.totals.maxHops} hops){scopedReport.totals.capped ? ' (capped)' : ''} · {fmt(scopedReport.totals.reachableRoles)} of {fmt(scopedReport.totals.roles)} roles reachable from outside
+            <b className="lens-num-hot">{fmt(scopedReport.totals.unverifiedPaths)}</b> {t('unverified of {paths} paths (≤{hops} hops){capped} · {reachable} of {roles} roles reachable from outside', { paths: fmt(scopedReport.totals.paths), hops: scopedReport.totals.maxHops, capped: scopedReport.totals.capped ? t(' (capped)') : '', reachable: fmt(scopedReport.totals.reachableRoles), roles: fmt(scopedReport.totals.roles) })}
           </p>
-          <Section title="Mixed org + network paths (role → device → zone → system)">
+          <Section title={t('Mixed org + network paths (role → device → zone → system)')}>
             <div className="lens-list" data-mixed-roles>
               {scopedReport.roles
                 .filter((r) => r.viaNetwork && r.score > 0)
                 .slice(0, 8)
                 .map((r) => (
                   <button key={r.role} type="button" className={`lens-row ${r.role === selectedId ? 'active' : ''}`} onClick={() => onSelect(r.role)}>
-                    <span><strong>{roleLabel(r.role)}</strong><small>score {r.score} · seize {r.minCost} + network {r.topCost} → {r.topResource ? labelOf(r.topResource) : '—'} (no grant)</small></span>
+                    <span><strong>{roleLabel(r.role)}</strong><small>{t('score {score} · seize {seize} + network {network} → {resource} (no grant)', { score: r.score, seize: r.minCost ?? '—', network: r.topCost ?? '—', resource: r.topResource ? labelOf(r.topResource) : '—' })}</small></span>
                   </button>
                 ))}
             </div>
@@ -1348,11 +1350,11 @@ function ScalePanel(props: {
       )}
 
       {lens === 'shadow' && (
-        <Section title={`Unsanctioned SaaS in scope (${scopedShadow.length})`}>
+        <Section title={t('Unsanctioned SaaS in scope ({count})', { count: scopedShadow.length })}>
           <div className="lens-list">
             {scopedShadow.slice(0, 40).map((a) => (
               <button key={a.id} type="button" className={`lens-row ${a.id === selectedId ? 'active' : ''}`} onClick={() => onSelect(a.id)}>
-                <span><strong>{a.label}</strong><small>{a.source} · {a.criticality} · {a.departments.length} depts · {a.companies.length} subsidiaries</small></span>
+                <span><strong>{a.label}</strong><small>{t('{source} · {criticality} · {departments} depts · {subsidiaries} subsidiaries', { source: a.source, criticality: t(a.criticality), departments: a.departments.length, subsidiaries: a.companies.length })}</small></span>
               </button>
             ))}
           </div>
@@ -1377,15 +1379,16 @@ const NET_EDGE_TYPES = new Set<number>([EDGE.pivot, EDGE.device, EDGE.reach, EDG
 
 /** Mixed org + network hop chain from the engine (actor → role → device → zone → … → system). */
 function MixedPath({ path, index, labelOf }: { path: PathResult | null; index: IndexLike; labelOf: (id: string) => string }) {
-  if (!path) return <p className="lens-blurb" data-path-pending>Computing mixed path…</p>
-  if (!path.hops.length) return <p className="lens-blurb">No path from an external actor in the model.</p>
+  const t = useScaleCopy()
+  if (!path) return <p className="lens-blurb" data-path-pending>{t('Computing mixed path…')}</p>
+  if (!path.hops.length) return <p className="lens-blurb">{t('No path from an external actor in the model.')}</p>
   const net = path.hops.filter((h) => NET_EDGE_TYPES.has(h.edge)).length
   return (
     <div className="scale-path" data-mixed-path={path.target ?? path.role ?? ''}>
       <p className="lens-metric">
-        cost <b>{path.cost ?? '—'}</b> · {path.hops.length} hops ({path.hops.length - net} org, {net} network){path.target ? ` → ${labelOf(path.target)}` : ''}
+        {t('cost')} <b>{path.cost ?? '—'}</b> · {t('{hops} hops ({org} org, {network} network)', { hops: path.hops.length, org: path.hops.length - net, network: net })}{path.target ? ` → ${labelOf(path.target)}` : ''}
       </p>
-      <ol className="scale-hops" aria-label="Mixed org and network path">
+      <ol className="scale-hops" aria-label={t('Mixed org and network path')}>
         {path.hops.map((h: MixedHop, i) => {
           const ch = h.edge === EDGE.channel ? index.channels.get(h.ref) : undefined
           const dim = NET_EDGE_TYPES.has(h.edge) ? 'net' : 'org'
@@ -1396,20 +1399,20 @@ function MixedPath({ path, index, labelOf }: { path: PathResult | null; index: I
                 {labelOf(h.from)} → {labelOf(h.to)}
               </span>
               <small>
-                {ch ? `${ch.kind} · ${h.red ? 'no verification' : ch.verification.join(' + ')}` : h.kind}
-                {h.edge === EDGE.reach ? ` · ${h.red ? 'open' : 'conditional'}` : ''} · cost {Number.isInteger(h.cost) ? h.cost : h.cost.toFixed(2)}
+                {ch ? `${t(ch.kind)} · ${h.red ? t('no verification') : ch.verification.map((v) => t(v)).join(' + ')}` : t(h.kind)}
+                {h.edge === EDGE.reach ? ` · ${h.red ? t('open') : t('conditional')}` : ''} · {t('cost')} {Number.isInteger(h.cost) ? h.cost : h.cost.toFixed(2)}
               </small>
-              {h.blind && <em className={`scale-hop-blind blind-${h.blind}`} data-hop-blind={h.blind}>{h.blind === 'blind' ? 'detection blind spot' : 'short log retention'}</em>}
+              {h.blind && <em className={`scale-hop-blind blind-${h.blind}`} data-hop-blind={h.blind}>{t(h.blind === 'blind' ? 'detection blind spot' : 'short log retention')}</em>}
               {h.notes?.map((n) => <small key={n} className="scale-hop-note">{n}</small>)}
             </li>
           )
         })}
       </ol>
       {path.blast && (
-        <dl className="lens-kv" aria-label="Weighted blast radius">
-          <div><dt>blast radius</dt><dd>{path.blast.count} resources within cost ≤ {path.blast.maxCost} · {path.blast.crownJewels} crown jewel · {path.blast.network} network-only</dd></div>
+        <dl className="lens-kv" aria-label={t('Weighted blast radius')}>
+          <div><dt>{t('blast radius')}</dt><dd>{t('{resources} resources within cost ≤ {cost} · {jewels} crown jewel · {network} network-only', { resources: path.blast.count, cost: path.blast.maxCost, jewels: path.blast.crownJewels, network: path.blast.network })}</dd></div>
           {path.blast.top.slice(0, 5).map((r) => (
-            <div key={r.resource}><dt>{r.level}</dt><dd>{labelOf(r.resource)} · cost {r.cost}</dd></div>
+            <div key={r.resource}><dt>{t(r.level)}</dt><dd>{labelOf(r.resource)} · {t('cost')} {r.cost}</dd></div>
           ))}
         </dl>
       )}
@@ -1419,6 +1422,7 @@ function MixedPath({ path, index, labelOf }: { path: PathResult | null; index: I
 
 /** Zone→zone reach edges on the floor. Red: open into a crown-jewel zone; dashed: conditional. */
 function ReachLinks({ links, width, height }: { links: LinkSpec[]; width: number; height: number }) {
+  const t = useScaleCopy()
   const center = (r: Rect) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 })
   const clip = (r: Rect, from: { x: number; y: number }, to: { x: number; y: number }) => {
     const dx = to.x - from.x
@@ -1427,7 +1431,7 @@ function ReachLinks({ links, width, height }: { links: LinkSpec[]; width: number
     return { x: from.x + dx * t, y: from.y + dy * t }
   }
   return (
-    <svg className="scale-reach" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-label="Zone reach" data-reach-links={links.length}>
+    <svg className="scale-reach" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-label={t('Zone reach')} data-reach-links={links.length}>
       <defs>
         {['red', 'open', 'conditional', 'blocked'].map((k) => (
           <marker key={k} id={`reach-arrow-${k}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -1450,7 +1454,7 @@ function ReachLinks({ links, width, height }: { links: LinkSpec[]; width: number
           <g key={l.id} className={`reach-link reach-${k}`} data-reach={l.kind} data-reach-red={l.red ? 'true' : undefined}>
             <line x1={p.x} y1={p.y} x2={q.x} y2={q.y} markerEnd={`url(#reach-arrow-${k})`} />
             {l.kind !== 'blocked' && (
-              <text x={(p.x + q.x) / 2 + nx} y={(p.y + q.y) / 2 + ny}>{l.kind === 'open' ? `open ${l.weight}` : `${l.weight}`}</text>
+              <text x={(p.x + q.x) / 2 + nx} y={(p.y + q.y) / 2 + ny}>{l.kind === 'open' ? t('open {weight}', { weight: l.weight }) : `${l.weight}`}</text>
             )}
           </g>
         )
@@ -1469,6 +1473,7 @@ function NetworkPanel(props: {
   selectedId: string | null
   onSelect: (id: string | null) => void
 }) {
+  const t = useScaleCopy()
   const { analysis, scopeCompany, index, labelOf, roleLabel, selectedId, onSelect } = props
   const key = scopeCompany?.id.replace('b:', '')
   const inScopeZone = (z: string | null) => !key || (!!z && z.startsWith(`net:${key}.`))
@@ -1481,65 +1486,77 @@ function NetworkPanel(props: {
   const shadow = analysis.report.shadowEntries.filter((x) => x.crownJewelCost != null)
   return (
     <>
-      <dl className="lens-stats" aria-label="Zone reach">
-        <div><dt>Zones</dt><dd>{fmt(zones.length)}</dd></div>
-        <div><dt>Reach open</dt><dd className="lens-num-hot">{fmt(counts.open)}</dd></div>
-        <div><dt>Conditional</dt><dd>{fmt(counts.conditional)}</dd></div>
-        <div><dt>Blocked</dt><dd>{fmt(counts.blocked)}</dd></div>
+      <dl className="lens-stats" aria-label={t('Zone reach')}>
+        <div><dt>{t('Zones')}</dt><dd>{fmt(zones.length)}</dd></div>
+        <div><dt>{t('Reach open')}</dt><dd className="lens-num-hot">{fmt(counts.open)}</dd></div>
+        <div><dt>{t('Conditional')}</dt><dd>{fmt(counts.conditional)}</dd></div>
+        <div><dt>{t('Blocked')}</dt><dd>{fmt(counts.blocked)}</dd></div>
       </dl>
-      <Section title={`Open paths into crown-jewel zones (${open.length})`}>
+      <Section title={t('Open paths into crown-jewel zones ({count})', { count: open.length })}>
         <div className="lens-list" data-open-cj>
           {open.slice(0, 10).map((z) => (
             <button key={z.zone} type="button" className={`lens-row ${z.zone === selectedId ? 'active' : ''}`} onClick={() => onSelect(z.zone)}>
-              <span><strong className="lens-num-hot">{labelOf(z.zone)}</strong><small>open reach only → {z.crownJewel ? labelOf(z.crownJewel) : 'crown-jewel zone'} · weighted cost {z.crownJewelCost ?? '—'}</small></span>
+              <span><strong className="lens-num-hot">{labelOf(z.zone)}</strong><small>{t('open reach only → {target} · weighted cost {cost}', { target: z.crownJewel ? labelOf(z.crownJewel) : t('crown-jewel zone'), cost: z.crownJewelCost ?? '—' })}</small></span>
             </button>
           ))}
-          {!open.length && <p className="lens-blurb">No open-only path into a crown-jewel zone in scope.</p>}
+          {!open.length && <p className="lens-blurb">{t('No open-only path into a crown-jewel zone in scope.')}</p>}
         </div>
       </Section>
-      <Section title={`Network-reachable without a grant (${fmt(netExp.length)})`}>
+      <Section title={t('Network-reachable without a grant ({count})', { count: fmt(netExp.length) })}>
         <div className="lens-list" data-net-no-grant>
           {netExp.slice(0, 8).map((x) => (
             <button key={x.resource} type="button" className={`lens-row ${x.resource === selectedId ? 'active' : ''}`} onClick={() => onSelect(x.resource)}>
-              <span><strong>{labelOf(x.resource)}</strong><small>{x.criticality} · cost {x.cost} · via {x.viaRole ? roleLabel(x.viaRole) : 'shadow SaaS entry'} · hosted in {x.hostZone ? labelOf(x.hostZone) : '—'}</small></span>
+              <span><strong>{labelOf(x.resource)}</strong><small>{t('{criticality} · cost {cost} · via {route} · hosted in {zone}', { criticality: t(x.criticality), cost: x.cost, route: x.viaRole ? roleLabel(x.viaRole) : t('shadow SaaS entry'), zone: x.hostZone ? labelOf(x.hostZone) : '—' })}</small></span>
             </button>
           ))}
         </div>
       </Section>
-      <Section title={`Shadow-IT SaaS entry paths to crown jewels (${shadow.length})`}>
+      <Section title={t('Shadow-IT SaaS entry paths to crown jewels ({count})', { count: shadow.length })}>
         <div className="lens-list" data-shadow-entry>
           {shadow.slice(0, 6).map((x) => (
             <button key={x.system} type="button" className={`lens-row ${x.system === selectedId ? 'active' : ''}`} onClick={() => onSelect(x.system)}>
-              <span><strong>{labelOf(x.system)}</strong><small>internet → SaaS → sync into {x.syncZones} zones → {x.crownJewel ? labelOf(x.crownJewel) : '—'} · cost {x.crownJewelCost}</small></span>
+              <span><strong>{labelOf(x.system)}</strong><small>{t('internet → SaaS → sync into {zones} zones → {target} · cost {cost}', { zones: x.syncZones, target: x.crownJewel ? labelOf(x.crownJewel) : '—', cost: x.crownJewelCost ?? '—' })}</small></span>
             </button>
           ))}
         </div>
       </Section>
-      <div className="scale-legend" aria-label="Zone legend">
-        <span style={{ background: zoneFill({ openToCrownJewel: true } as ZoneScore) }}>open → CJ</span>
-        <span style={{ background: zoneFill({ hostsCrownJewel: true } as ZoneScore) }}>hosts CJ</span>
-        <span style={{ background: zoneFill(undefined) }}>other</span>
-        <small>arrows: red open into CJ zone · solid open · dashed conditional · dotted blocked</small>
+      <div className="scale-legend" aria-label={t('Zone legend')}>
+        <span style={{ background: zoneFill({ openToCrownJewel: true } as ZoneScore) }}>{t('open → CJ')}</span>
+        <span style={{ background: zoneFill({ hostsCrownJewel: true } as ZoneScore) }}>{t('hosts CJ')}</span>
+        <span style={{ background: zoneFill(undefined) }}>{t('other')}</span>
+        <small>{t('arrows: red open into CJ zone · solid open · dashed conditional · dotted blocked')}</small>
       </div>
     </>
   )
 }
 
 function WeightsNote() {
+  const t = useScaleCopy()
   return (
     <p className="lens-blurb scale-weights">
-      Hop cost = 1 + {Object.entries(CONTROL_WEIGHTS).filter(([k]) => k !== 'none').map(([k, v]) => `${k} ${v}`).join(', ')}; network reach open {DEFAULT_REACH_WEIGHTS.open}, conditional {DEFAULT_REACH_WEIGHTS.conditional}, blocked impassable; jump host {DEFAULT_JUMP_HOST_COST}, device pivot / host 1; device pivot × (1 − ease), ease = min({DEFAULT_DEVICE_WEIGHTS.maxEase}, EOL {DEFAULT_DEVICE_WEIGHTS.eol} + unsanctioned {DEFAULT_DEVICE_WEIGHTS.unsanctioned} + worst vuln {Object.entries(DEFAULT_DEVICE_WEIGHTS.vulnerability).map(([k, v]) => `${k} ${v}`).join(' / ')}); log retention minimum {DEFAULT_MIN_RETENTION_DAYS} days (tunable defaults, per-document overrides in model.weights; not real-world success rates). Score = 100 × criticality × level ÷ 8 ÷ (cost to seize the role + network cost to the system).
+      {t('Hop cost = 1 + {controls}; network reach open {open}, conditional {conditional}, blocked impassable; jump host {jump}, device pivot / host 1; device pivot × (1 − ease), ease = min({maxEase}, EOL {eol} + unsanctioned {unsanctioned} + worst vuln {vulnerability}); log retention minimum {days} days (tunable defaults, per-document overrides in model.weights; not real-world success rates). Score = 100 × criticality × level ÷ 8 ÷ (cost to seize the role + network cost to the system).', {
+        controls: Object.entries(CONTROL_WEIGHTS).filter(([k]) => k !== 'none').map(([k, v]) => `${t(k)} ${v}`).join(', '),
+        open: DEFAULT_REACH_WEIGHTS.open,
+        conditional: DEFAULT_REACH_WEIGHTS.conditional,
+        jump: DEFAULT_JUMP_HOST_COST,
+        maxEase: DEFAULT_DEVICE_WEIGHTS.maxEase,
+        eol: DEFAULT_DEVICE_WEIGHTS.eol,
+        unsanctioned: DEFAULT_DEVICE_WEIGHTS.unsanctioned,
+        vulnerability: Object.entries(DEFAULT_DEVICE_WEIGHTS.vulnerability).map(([k, v]) => `${t(k)} ${v}`).join(' / '),
+        days: DEFAULT_MIN_RETENTION_DAYS,
+      })}
     </p>
   )
 }
 
 function HeatLegend({ sat, note }: { sat: number; note?: string }) {
+  const t = useScaleCopy()
   return (
-    <div className="scale-legend" aria-label="Heat legend">
+    <div className="scale-legend" aria-label={t('Heat legend')}>
       {[0, 0.2, 0.4, 0.6, 0.8, 1].map((k) => (
         <span key={k} style={{ background: shareColor(k * sat, sat) }}>{Math.round(k * sat * 100)}%{k === 1 ? '+' : ''}</span>
       ))}
-      <small>{note ?? `tile = share of roles with score ≥ ${HOT}`}</small>
+      <small>{note ?? t('tile = share of roles with score ≥ {threshold}', { threshold: HOT })}</small>
     </div>
   )
 }
@@ -1560,6 +1577,7 @@ function TeamList({
   selectedId: string | null
   onPick: (id: string) => void
 }) {
+  const t = useScaleCopy()
   const rows = useMemo(() => {
     const people = (chunk.teamPeople.get(team) ?? []).map((i) => chunk.people[i]!)
     const devices = (chunk.teamDevices.get(team) ?? []).map((i) => chunk.devices[i]!)
@@ -1578,7 +1596,7 @@ function TeamList({
   const first = Math.max(0, Math.floor(top / ROW) - 4)
   const last = Math.min(rows.length, first + Math.ceil(H / ROW) + 8)
   return (
-    <Section title={`Team members & devices (${rows.length})`}>
+    <Section title={t('Team members & devices ({count})', { count: rows.length })}>
       <div className="scale-vlist" style={{ height: H }} onScroll={(e) => setTop(e.currentTarget.scrollTop)} data-vlist-rows={rows.length}>
         <div style={{ height: rows.length * ROW, position: 'relative' }}>
           {rows.slice(first, last).map((e, i) => {
@@ -1598,12 +1616,12 @@ function TeamList({
                   <small>
                     {e.type}
                     {e.attrs.title ? ` · ${e.attrs.title}` : ''}
-                    {risk && <> · ease <b style={{ color: easeColor(risk.ease) }}>{risk.ease.toFixed(2)}</b></>}
-                    {cov && <> · logs <b style={{ color: coverageColor(cov) }}>{cov}</b></>}
+                    {risk && <> · {t('ease')} <b style={{ color: easeColor(risk.ease) }}>{risk.ease.toFixed(2)}</b></>}
+                    {cov && <> · {t('logs')} <b style={{ color: coverageColor(cov) }}>{t(cov)}</b></>}
                   </small>
                 </button>
                 {mine.length > 0 && (
-                  <span className="scale-vrow-links" aria-label={`Devices of ${e.label}`}>
+                  <span className="scale-vrow-links" aria-label={t('Devices of {name}', { name: e.label })}>
                     {mine.slice(0, 3).map(({ device, relation }) => (
                       <button key={device.id} type="button" className="scale-dev-chip" title={`${device.label} (${relation})`} onClick={() => onPick(device.id)} data-person-device-link={device.id}>
                         {device.type}
@@ -1635,6 +1653,7 @@ function DeviceLensPanel(props: {
   onPick: (id: string) => void
   onOpen: (id: string | null) => void
 }) {
+  const t = useScaleCopy()
   const { lens, analysis, level, chunk, labelOf } = props
   const agg = analysis?.devices
   const col = lens === 'software' ? 1 : 2
@@ -1655,25 +1674,25 @@ function DeviceLensPanel(props: {
     <>
       {here && (
         <dl className="lens-stats" data-device-lens={lens}>
-          <div><dt>Devices</dt><dd>{fmt(here[0])}</dd></div>
+          <div><dt>{t('Devices')}</dt><dd>{fmt(here[0])}</dd></div>
           {lens === 'software' ? (
-            <div><dt>High-ease</dt><dd>{fmt(here[1])} ({Math.round((here[1] / Math.max(1, here[0])) * 100)}%)</dd></div>
+            <div><dt>{t('High-ease')}</dt><dd>{fmt(here[1])} ({Math.round((here[1] / Math.max(1, here[0])) * 100)}%)</dd></div>
           ) : (
             <>
-              <div><dt>Log gaps</dt><dd>{fmt(here[2])} ({Math.round((here[2] / Math.max(1, here[0])) * 100)}%)</dd></div>
-              <div><dt>Unknown</dt><dd>{fmt(here[3])}</dd></div>
+              <div><dt>{t('Log gaps')}</dt><dd>{fmt(here[2])} ({Math.round((here[2] / Math.max(1, here[0])) * 100)}%)</dd></div>
+              <div><dt>{t('Unknown')}</dt><dd>{fmt(here[3])}</dd></div>
             </>
           )}
         </dl>
       )}
       {ranked.length > 0 && (
-        <Section title={lens === 'software' ? 'Highest share of high-ease devices' : 'Highest share of log-coverage gaps'}>
+        <Section title={t(lens === 'software' ? 'Highest share of high-ease devices' : 'Highest share of log-coverage gaps')}>
           <div className="lens-list">
             {ranked.map(([id, c]) => (
               <button key={id} type="button" className="lens-row" onClick={() => props.onOpen(id)}>
                 <span>
                   <strong>{labelOf(id)}</strong>
-                  <small>{Math.round((c[col]! / c[0]) * 100)}% · {fmt(c[col]!)} of {fmt(c[0])} devices</small>
+                  <small>{t('{share}% · {count} of {total} devices', { share: Math.round((c[col]! / c[0]) * 100), count: fmt(c[col]!), total: fmt(c[0]) })}</small>
                 </span>
               </button>
             ))}
@@ -1681,8 +1700,8 @@ function DeviceLensPanel(props: {
         </Section>
       )}
       {level.team && chunk && <TeamList team={level.team} chunk={chunk} lens={lens} weights={props.weights} selectedId={props.selectedId} onPick={props.onPick} />}
-      {level.dept && !level.team && <p className="lens-blurb">Pick a team to list its devices; click a device for software, logs, and people.</p>}
-      <HeatLegend sat={DEVICE_HEAT_SATURATION} note={lens === 'software' ? 'tile = share of devices with ease ≥ 0.25' : 'tile = share of devices with a log gap'} />
+      {level.dept && !level.team && <p className="lens-blurb">{t('Pick a team to list its devices; click a device for software, logs, and people.')}</p>}
+      <HeatLegend sat={DEVICE_HEAT_SATURATION} note={t(lens === 'software' ? 'tile = share of devices with ease ≥ 0.25' : 'tile = share of devices with a log gap')} />
     </>
   )
 }

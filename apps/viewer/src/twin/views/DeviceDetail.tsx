@@ -1,6 +1,8 @@
 import { deviceRisk, logCoverage, type LogCoverage, type ResolvedWeights } from '../mith/graph'
 import type { MithEntity } from '../mith/types'
 import type { ExpandedChunk } from '../scale/pack'
+import { useViewerLocale } from '../../locale'
+import { twinCopy } from '../twin-copy'
 import './device.css'
 
 /**
@@ -64,34 +66,35 @@ export function DeviceDetail({
   labelOf: (id: string) => string
   onPick: (id: string) => void
 }) {
+  const locale = useViewerLocale()
+  const t = (english: string, values?: Record<string, string | number>) => twinCopy(locale, english, values)
   const risk = deviceRisk(device.software, weights.device)
   const cov = logCoverage(device.logs, weights.minRetentionDays)
   const logs = device.logs
   return (
     <div className="device-detail" data-device-detail={device.id}>
       <dl className="lens-kv">
-        <div><dt>type</dt><dd>{device.type}</dd></div>
-        <div><dt>zone</dt><dd>{device.zone ? labelOf(device.zone) : '—'}</dd></div>
+        <div><dt>{t('type')}</dt><dd>{device.type}</dd></div>
+        <div><dt>{t('zone')}</dt><dd>{device.zone ? labelOf(device.zone) : '—'}</dd></div>
         <div>
-          <dt>compromise ease</dt>
+          <dt>{t('compromise ease')}</dt>
           <dd>
-            <b style={{ color: easeColor(risk.ease) }}>{risk.ease.toFixed(2)}</b> of max {weights.device.maxEase} · role → device pivot costs{' '}
-            {(weights.pivot * (1 - risk.ease)).toFixed(2)} (pivot {weights.pivot} × (1 − ease))
+            <b style={{ color: easeColor(risk.ease) }}>{risk.ease.toFixed(2)}</b> {t('of max {maximum} · role → device pivot costs {cost} (pivot {pivot} × (1 − ease))', { maximum: weights.device.maxEase, cost: (weights.pivot * (1 - risk.ease)).toFixed(2), pivot: weights.pivot })}
           </dd>
         </div>
         <div>
-          <dt>log coverage</dt>
+          <dt>{t('log coverage')}</dt>
           <dd data-log-coverage={cov}>
-            <b style={{ color: coverageColor(cov) }}>{COVERAGE_LABEL[cov]}</b>
-            {cov === 'blind' || cov === 'short' ? ' · shown as a detection blind spot on paths through this device (reachability unchanged)' : ''}
+            <b style={{ color: coverageColor(cov) }}>{t(COVERAGE_LABEL[cov])}</b>
+            {cov === 'blind' || cov === 'short' ? t(' · shown as a detection blind spot on paths through this device (reachability unchanged)') : ''}
           </dd>
         </div>
       </dl>
 
-      <h3 className="lens-h3">Software ({device.software?.length ?? 0})</h3>
+      <h3 className="lens-h3">{t('Software ({count})', { count: device.software?.length ?? 0 })}</h3>
       {device.software?.length ? (
         <table className="device-table" data-device-software>
-          <thead><tr><th>name</th><th>version</th><th>vendor</th><th>flags</th></tr></thead>
+          <thead><tr><th>{t('name')}</th><th>{t('version')}</th><th>{t('vendor')}</th><th>{t('flags')}</th></tr></thead>
           <tbody>
             {device.software.map((s, i) => (
               <tr key={`${s.name}:${i}`} className={s.eol || s.sanctioned === false || (s.vulnerability && s.vulnerability !== 'none' && s.vulnerability !== 'low') ? 'is-risky' : ''}>
@@ -100,28 +103,33 @@ export function DeviceDetail({
                 <td>{s.vendor ?? '—'}</td>
                 <td>
                   {s.eol && <span className="device-flag flag-eol">EOL</span>}
-                  {s.sanctioned === false && <span className="device-flag flag-unsanctioned">unsanctioned</span>}
-                  {s.vulnerability && s.vulnerability !== 'none' && <span className={`device-flag flag-vuln-${s.vulnerability}`}>{s.vulnerability}</span>}
+                  {s.sanctioned === false && <span className="device-flag flag-unsanctioned">{t('unsanctioned')}</span>}
+                  {s.vulnerability && s.vulnerability !== 'none' && <span className={`device-flag flag-vuln-${s.vulnerability}`}>{t(s.vulnerability)}</span>}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       ) : (
-        <p className="lens-blurb">No software modeled.</p>
+        <p className="lens-blurb">{t('No software modeled.')}</p>
       )}
-      {risk.reasons.length > 0 && <p className="lens-blurb">Ease = min({weights.device.maxEase}, EOL {weights.device.eol} + unsanctioned {weights.device.unsanctioned} + worst vuln): {risk.reasons.join('; ')}</p>}
+      {risk.reasons.length > 0 && <p className="lens-blurb">{t('Ease = min({maximum}, EOL {eol} + unsanctioned {unsanctioned} + worst vuln): {reasons}', { maximum: weights.device.maxEase, eol: weights.device.eol, unsanctioned: weights.device.unsanctioned, reasons: risk.reasons.map((reason) => {
+        if (reason.startsWith('EOL: ')) return t('EOL: {software}', { software: reason.slice(5) })
+        if (reason.startsWith('unsanctioned: ')) return t('unsanctioned: {software}', { software: reason.slice(14) })
+        const match = /^(\w+) vuln: (.+)$/.exec(reason)
+        return match ? t('{severity} vulnerability: {software}', { severity: t(match[1]!), software: match[2]! }) : reason
+      }).join('; ') })}</p>}
 
-      <h3 className="lens-h3">Logs</h3>
+      <h3 className="lens-h3">{t('Logs')}</h3>
       {logs ? (
         <>
           <dl className="lens-kv" data-device-logs>
-            <div><dt>sources</dt><dd>{logs.sources.length ? logs.sources.join(', ') : 'none'}</dd></div>
-            <div><dt>forwarded to</dt><dd>{logs.forwardTo === 'none' ? 'not forwarded (kept on device)' : logs.forwardTo}</dd></div>
-            <div><dt>retention</dt><dd>{logs.retentionDays} days{logs.retentionDays < weights.minRetentionDays ? ` (< ${weights.minRetentionDays} minimum)` : ''}</dd></div>
+            <div><dt>{t('sources')}</dt><dd>{logs.sources.length ? logs.sources.join(', ') : t('none')}</dd></div>
+            <div><dt>{t('forwarded to')}</dt><dd>{logs.forwardTo === 'none' ? t('not forwarded (kept on device)') : logs.forwardTo}</dd></div>
+            <div><dt>{t('retention')}</dt><dd>{t('{days} days{minimum}', { days: logs.retentionDays, minimum: logs.retentionDays < weights.minRetentionDays ? t(' (< {days} minimum)', { days: weights.minRetentionDays }) : '' })}</dd></div>
           </dl>
           {logs.events?.length ? (
-            <ol className="device-timeline" aria-label="Sample log events (synthetic)" data-device-events={logs.events.length}>
+            <ol className="device-timeline" aria-label={t('Sample log events (synthetic)')} data-device-events={logs.events.length}>
               {logs.events.map((e, i) => (
                 <li key={`${e.at}:${i}`} className={`sev-${e.severity ?? 'info'}`}>
                   <time dateTime={e.at}>{e.at.slice(11, 16)}</time>
@@ -130,24 +138,24 @@ export function DeviceDetail({
               ))}
             </ol>
           ) : (
-            <p className="lens-blurb">No sample events.</p>
+            <p className="lens-blurb">{t('No sample events.')}</p>
           )}
         </>
       ) : (
-        <p className="lens-blurb">No logs block modeled (coverage unknown, not flagged).</p>
+        <p className="lens-blurb">{t('No logs block modeled (coverage unknown, not flagged).')}</p>
       )}
 
-      <h3 className="lens-h3">People ({device.users?.length ?? 0})</h3>
+      <h3 className="lens-h3">{t('People ({count})', { count: device.users?.length ?? 0 })}</h3>
       {device.users?.length ? (
         <div className="lens-list" data-device-people>
           {device.users.map((u) => (
             <button key={u.person} type="button" className="lens-row" onClick={() => onPick(u.person)}>
-              <span><strong>{labelOf(u.person)}</strong><small>{u.relation}</small></span>
+              <span><strong>{labelOf(u.person)}</strong><small>{t(u.relation)}</small></span>
             </button>
           ))}
         </div>
       ) : (
-        <p className="lens-blurb">No people linked.</p>
+        <p className="lens-blurb">{t('No people linked.')}</p>
       )}
     </div>
   )
@@ -164,13 +172,15 @@ export function PersonDevices({
   weights: ResolvedWeights
   onPick: (id: string) => void
 }) {
+  const locale = useViewerLocale()
+  const t = (english: string, values?: Record<string, string | number>) => twinCopy(locale, english, values)
   return (
     <div data-person-devices={person.id}>
       <dl className="lens-kv">
-        <div><dt>title</dt><dd>{person.attrs.title || '—'}</dd></div>
-        <div><dt>zone</dt><dd>{person.zone ?? '—'}</dd></div>
+        <div><dt>{t('title')}</dt><dd>{person.attrs.title || '—'}</dd></div>
+        <div><dt>{t('zone')}</dt><dd>{person.zone ?? '—'}</dd></div>
       </dl>
-      <h3 className="lens-h3">Devices ({devices.length})</h3>
+      <h3 className="lens-h3">{t('Devices ({count})', { count: devices.length })}</h3>
       <div className="lens-list">
         {devices.map(({ device, relation }) => {
           const risk = deviceRisk(device.software, weights.device)
@@ -180,8 +190,8 @@ export function PersonDevices({
               <span>
                 <strong>{device.label}</strong>
                 <small>
-                  {relation} · ease <b style={{ color: easeColor(risk.ease) }}>{risk.ease.toFixed(2)}</b> · logs{' '}
-                  <b style={{ color: coverageColor(cov) }}>{COVERAGE_LABEL[cov]}</b>
+                  {t(relation)} · {t('ease')} <b style={{ color: easeColor(risk.ease) }}>{risk.ease.toFixed(2)}</b> · {t('logs')}{' '}
+                  <b style={{ color: coverageColor(cov) }}>{t(COVERAGE_LABEL[cov])}</b>
                 </small>
               </span>
             </button>

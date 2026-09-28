@@ -1,0 +1,1659 @@
+{
+  "checkedAt": "2026-09-28T16:30:30.073Z",
+  "scope": "draft document lens header and blurb only; not a full locale receipt",
+  "viewport": "390x844",
+  "rows": [
+    {
+      "locale": "en",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "Org lens",
+        "blurb": "Org boundaries frame the grid: company › department › team. Network zones are a separate dimension.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Org lens",
+        "blurb": "Org boundaries frame the grid: company › department › team. Network zones are a separate dimension."
+      }
+    },
+    {
+      "locale": "en",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "Network lens",
+        "blurb": "Network zones frame the grid. The same people and systems keep their org boundary.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Network lens",
+        "blurb": "Network zones frame the grid. The same people and systems keep their org boundary."
+      }
+    },
+    {
+      "locale": "en",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "Access lens",
+        "blurb": "Grants from roles to systems. Select a role to see its blast radius if that role were impersonated.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Access lens",
+        "blurb": "Grants from roles to systems. Select a role to see its blast radius if that role were impersonated."
+      }
+    },
+    {
+      "locale": "en",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "Impersonation lens",
+        "blurb": "Request channels from outside actors into roles. Red hops carry no verification control.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Impersonation lens",
+        "blurb": "Request channels from outside actors into roles. Red hops carry no verification control."
+      }
+    },
+    {
+      "locale": "en",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "Shadow IT lens",
+        "blurb": "Unsanctioned systems sit outside the org boundary in dashed frames, linked to who uses them.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Shadow IT lens",
+        "blurb": "Unsanctioned systems sit outside the org boundary in dashed frames, linked to who uses them."
+      }
+    },
+    {
+      "locale": "zh-Hans",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "组织 视角",
+        "blurb": "组织边界用于划分网格：公司 › 部门 › 团队。网络区域是另一个独立维度。",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "组织 视角",
+        "blurb": "组织边界用于划分网格：公司 › 部门 › 团队。网络区域是另一个独立维度。"
+      }
+    },
+    {
+      "locale": "zh-Hans",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "网络 视角",
+        "blurb": "网络区域用于划分网格。人员和系统仍保留原有的组织边界。",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "网络 视角",
+        "blurb": "网络区域用于划分网格。人员和系统仍保留原有的组织边界。"
+      }
+    },
+    {
+      "locale": "zh-Hans",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "访问 视角",
+        "blurb": "显示从角色到系统的授权关系。选择一个角色，可查看该角色被冒用时的影响范围。",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "访问 视角",
+        "blurb": "显示从角色到系统的授权关系。选择一个角色，可查看该角色被冒用时的影响范围。"
+      }
+    },
+    {
+      "locale": "zh-Hans",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "仿冒身份 视角",
+        "blurb": "显示外部主体向角色发出请求的通道。红色跳转不受任何验证控制。",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "仿冒身份 视角",
+        "blurb": "显示外部主体向角色发出请求的通道。红色跳转不受任何验证控制。"
+      }
+    },
+    {
+      "locale": "zh-Hans",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "影子 IT 视角",
+        "blurb": "未授权系统以虚线框的形式显示在组织边界之外，并与其使用者相连。",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "影子 IT 视角",
+        "blurb": "未授权系统以虚线框的形式显示在组织边界之外，并与其使用者相连。"
+      }
+    },
+    {
+      "locale": "hi",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "ऑर्ग लेंस",
+        "blurb": "संगठन सीमाएँ ग्रिड को कंपनी › विभाग › टीम के क्रम में विभाजित करती हैं। नेटवर्क ज़ोन एक अलग आयाम हैं।",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "ऑर्ग लेंस",
+        "blurb": "संगठन सीमाएँ ग्रिड को कंपनी › विभाग › टीम के क्रम में विभाजित करती हैं। नेटवर्क ज़ोन एक अलग आयाम हैं।"
+      }
+    },
+    {
+      "locale": "hi",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "नेटवर्क लेंस",
+        "blurb": "नेटवर्क ज़ोन ग्रिड को विभाजित करते हैं। लोग और सिस्टम अपनी मूल संगठन सीमा में ही बने रहते हैं।",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "नेटवर्क लेंस",
+        "blurb": "नेटवर्क ज़ोन ग्रिड को विभाजित करते हैं। लोग और सिस्टम अपनी मूल संगठन सीमा में ही बने रहते हैं।"
+      }
+    },
+    {
+      "locale": "hi",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "एक्सेस लेंस",
+        "blurb": "भूमिकाओं से सिस्टम को दी गई अनुमतियाँ दर्शाता है। किसी भूमिका को चुनें ताकि यह देखा जा सके कि उस भूमिका का प्रतिरूपण होने पर प्रभाव क्षेत्र क्या होगा।",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "एक्सेस लेंस",
+        "blurb": "भूमिकाओं से सिस्टम को दी गई अनुमतियाँ दर्शाता है। किसी भूमिका को चुनें ताकि यह देखा जा सके कि उस भूमिका का प्रतिरूपण होने पर प्रभाव क्षेत्र क्या होगा।"
+      }
+    },
+    {
+      "locale": "hi",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "इम्पर्सनेशन लेंस",
+        "blurb": "बाहरी कर्ताओं से भूमिकाओं तक जाने वाले अनुरोध चैनल दर्शाता है। लाल हॉप्स में कोई सत्यापन नियंत्रण नहीं है।",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "इम्पर्सनेशन लेंस",
+        "blurb": "बाहरी कर्ताओं से भूमिकाओं तक जाने वाले अनुरोध चैनल दर्शाता है। लाल हॉप्स में कोई सत्यापन नियंत्रण नहीं है।"
+      }
+    },
+    {
+      "locale": "hi",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "शैडो IT लेंस",
+        "blurb": "अस्वीकृत सिस्टम संगठन सीमा के बाहर डैश्ड फ्रेम में दिखाए जाते हैं, और उनके उपयोगकर्ताओं से जुड़े होते हैं।",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "शैडो IT लेंस",
+        "blurb": "अस्वीकृत सिस्टम संगठन सीमा के बाहर डैश्ड फ्रेम में दिखाए जाते हैं, और उनके उपयोगकर्ताओं से जुड़े होते हैं।"
+      }
+    },
+    {
+      "locale": "es",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "Lente Org",
+        "blurb": "Los límites organizativos delimitan la cuadrícula: empresa › departamento › equipo. Las zonas de red son una dimensión aparte.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lente Org",
+        "blurb": "Los límites organizativos delimitan la cuadrícula: empresa › departamento › equipo. Las zonas de red son una dimensión aparte."
+      }
+    },
+    {
+      "locale": "es",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "Lente Red",
+        "blurb": "Las zonas de red delimitan la cuadrícula. Las mismas personas y sistemas conservan su límite organizativo.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lente Red",
+        "blurb": "Las zonas de red delimitan la cuadrícula. Las mismas personas y sistemas conservan su límite organizativo."
+      }
+    },
+    {
+      "locale": "es",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "Lente Acceso",
+        "blurb": "Concesiones de roles a sistemas. Seleccione un rol para ver su radio de impacto si ese rol fuera suplantado.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lente Acceso",
+        "blurb": "Concesiones de roles a sistemas. Seleccione un rol para ver su radio de impacto si ese rol fuera suplantado."
+      }
+    },
+    {
+      "locale": "es",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "Lente Suplantación",
+        "blurb": "Canales de solicitud de actores externos hacia roles. Los saltos en rojo no tienen control de verificación.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lente Suplantación",
+        "blurb": "Canales de solicitud de actores externos hacia roles. Los saltos en rojo no tienen control de verificación."
+      }
+    },
+    {
+      "locale": "es",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "Lente Shadow IT",
+        "blurb": "Los sistemas no autorizados se ubican fuera del límite organizativo en marcos discontinuos, vinculados a quienes los usan.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lente Shadow IT",
+        "blurb": "Los sistemas no autorizados se ubican fuera del límite organizativo en marcos discontinuos, vinculados a quienes los usan."
+      }
+    },
+    {
+      "locale": "ar",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "عدسة المؤسسة",
+        "blurb": "حدود المؤسسة تُشكّل الشبكة: الشركة › القسم › الفريق. مناطق الشبكة بُعد منفصل.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "عدسة المؤسسة",
+        "blurb": "حدود المؤسسة تُشكّل الشبكة: الشركة › القسم › الفريق. مناطق الشبكة بُعد منفصل."
+      }
+    },
+    {
+      "locale": "ar",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "عدسة الشبكة",
+        "blurb": "مناطق الشبكة تُشكّل الشبكة. يحتفظ الأفراد والأنظمة نفسها بحدود مؤسستهم الأصلية.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "عدسة الشبكة",
+        "blurb": "مناطق الشبكة تُشكّل الشبكة. يحتفظ الأفراد والأنظمة نفسها بحدود مؤسستهم الأصلية."
+      }
+    },
+    {
+      "locale": "ar",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "عدسة الوصول",
+        "blurb": "يعرض صلاحيات الأدوار الممنوحة للأنظمة. اختر دورًا لعرض نطاق التأثير في حال انتحال هذا الدور.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "عدسة الوصول",
+        "blurb": "يعرض صلاحيات الأدوار الممنوحة للأنظمة. اختر دورًا لعرض نطاق التأثير في حال انتحال هذا الدور."
+      }
+    },
+    {
+      "locale": "ar",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "عدسة انتحال الهوية",
+        "blurb": "يعرض قنوات الطلبات من الجهات الخارجية إلى الأدوار. القفزات الحمراء لا تحمل أي ضبط للتحقق.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "عدسة انتحال الهوية",
+        "blurb": "يعرض قنوات الطلبات من الجهات الخارجية إلى الأدوار. القفزات الحمراء لا تحمل أي ضبط للتحقق."
+      }
+    },
+    {
+      "locale": "ar",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "عدسة تقنية المعلومات الظلية",
+        "blurb": "تُعرض الأنظمة غير المصرَّح بها خارج حدود المؤسسة داخل إطارات متقطعة، مرتبطة بمن يستخدمها.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "عدسة تقنية المعلومات الظلية",
+        "blurb": "تُعرض الأنظمة غير المصرَّح بها خارج حدود المؤسسة داخل إطارات متقطعة، مرتبطة بمن يستخدمها."
+      }
+    },
+    {
+      "locale": "fr",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "Lentille Org",
+        "blurb": "Les limites organisationnelles structurent la grille : entreprise › département › équipe. Les zones réseau constituent une dimension distincte.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lentille Org",
+        "blurb": "Les limites organisationnelles structurent la grille : entreprise › département › équipe. Les zones réseau constituent une dimension distincte."
+      }
+    },
+    {
+      "locale": "fr",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "Lentille Réseau",
+        "blurb": "Les zones réseau structurent la grille. Les mêmes personnes et systèmes conservent leur limite organisationnelle.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lentille Réseau",
+        "blurb": "Les zones réseau structurent la grille. Les mêmes personnes et systèmes conservent leur limite organisationnelle."
+      }
+    },
+    {
+      "locale": "fr",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "Lentille Accès",
+        "blurb": "Autorisations accordées des rôles vers les systèmes. Sélectionnez un rôle pour voir son rayon d'impact en cas d'usurpation de ce rôle.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lentille Accès",
+        "blurb": "Autorisations accordées des rôles vers les systèmes. Sélectionnez un rôle pour voir son rayon d'impact en cas d'usurpation de ce rôle."
+      }
+    },
+    {
+      "locale": "fr",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "Lentille Usurpation d'identité",
+        "blurb": "Canaux de requête des acteurs externes vers les rôles. Les liaisons en rouge ne comportent aucun contrôle de vérification.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lentille Usurpation d'identité",
+        "blurb": "Canaux de requête des acteurs externes vers les rôles. Les liaisons en rouge ne comportent aucun contrôle de vérification."
+      }
+    },
+    {
+      "locale": "fr",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "Lentille Shadow IT",
+        "blurb": "Les systèmes non approuvés se trouvent en dehors de la limite organisationnelle, dans des cadres en pointillés, reliés à leurs utilisateurs.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lentille Shadow IT",
+        "blurb": "Les systèmes non approuvés se trouvent en dehors de la limite organisationnelle, dans des cadres en pointillés, reliés à leurs utilisateurs."
+      }
+    },
+    {
+      "locale": "bn",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "প্রতিষ্ঠান লেন্স",
+        "blurb": "সংগঠনের সীমারেখা অনুযায়ী গ্রিড সাজানো হয়েছে: company › department › team। নেটওয়ার্ক জোন একটি ভিন্ন মাত্রা।",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "প্রতিষ্ঠান লেন্স",
+        "blurb": "সংগঠনের সীমারেখা অনুযায়ী গ্রিড সাজানো হয়েছে: company › department › team। নেটওয়ার্ক জোন একটি ভিন্ন মাত্রা।"
+      }
+    },
+    {
+      "locale": "bn",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "নেটওয়ার্ক লেন্স",
+        "blurb": "নেটওয়ার্ক জোন অনুযায়ী গ্রিড সাজানো হয়েছে। একই ব্যক্তি ও সিস্টেমগুলো তাদের মূল সংগঠন সীমারেখার মধ্যেই থাকে।",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "নেটওয়ার্ক লেন্স",
+        "blurb": "নেটওয়ার্ক জোন অনুযায়ী গ্রিড সাজানো হয়েছে। একই ব্যক্তি ও সিস্টেমগুলো তাদের মূল সংগঠন সীমারেখার মধ্যেই থাকে।"
+      }
+    },
+    {
+      "locale": "bn",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "অ্যাক্সেস লেন্স",
+        "blurb": "role থেকে system-এ প্রদত্ত অনুমতিগুলো দেখানো হয়েছে। কোনো role নির্বাচন করলে, সেই role-কে ছদ্মবেশে ব্যবহার করা হলে তার প্রভাব-পরিসীমা (blast radius) দেখা যাবে।",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "অ্যাক্সেস লেন্স",
+        "blurb": "role থেকে system-এ প্রদত্ত অনুমতিগুলো দেখানো হয়েছে। কোনো role নির্বাচন করলে, সেই role-কে ছদ্মবেশে ব্যবহার করা হলে তার প্রভাব-পরিসীমা (blast radius) দেখা যাবে।"
+      }
+    },
+    {
+      "locale": "bn",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "ছদ্মবেশ ধারণ লেন্স",
+        "blurb": "বাহ্যিক actor থেকে role-এর দিকে অনুরোধ চ্যানেলগুলো দেখানো হয়েছে। লাল hop-গুলোতে কোনো যাচাইকরণ নিয়ন্ত্রণ নেই।",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "ছদ্মবেশ ধারণ লেন্স",
+        "blurb": "বাহ্যিক actor থেকে role-এর দিকে অনুরোধ চ্যানেলগুলো দেখানো হয়েছে। লাল hop-গুলোতে কোনো যাচাইকরণ নিয়ন্ত্রণ নেই।"
+      }
+    },
+    {
+      "locale": "bn",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "শ্যাডো আইটি লেন্স",
+        "blurb": "অননুমোদিত সিস্টেমগুলো সংগঠনের সীমারেখার বাইরে ড্যাশ-চিহ্নিত ফ্রেমে দেখানো হয়েছে, এবং কারা এগুলো ব্যবহার করে তার সাথে সংযুক্ত।",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "শ্যাডো আইটি লেন্স",
+        "blurb": "অননুমোদিত সিস্টেমগুলো সংগঠনের সীমারেখার বাইরে ড্যাশ-চিহ্নিত ফ্রেমে দেখানো হয়েছে, এবং কারা এগুলো ব্যবহার করে তার সাথে সংযুক্ত।"
+      }
+    },
+    {
+      "locale": "pt",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "Lente Org",
+        "blurb": "Os limites organizacionais estruturam a grade: empresa › departamento › equipe. As zonas de rede são uma dimensão separada.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lente Org",
+        "blurb": "Os limites organizacionais estruturam a grade: empresa › departamento › equipe. As zonas de rede são uma dimensão separada."
+      }
+    },
+    {
+      "locale": "pt",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "Lente Rede",
+        "blurb": "As zonas de rede estruturam a grade. As mesmas pessoas e sistemas mantêm seu limite organizacional.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lente Rede",
+        "blurb": "As zonas de rede estruturam a grade. As mesmas pessoas e sistemas mantêm seu limite organizacional."
+      }
+    },
+    {
+      "locale": "pt",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "Lente Acesso",
+        "blurb": "Concessões de funções para sistemas. Selecione uma função para ver seu raio de impacto caso essa função fosse personificada.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lente Acesso",
+        "blurb": "Concessões de funções para sistemas. Selecione uma função para ver seu raio de impacto caso essa função fosse personificada."
+      }
+    },
+    {
+      "locale": "pt",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "Lente Impersonação",
+        "blurb": "Canais de solicitação de agentes externos para funções. Saltos em vermelho não possuem controle de verificação.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lente Impersonação",
+        "blurb": "Canais de solicitação de agentes externos para funções. Saltos em vermelho não possuem controle de verificação."
+      }
+    },
+    {
+      "locale": "pt",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "Lente Shadow IT",
+        "blurb": "Sistemas não sancionados ficam fora do limite organizacional em quadros pontilhados, ligados a quem os utiliza.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lente Shadow IT",
+        "blurb": "Sistemas não sancionados ficam fora do limite organizacional em quadros pontilhados, ligados a quem os utiliza."
+      }
+    },
+    {
+      "locale": "id",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "Lensa Organisasi",
+        "blurb": "Batas organisasi membingkai kisi: perusahaan › departemen › tim. Zona jaringan adalah dimensi yang terpisah.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lensa Organisasi",
+        "blurb": "Batas organisasi membingkai kisi: perusahaan › departemen › tim. Zona jaringan adalah dimensi yang terpisah."
+      }
+    },
+    {
+      "locale": "id",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "Lensa Jaringan",
+        "blurb": "Zona jaringan membingkai kisi. Orang dan sistem yang sama tetap mempertahankan batas organisasinya.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lensa Jaringan",
+        "blurb": "Zona jaringan membingkai kisi. Orang dan sistem yang sama tetap mempertahankan batas organisasinya."
+      }
+    },
+    {
+      "locale": "id",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "Lensa Akses",
+        "blurb": "Hak akses dari peran ke sistem. Pilih sebuah peran untuk melihat radius dampaknya jika peran tersebut dipalsukan (impersonated).",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lensa Akses",
+        "blurb": "Hak akses dari peran ke sistem. Pilih sebuah peran untuk melihat radius dampaknya jika peran tersebut dipalsukan (impersonated)."
+      }
+    },
+    {
+      "locale": "id",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "Lensa Peniruan Identitas",
+        "blurb": "Jalur permintaan dari aktor luar ke peran. Hop berwarna merah tidak memiliki kontrol verifikasi.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lensa Peniruan Identitas",
+        "blurb": "Jalur permintaan dari aktor luar ke peran. Hop berwarna merah tidak memiliki kontrol verifikasi."
+      }
+    },
+    {
+      "locale": "id",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "Lensa Shadow IT",
+        "blurb": "Sistem yang tidak disahkan berada di luar batas organisasi dalam bingkai bergaris putus-putus, terhubung dengan pihak yang menggunakannya.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lensa Shadow IT",
+        "blurb": "Sistem yang tidak disahkan berada di luar batas organisasi dalam bingkai bergaris putus-putus, terhubung dengan pihak yang menggunakannya."
+      }
+    },
+    {
+      "locale": "ur",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "ادارہ لینس",
+        "blurb": "Org boundaries گرڈ کو ترتیب دیتی ہیں: کمپنی › ڈیپارٹمنٹ › ٹیم۔ Network zones ایک الگ جہت ہیں۔",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "ادارہ لینس",
+        "blurb": "Org boundaries گرڈ کو ترتیب دیتی ہیں: کمپنی › ڈیپارٹمنٹ › ٹیم۔ Network zones ایک الگ جہت ہیں۔"
+      }
+    },
+    {
+      "locale": "ur",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "نیٹ ورک لینس",
+        "blurb": "Network zones گرڈ کو ترتیب دیتے ہیں۔ وہی افراد اور سسٹمز اپنی org boundary برقرار رکھتے ہیں۔",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "نیٹ ورک لینس",
+        "blurb": "Network zones گرڈ کو ترتیب دیتے ہیں۔ وہی افراد اور سسٹمز اپنی org boundary برقرار رکھتے ہیں۔"
+      }
+    },
+    {
+      "locale": "ur",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "رسائی لینس",
+        "blurb": "Roles سے systems کو دیے گئے grants۔ کسی role کو منتخب کریں تاکہ دیکھ سکیں کہ اگر اس role کی نقالی کی جائے تو اس کا blast radius کیا ہوگا۔",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "رسائی لینس",
+        "blurb": "Roles سے systems کو دیے گئے grants۔ کسی role کو منتخب کریں تاکہ دیکھ سکیں کہ اگر اس role کی نقالی کی جائے تو اس کا blast radius کیا ہوگا۔"
+      }
+    },
+    {
+      "locale": "ur",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "جعلی شناخت لینس",
+        "blurb": "باہر کے actors سے roles کی طرف request channels۔ سرخ hops میں کوئی verification control موجود نہیں ہے۔",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "جعلی شناخت لینس",
+        "blurb": "باہر کے actors سے roles کی طرف request channels۔ سرخ hops میں کوئی verification control موجود نہیں ہے۔"
+      }
+    },
+    {
+      "locale": "ur",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "غیر مجاز IT لینس",
+        "blurb": "غیر منظور شدہ systems org boundary سے باہر dashed frames میں موجود ہیں، جو ان کے استعمال کرنے والوں سے منسلک ہیں۔",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "غیر مجاز IT لینس",
+        "blurb": "غیر منظور شدہ systems org boundary سے باہر dashed frames میں موجود ہیں، جو ان کے استعمال کرنے والوں سے منسلک ہیں۔"
+      }
+    },
+    {
+      "locale": "ru",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "Линза «Организация»",
+        "blurb": "Организационные границы формируют сетку: компания › отдел › команда. Сетевые зоны — отдельное измерение.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Линза «Организация»",
+        "blurb": "Организационные границы формируют сетку: компания › отдел › команда. Сетевые зоны — отдельное измерение."
+      }
+    },
+    {
+      "locale": "ru",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "Линза «Сеть»",
+        "blurb": "Сетевые зоны формируют сетку. Те же люди и системы сохраняют свою организационную границу.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Линза «Сеть»",
+        "blurb": "Сетевые зоны формируют сетку. Те же люди и системы сохраняют свою организационную границу."
+      }
+    },
+    {
+      "locale": "ru",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "Линза «Доступ»",
+        "blurb": "Права доступа от ролей к системам. Выберите роль, чтобы увидеть радиус поражения при имитации этой роли.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Линза «Доступ»",
+        "blurb": "Права доступа от ролей к системам. Выберите роль, чтобы увидеть радиус поражения при имитации этой роли."
+      }
+    },
+    {
+      "locale": "ru",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "Линза «Имперсонация»",
+        "blurb": "Каналы запросов от внешних субъектов к ролям. Красные переходы не имеют контроля верификации.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Линза «Имперсонация»",
+        "blurb": "Каналы запросов от внешних субъектов к ролям. Красные переходы не имеют контроля верификации."
+      }
+    },
+    {
+      "locale": "ru",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "Линза «Shadow IT»",
+        "blurb": "Несанкционированные системы отображаются за пределами организационной границы в пунктирных рамках, связанные с теми, кто их использует.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Линза «Shadow IT»",
+        "blurb": "Несанкционированные системы отображаются за пределами организационной границы в пунктирных рамках, связанные с теми, кто их использует."
+      }
+    },
+    {
+      "locale": "de",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "Org-Ansicht",
+        "blurb": "Org-Grenzen gliedern das Raster: Unternehmen › Abteilung › Team. Netzwerkzonen sind eine eigene Dimension.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Org-Ansicht",
+        "blurb": "Org-Grenzen gliedern das Raster: Unternehmen › Abteilung › Team. Netzwerkzonen sind eine eigene Dimension."
+      }
+    },
+    {
+      "locale": "de",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "Netzwerk-Ansicht",
+        "blurb": "Netzwerkzonen gliedern das Raster. Dieselben Personen und Systeme behalten ihre Org-Grenze.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Netzwerk-Ansicht",
+        "blurb": "Netzwerkzonen gliedern das Raster. Dieselben Personen und Systeme behalten ihre Org-Grenze."
+      }
+    },
+    {
+      "locale": "de",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "Zugriff-Ansicht",
+        "blurb": "Berechtigungen von Rollen an Systeme. Wählen Sie eine Rolle aus, um deren Auswirkungsbereich bei Identitätsmissbrauch zu sehen.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Zugriff-Ansicht",
+        "blurb": "Berechtigungen von Rollen an Systeme. Wählen Sie eine Rolle aus, um deren Auswirkungsbereich bei Identitätsmissbrauch zu sehen."
+      }
+    },
+    {
+      "locale": "de",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "Identitätsvortäuschung-Ansicht",
+        "blurb": "Anfragekanäle von externen Akteuren zu Rollen. Rote Hops verfügen über keine Verifizierungskontrolle.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Identitätsvortäuschung-Ansicht",
+        "blurb": "Anfragekanäle von externen Akteuren zu Rollen. Rote Hops verfügen über keine Verifizierungskontrolle."
+      }
+    },
+    {
+      "locale": "de",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "Schatten-IT-Ansicht",
+        "blurb": "Nicht genehmigte Systeme liegen außerhalb der Org-Grenze in gestrichelten Rahmen, verknüpft mit ihren Nutzern.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Schatten-IT-Ansicht",
+        "blurb": "Nicht genehmigte Systeme liegen außerhalb der Org-Grenze in gestrichelten Rahmen, verknüpft mit ihren Nutzern."
+      }
+    },
+    {
+      "locale": "ja",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "組織 レンズ",
+        "blurb": "組織境界でグリッドを会社 › 部門 › チームの順に区切ります。ネットワークゾーンは別の軸です。",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "組織 レンズ",
+        "blurb": "組織境界でグリッドを会社 › 部門 › チームの順に区切ります。ネットワークゾーンは別の軸です。"
+      }
+    },
+    {
+      "locale": "ja",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "ネットワーク レンズ",
+        "blurb": "ネットワークゾーンでグリッドを区切ります。人員とシステムは元の組織境界に属したままです。",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "ネットワーク レンズ",
+        "blurb": "ネットワークゾーンでグリッドを区切ります。人員とシステムは元の組織境界に属したままです。"
+      }
+    },
+    {
+      "locale": "ja",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "アクセス レンズ",
+        "blurb": "役割からシステムへの権限付与を示します。役割を選ぶと、その役割になりすました場合の影響範囲を確認できます。",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "アクセス レンズ",
+        "blurb": "役割からシステムへの権限付与を示します。役割を選ぶと、その役割になりすました場合の影響範囲を確認できます。"
+      }
+    },
+    {
+      "locale": "ja",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "なりすまし レンズ",
+        "blurb": "外部の主体から役割への要求チャネルを示します。赤いホップには検証の制御がありません。",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "なりすまし レンズ",
+        "blurb": "外部の主体から役割への要求チャネルを示します。赤いホップには検証の制御がありません。"
+      }
+    },
+    {
+      "locale": "ja",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "シャドー IT レンズ",
+        "blurb": "未承認のシステムを組織境界の外側に破線の枠で示し、利用者との関係を表示します。",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "シャドー IT レンズ",
+        "blurb": "未承認のシステムを組織境界の外側に破線の枠で示し、利用者との関係を表示します。"
+      }
+    },
+    {
+      "locale": "ko",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "조직 렌즈",
+        "blurb": "조직 경계가 그리드를 회사 › 부서 › 팀 순으로 구분합니다. 네트워크 영역은 별도의 축입니다.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "조직 렌즈",
+        "blurb": "조직 경계가 그리드를 회사 › 부서 › 팀 순으로 구분합니다. 네트워크 영역은 별도의 축입니다."
+      }
+    },
+    {
+      "locale": "ko",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "네트워크 렌즈",
+        "blurb": "네트워크 영역이 그리드를 구분합니다. 인원과 시스템은 원래의 조직 경계를 그대로 유지합니다.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "네트워크 렌즈",
+        "blurb": "네트워크 영역이 그리드를 구분합니다. 인원과 시스템은 원래의 조직 경계를 그대로 유지합니다."
+      }
+    },
+    {
+      "locale": "ko",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "접근 렌즈",
+        "blurb": "역할에서 시스템으로의 권한 부여를 표시합니다. 역할을 선택하면 해당 역할이 도용되었을 때의 영향 범위를 확인할 수 있습니다.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "접근 렌즈",
+        "blurb": "역할에서 시스템으로의 권한 부여를 표시합니다. 역할을 선택하면 해당 역할이 도용되었을 때의 영향 범위를 확인할 수 있습니다."
+      }
+    },
+    {
+      "locale": "ko",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "위장 렌즈",
+        "blurb": "외부 행위자가 역할로 접근하는 요청 채널을 표시합니다. 빨간색 홉에는 검증 제어가 없습니다.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "위장 렌즈",
+        "blurb": "외부 행위자가 역할로 접근하는 요청 채널을 표시합니다. 빨간색 홉에는 검증 제어가 없습니다."
+      }
+    },
+    {
+      "locale": "ko",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "Shadow IT 렌즈",
+        "blurb": "승인되지 않은 시스템은 조직 경계 밖에 점선 프레임으로 표시되며, 사용자와 연결되어 있습니다.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Shadow IT 렌즈",
+        "blurb": "승인되지 않은 시스템은 조직 경계 밖에 점선 프레임으로 표시되며, 사용자와 연결되어 있습니다."
+      }
+    },
+    {
+      "locale": "pcm",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "Org lens",
+        "blurb": "Org boundary de arrange di grid: company › department › team. Network zones be different dimension entirely.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Org lens",
+        "blurb": "Org boundary de arrange di grid: company › department › team. Network zones be different dimension entirely."
+      }
+    },
+    {
+      "locale": "pcm",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "Network lens",
+        "blurb": "Network zones de arrange di grid. Di same people and systems still dey inside dia original org boundary.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Network lens",
+        "blurb": "Network zones de arrange di grid. Di same people and systems still dey inside dia original org boundary."
+      }
+    },
+    {
+      "locale": "pcm",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "Access lens",
+        "blurb": "E show grants from roles to systems. Pick one role to see how far di damage go reach if dem impersonate dat role.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Access lens",
+        "blurb": "E show grants from roles to systems. Pick one role to see how far di damage go reach if dem impersonate dat role."
+      }
+    },
+    {
+      "locale": "pcm",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "Impersonation lens",
+        "blurb": "E show request channels wey outside actors dey use enta roles. Red hops no get any verification control at all.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Impersonation lens",
+        "blurb": "E show request channels wey outside actors dey use enta roles. Red hops no get any verification control at all."
+      }
+    },
+    {
+      "locale": "pcm",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "Shadow IT lens",
+        "blurb": "Systems wey no get approval dey sit outside di org boundary inside dashed frames, wey link to who dey use dem.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Shadow IT lens",
+        "blurb": "Systems wey no get approval dey sit outside di org boundary inside dashed frames, wey link to who dey use dem."
+      }
+    },
+    {
+      "locale": "arz",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "لينز الجهة",
+        "blurb": "حدود المؤسسة بترسم الـ grid: company › department › team. Network zones دي بُعد تاني منفصل.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "لينز الجهة",
+        "blurb": "حدود المؤسسة بترسم الـ grid: company › department › team. Network zones دي بُعد تاني منفصل."
+      }
+    },
+    {
+      "locale": "arz",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "لينز الشبكة",
+        "blurb": "Network zones بترسم الـ grid. نفس الأشخاص والأنظمة بيفضلوا محتفظين بحدود المؤسسة الخاصة بيهم.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "لينز الشبكة",
+        "blurb": "Network zones بترسم الـ grid. نفس الأشخاص والأنظمة بيفضلوا محتفظين بحدود المؤسسة الخاصة بيهم."
+      }
+    },
+    {
+      "locale": "arz",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "لينز الوصول",
+        "blurb": "صلاحيات من الـ roles للأنظمة. اختار role عشان تشوف الـ blast radius بتاعه لو حد اتنكر في الـ role ده.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "لينز الوصول",
+        "blurb": "صلاحيات من الـ roles للأنظمة. اختار role عشان تشوف الـ blast radius بتاعه لو حد اتنكر في الـ role ده."
+      }
+    },
+    {
+      "locale": "arz",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "لينز انتحال الهوية",
+        "blurb": "قنوات الطلبات من جهات خارجية لحد الـ roles. الـ hops الحمرا مفيهاش أي ضبط للتحقق.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "لينز انتحال الهوية",
+        "blurb": "قنوات الطلبات من جهات خارجية لحد الـ roles. الـ hops الحمرا مفيهاش أي ضبط للتحقق."
+      }
+    },
+    {
+      "locale": "arz",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "لينز Shadow IT",
+        "blurb": "الأنظمة غير المعتمدة موجودة برا حدود المؤسسة في frames متقطعة، ومرتبطة بمين بيستخدمها.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "لينز Shadow IT",
+        "blurb": "الأنظمة غير المعتمدة موجودة برا حدود المؤسسة في frames متقطعة، ومرتبطة بمين بيستخدمها."
+      }
+    },
+    {
+      "locale": "mr",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "संस्था लेन्स",
+        "blurb": "संस्थात्मक सीमा ग्रिडची रचना करतात: कंपनी › विभाग › टीम. नेटवर्क झोन ही एक वेगळी परिमाणे आहे.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "संस्था लेन्स",
+        "blurb": "संस्थात्मक सीमा ग्रिडची रचना करतात: कंपनी › विभाग › टीम. नेटवर्क झोन ही एक वेगळी परिमाणे आहे."
+      }
+    },
+    {
+      "locale": "mr",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "नेटवर्क लेन्स",
+        "blurb": "नेटवर्क झोन ग्रिडची रचना करतात. तेच लोक आणि प्रणाली त्यांची मूळ संस्थात्मक सीमा कायम ठेवतात.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "नेटवर्क लेन्स",
+        "blurb": "नेटवर्क झोन ग्रिडची रचना करतात. तेच लोक आणि प्रणाली त्यांची मूळ संस्थात्मक सीमा कायम ठेवतात."
+      }
+    },
+    {
+      "locale": "mr",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "प्रवेश लेन्स",
+        "blurb": "भूमिकांकडून प्रणालींना दिलेले अधिकार दर्शवते. एखादी भूमिका निवडा आणि ती भूमिका बनावट रूपाने वापरली गेल्यास तिचा प्रभाव क्षेत्र (blast radius) पाहा.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "प्रवेश लेन्स",
+        "blurb": "भूमिकांकडून प्रणालींना दिलेले अधिकार दर्शवते. एखादी भूमिका निवडा आणि ती भूमिका बनावट रूपाने वापरली गेल्यास तिचा प्रभाव क्षेत्र (blast radius) पाहा."
+      }
+    },
+    {
+      "locale": "mr",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "तोतयागिरी लेन्स",
+        "blurb": "बाहेरील घटकांकडून भूमिकांकडे येणाऱ्या विनंती वाहिन्या दर्शवते. लाल हॉप्समध्ये कोणतेही पडताळणी नियंत्रण नाही.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "तोतयागिरी लेन्स",
+        "blurb": "बाहेरील घटकांकडून भूमिकांकडे येणाऱ्या विनंती वाहिन्या दर्शवते. लाल हॉप्समध्ये कोणतेही पडताळणी नियंत्रण नाही."
+      }
+    },
+    {
+      "locale": "mr",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "शॅडो IT लेन्स",
+        "blurb": "अनधिकृत प्रणाली संस्थात्मक सीमेच्या बाहेर ठिपकेदार चौकटींमध्ये दाखवल्या जातात, त्या वापरणाऱ्यांशी जोडलेल्या असतात.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "शॅडो IT लेन्स",
+        "blurb": "अनधिकृत प्रणाली संस्थात्मक सीमेच्या बाहेर ठिपकेदार चौकटींमध्ये दाखवल्या जातात, त्या वापरणाऱ्यांशी जोडलेल्या असतात."
+      }
+    },
+    {
+      "locale": "jv",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "Lensa Org",
+        "blurb": "Wates organisasi ngrangka grid: perusahaan › departemen › tim. Zona jaringan minangka dimensi kang beda.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lensa Org",
+        "blurb": "Wates organisasi ngrangka grid: perusahaan › departemen › tim. Zona jaringan minangka dimensi kang beda."
+      }
+    },
+    {
+      "locale": "jv",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "Lensa Network",
+        "blurb": "Zona jaringan ngrangka grid. Wong lan sistem sing padha isih nyekel wates organisasine.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lensa Network",
+        "blurb": "Zona jaringan ngrangka grid. Wong lan sistem sing padha isih nyekel wates organisasine."
+      }
+    },
+    {
+      "locale": "jv",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "Lensa Access",
+        "blurb": "Hak akses saka peran menyang sistem. Pilih peran kanggo ndeleng blast radius yen peran kasebut ditiru identitase.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lensa Access",
+        "blurb": "Hak akses saka peran menyang sistem. Pilih peran kanggo ndeleng blast radius yen peran kasebut ditiru identitase."
+      }
+    },
+    {
+      "locale": "jv",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "Lensa Panyaruan",
+        "blurb": "Saluran panyuwunan saka aktor njaba menyang peran. Hop abang ora nduweni kontrol verifikasi.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lensa Panyaruan",
+        "blurb": "Saluran panyuwunan saka aktor njaba menyang peran. Hop abang ora nduweni kontrol verifikasi."
+      }
+    },
+    {
+      "locale": "jv",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "Lensa Shadow IT",
+        "blurb": "Sistem sing ora resmi ana ing njaba wates organisasi, digambar nganggo pigura garis pedhot, disambungake karo sing nggunakake.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lensa Shadow IT",
+        "blurb": "Sistem sing ora resmi ana ing njaba wates organisasi, digambar nganggo pigura garis pedhot, disambungake karo sing nggunakake."
+      }
+    },
+    {
+      "locale": "su",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "lensa Org",
+        "blurb": "Wates organisasi mangraankeun grid: perusahaan › departemen › tim. Zona jaringan mangrupa diménsi anu misah.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "lensa Org",
+        "blurb": "Wates organisasi mangraankeun grid: perusahaan › departemen › tim. Zona jaringan mangrupa diménsi anu misah."
+      }
+    },
+    {
+      "locale": "su",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "lensa Network",
+        "blurb": "Zona jaringan mangraankeun grid. Jalma jeung sistem anu sarua tetep nyekel wates organisasina.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "lensa Network",
+        "blurb": "Zona jaringan mangraankeun grid. Jalma jeung sistem anu sarua tetep nyekel wates organisasina."
+      }
+    },
+    {
+      "locale": "su",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "lensa Access",
+        "blurb": "Idin ti peran ka sistem. Pilih hiji peran pikeun ningali radius dampakna upami peran éta ditiruan.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "lensa Access",
+        "blurb": "Idin ti peran ka sistem. Pilih hiji peran pikeun ningali radius dampakna upami peran éta ditiruan."
+      }
+    },
+    {
+      "locale": "su",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "lensa Impersonation",
+        "blurb": "Saluran paménta ti aktor luar ka peran. Hop beureum teu boga kontrol verifikasi.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "lensa Impersonation",
+        "blurb": "Saluran paménta ti aktor luar ka peran. Hop beureum teu boga kontrol verifikasi."
+      }
+    },
+    {
+      "locale": "su",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "lensa Shadow IT",
+        "blurb": "Sistem anu teu disahkeun aya di luar wates organisasi dina pigura garis putus-putus, dihubungkeun ka saha anu ngagunakeunna.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "lensa Shadow IT",
+        "blurb": "Sistem anu teu disahkeun aya di luar wates organisasi dina pigura garis putus-putus, dihubungkeun ka saha anu ngagunakeunna."
+      }
+    },
+    {
+      "locale": "he",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "עדשת ארגון",
+        "blurb": "גבולות ארגוניים ממסגרים את הרשת: חברה › מחלקה › צוות. אזורי רשת הם מימד נפרד.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "עדשת ארגון",
+        "blurb": "גבולות ארגוניים ממסגרים את הרשת: חברה › מחלקה › צוות. אזורי רשת הם מימד נפרד."
+      }
+    },
+    {
+      "locale": "he",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "עדשת רשת",
+        "blurb": "אזורי רשת ממסגרים את הרשת. אותם אנשים ומערכות שומרים על הגבול הארגוני שלהם.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "עדשת רשת",
+        "blurb": "אזורי רשת ממסגרים את הרשת. אותם אנשים ומערכות שומרים על הגבול הארגוני שלהם."
+      }
+    },
+    {
+      "locale": "he",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "עדשת גישה",
+        "blurb": "הרשאות מתפקידים למערכות. בחר תפקיד כדי לראות את רדיוס הפגיעה שלו אם תפקיד זה יזוהה בזיהוי מזויף.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "עדשת גישה",
+        "blurb": "הרשאות מתפקידים למערכות. בחר תפקיד כדי לראות את רדיוס הפגיעה שלו אם תפקיד זה יזוהה בזיהוי מזויף."
+      }
+    },
+    {
+      "locale": "he",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "עדשת התחזות",
+        "blurb": "ערוצי בקשה מגורמים חיצוניים לתפקידים. קפיצות אדומות אינן נושאות בקרת אימות.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "עדשת התחזות",
+        "blurb": "ערוצי בקשה מגורמים חיצוניים לתפקידים. קפיצות אדומות אינן נושאות בקרת אימות."
+      }
+    },
+    {
+      "locale": "he",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "עדשת Shadow IT",
+        "blurb": "מערכות לא מאושרות ממוקמות מחוץ לגבול הארגוני במסגרות מקווקוות, מקושרות למי שמשתמש בהן.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "עדשת Shadow IT",
+        "blurb": "מערכות לא מאושרות ממוקמות מחוץ לגבול הארגוני במסגרות מקווקוות, מקושרות למי שמשתמש בהן."
+      }
+    },
+    {
+      "locale": "it",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "Lente Org",
+        "blurb": "I confini organizzativi delimitano la griglia: azienda › reparto › team. Le zone di rete sono una dimensione separata.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lente Org",
+        "blurb": "I confini organizzativi delimitano la griglia: azienda › reparto › team. Le zone di rete sono una dimensione separata."
+      }
+    },
+    {
+      "locale": "it",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "Lente Rete",
+        "blurb": "Le zone di rete delimitano la griglia. Le stesse persone e gli stessi sistemi mantengono il proprio confine organizzativo.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lente Rete",
+        "blurb": "Le zone di rete delimitano la griglia. Le stesse persone e gli stessi sistemi mantengono il proprio confine organizzativo."
+      }
+    },
+    {
+      "locale": "it",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "Lente Accesso",
+        "blurb": "Autorizzazioni dai ruoli ai sistemi. Seleziona un ruolo per vedere il suo raggio d'impatto nel caso in cui quel ruolo venisse impersonato.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lente Accesso",
+        "blurb": "Autorizzazioni dai ruoli ai sistemi. Seleziona un ruolo per vedere il suo raggio d'impatto nel caso in cui quel ruolo venisse impersonato."
+      }
+    },
+    {
+      "locale": "it",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "Lente Impersonificazione",
+        "blurb": "Canali di richiesta da attori esterni verso i ruoli. I salti in rosso non hanno alcun controllo di verifica.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lente Impersonificazione",
+        "blurb": "Canali di richiesta da attori esterni verso i ruoli. I salti in rosso non hanno alcun controllo di verifica."
+      }
+    },
+    {
+      "locale": "it",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "Lente Shadow IT",
+        "blurb": "I sistemi non autorizzati si trovano fuori dal confine organizzativo in cornici tratteggiate, collegati a chi li utilizza.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Lente Shadow IT",
+        "blurb": "I sistemi non autorizzati si trovano fuori dal confine organizzativo in cornici tratteggiate, collegati a chi li utilizza."
+      }
+    },
+    {
+      "locale": "ar-MA",
+      "lens": "org",
+      "status": 200,
+      "observed": {
+        "title": "المؤسسة lens",
+        "blurb": "الـ org boundaries كيحددو الگريد بالترتيب: company › department › team. الـ Network zones هوما بعد آخر مختلف.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "المؤسسة lens",
+        "blurb": "الـ org boundaries كيحددو الگريد بالترتيب: company › department › team. الـ Network zones هوما بعد آخر مختلف."
+      }
+    },
+    {
+      "locale": "ar-MA",
+      "lens": "network",
+      "status": 200,
+      "observed": {
+        "title": "الشبكة lens",
+        "blurb": "الـ Network zones هوما لي كيحددو الگريد. نفس الناس والأنظمة كيبقاو محتفظين بـ org boundary ديالهم.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "الشبكة lens",
+        "blurb": "الـ Network zones هوما لي كيحددو الگريد. نفس الناس والأنظمة كيبقاو محتفظين بـ org boundary ديالهم."
+      }
+    },
+    {
+      "locale": "ar-MA",
+      "lens": "access",
+      "status": 200,
+      "observed": {
+        "title": "الوصول lens",
+        "blurb": "كيوري الصلاحيات (grants) من الـ roles لـ الأنظمة (systems). اختار role باش تشوف الـ blast radius ديالو إلا فرضنا تم التنكر فيه (impersonated).",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "الوصول lens",
+        "blurb": "كيوري الصلاحيات (grants) من الـ roles لـ الأنظمة (systems). اختار role باش تشوف الـ blast radius ديالو إلا فرضنا تم التنكر فيه (impersonated)."
+      }
+    },
+    {
+      "locale": "ar-MA",
+      "lens": "impersonation",
+      "status": 200,
+      "observed": {
+        "title": "انتحال الهوية lens",
+        "blurb": "كيوري قنوات الطلب من فاعلين خارجيين لـ الـ roles. الـ hops الحمر ماعندهم حتى ضابط للتحقق (verification control).",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "انتحال الهوية lens",
+        "blurb": "كيوري قنوات الطلب من فاعلين خارجيين لـ الـ roles. الـ hops الحمر ماعندهم حتى ضابط للتحقق (verification control)."
+      }
+    },
+    {
+      "locale": "ar-MA",
+      "lens": "shadow",
+      "status": 200,
+      "observed": {
+        "title": "Shadow IT lens",
+        "blurb": "الأنظمة غير المرخصة (unsanctioned) موجودة برا الـ org boundary فـ إطارات متقطعة، ومرتبطين بمن كيستخدمها.",
+        "overflow": false,
+        "open": true
+      },
+      "expected": {
+        "title": "Shadow IT lens",
+        "blurb": "الأنظمة غير المرخصة (unsanctioned) موجودة برا الـ org boundary فـ إطارات متقطعة، ومرتبطين بمن كيستخدمها."
+      }
+    }
+  ],
+  "failures": [],
+  "errors": []
+}
