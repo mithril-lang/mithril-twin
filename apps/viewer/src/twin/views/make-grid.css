@@ -949,3 +949,43 @@
   .make-bottom { max-width: calc(100% - 24px); left: 12px; transform: none; flex-wrap: wrap; }
   .make-top-search { display: none; }
 }
+
+@media (max-width: 680px) {
+  .make-top {
+    height: auto;
+    min-height: 56px;
+    padding: 8px 12px;
+    flex-wrap: wrap;
+  }
+  .make-brand { min-width: 0; }
+  .make-top-actions {
+    width: 100%;
+    margin-left: 0;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .make-chip { height: 26px; padding: 0 8px; }
+  .make-rail-left {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: min(32vh, 250px);
+  }
+  .make-rail-search input { min-width: 0; }
+  .make-rail-foot { flex-wrap: wrap; }
+  .make-rail-foot .make-sample-select {
+    width: 100%;
+    max-width: 100%;
+    direction: ltr;
+  }
+  .make-world { top: 220px; }
+  .make-bottom {
+    right: 12px;
+    bottom: 12px;
+    max-width: none;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .make-zoom { bottom: 62px; right: 12px; }
+  .scale-crumbs { max-width: calc(100% - 24px); }
+}
