@@ -1,6 +1,6 @@
 import { COPLANAR_BOARD_H, COPLANAR_BOARD_W } from './geometry'
 import { MithParseError, parseMith, parseMithrilPackage } from './parse'
-import { readMith, toTwinForm } from './twin'
+import { isTwinDatasetKind, readMith, toTwinForm, TWIN_DATASET_KINDS } from './twin'
 import type {
   DiagramFrame,
   DiagramLens,
@@ -171,16 +171,14 @@ export function applyDiagramView(doc: MithDocument, view: MithViewState): MithDo
  * Canonical text for a document. Runs `parseMith` first, so runner / executor / payload / secret
  * keys fail here the same way they fail on import.
  *
- * Synthetic documents are written as upstream Mithril Form, `(mithril/twin-document …)`, the only
- * spelling the twin context admits. Upstream twin Form has no `diagram.lens` / `diagram.frame` terms
- * and only admits `dataset_kind` `synthetic-demo`, so:
- * - `lens` and `frame` are not written (the next open picks Org or Layers from the content);
- * - a document that declares another label is written as deprecated legacy v0 JSON so the label
- *   is kept rather than silently relabelled.
+ * Documents whose `dataset_kind` is in the upstream closed set (`synthetic-demo`, `workshop-export`)
+ * are written as upstream Mithril Form, `(mithril/twin-document …)`, including `diagram.lens` and
+ * `diagram.frame`. Any other declared label cannot be spelled as twin Form, so that document is
+ * written as deprecated legacy v0 JSON and keeps its label rather than being relabelled.
  */
 export function serializeMith(doc: MithDocument): { body: string; format: 'form' | 'legacy-v0' } {
   const parsed = parseMith(JSON.parse(JSON.stringify(doc)))
-  if (parsed.dataset_kind === 'synthetic-demo') return { body: toTwinForm(parsed), format: 'form' }
+  if (isTwinDatasetKind(parsed.dataset_kind)) return { body: toTwinForm(parsed), format: 'form' }
   return { body: `${JSON.stringify(parsed, null, 2)}\n`, format: 'legacy-v0' }
 }
 
@@ -196,7 +194,7 @@ export function buildMithDownload(doc: MithDocument, view: MithViewState): MithF
     note:
       format === 'form'
         ? null
-        : `Written as legacy v0 JSON because Mithril twin Form only admits dataset_kind synthetic-demo and this file declares ${JSON.stringify(doc.dataset_kind)}.`,
+        : `Written as legacy v0 JSON because Mithril twin Form only admits dataset_kind ${TWIN_DATASET_KINDS.join(' or ')} and this file declares ${JSON.stringify(doc.dataset_kind)}.`,
   }
 }
 

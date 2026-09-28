@@ -292,9 +292,11 @@ describe('.mith import and export', () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
     fireEvent.click(screen.getByRole('button', { name: 'Export' }))
     await waitFor(() => expect(screen.getByRole('status').textContent).toMatch(/Exported imported-floor\.mith/))
-    expect(blobs[0]?.type).toBe('application/vnd.mithril.mith+json')
+    // workshop-export is in the upstream closed datasetKind set, so export is twin Form with lens / frame.
+    expect(blobs[0]?.type).toBe('application/vnd.mithril.form')
     const text = await blobs[0]!.text()
-    const round = JSON.parse(text) as { dataset_kind: string; diagram: { lens?: string }; title: string }
+    expect(text.startsWith('(mithril/twin-document')).toBe(true)
+    const round = readMith(text).doc
     expect(round.title).toBe('Imported Floor')
     expect(round.dataset_kind).toBe('workshop-export')
     expect(round.diagram.lens).toBe('layers')

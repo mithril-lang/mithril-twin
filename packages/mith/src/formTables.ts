@@ -1,5 +1,5 @@
-// Generated from mithril-lang/mithril src/mithril/form.cljk at dd014e419c9dcca2911540f222c735e7d7c3d931
-// (merge of mithril-lang/mithril#7, which adds `mithril/twin-document`). Do not edit by hand: the tables must equal upstream.
+// Generated from mithril-lang/mithril src/mithril/form.cljk at ba4919f2a1435ca895d6673d2de4334a859def9d
+// (merge of mithril-lang/mithril#8; form.cljk is unchanged since #7 dd014e4). Do not edit by hand: the tables must equal upstream.
 
 /** Top-level tags → JSON-LD `@type`. */
 export const TOP_LEVEL_TAGS: Record<string, string> = {

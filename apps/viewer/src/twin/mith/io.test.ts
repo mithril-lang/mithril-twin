@@ -59,9 +59,10 @@ describe('mith export', () => {
     expect(read.format).toBe('form')
     const parsed = read.doc
     expect(parsed.dataset_kind).toBe('synthetic-demo')
-    // Upstream twin Form has no lens / frame terms: they are not written.
-    expect(parsed.diagram.lens).toBeUndefined()
-    expect(parsed.diagram.frame).toBeUndefined()
+    // Upstream twin Form carries diagram lens / frame (closed enums).
+    expect(file.body).toContain(':lens "impersonation"')
+    expect(parsed.diagram.lens).toBe('impersonation')
+    expect(parsed.diagram.frame).toBe('network')
     expect(parsed.diagram.selection).toBe('role:cfo')
     expect(parsed.diagram.camera.mode).toBe('ortho')
     expect(parsed.diagram.camera.zoom).toBe(1.2)
@@ -74,15 +75,30 @@ describe('mith export', () => {
     expect(back(buildMithDownload(parsed, viewOf(parsed)).body)).toEqual(parsed)
   })
 
-  it('keeps a declared dataset_kind by writing legacy v0 JSON (Form only admits synthetic-demo)', () => {
+  it('writes workshop-export as Form and keeps its label, lens, and frame', () => {
     const declared = parseMith({ ...JSON.parse(JSON.stringify(floor)), dataset_kind: 'workshop-export' })
+    const file = buildMithDownload(declared, viewOf(declared, { lens: 'layers', frame: 'org' }))
+    expect(file.format).toBe('form')
+    expect(file.mime).toBe(MITH_FORM_MIME)
+    expect(file.body).toContain(':dataset-kind "workshop-export"')
+    const read = readMith(file.body)
+    expect(read.deprecated).toBe(false)
+    expect(read.doc.dataset_kind).toBe('workshop-export')
+    expect(read.doc.diagram.lens).toBe('layers')
+    expect(read.doc.diagram.frame).toBe('org')
+    expect(read.doc.model).toEqual(declared.model)
+  })
+
+  it('keeps a label outside the upstream set by writing legacy v0 JSON', () => {
+    const declared = parseMith({ ...JSON.parse(JSON.stringify(floor)), dataset_kind: 'field-notes' })
     const file = buildMithDownload(declared, viewOf(declared, { lens: 'layers', frame: 'org' }))
     expect(file.format).toBe('legacy-v0')
     expect(file.mime).toBe(MITH_MIME)
-    expect(file.note).toMatch(/workshop-export/)
+    expect(file.note).toMatch(/field-notes/)
+    expect(file.note).toMatch(/synthetic-demo or workshop-export/)
     const read = readMith(file.body)
     expect(read.deprecated).toBe(true)
-    expect(read.doc.dataset_kind).toBe('workshop-export')
+    expect(read.doc.dataset_kind).toBe('field-notes')
     expect(read.doc.diagram.lens).toBe('layers')
   })
 

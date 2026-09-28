@@ -28,7 +28,8 @@ import { fitBoardsInSafeArea } from '../mith/geometry'
 import { MithFileActions, useMithFileDrop } from '../components/MithFileActions'
 import { buildMithDownload, formatBytes, saveMithFile } from '../mith/io'
 import { SAMPLE_DOCS } from '../mith/load'
-import type { MithBoundary, MithChannel, MithDocument, MithEntity, MithReach, MithRole } from '../mith/types'
+import { DIAGRAM_LENSES } from '@mithril-twin/mith'
+import type { DiagramLens, MithBoundary, MithChannel, MithDocument, MithEntity, MithReach, MithRole } from '../mith/types'
 import { sharedEngine } from '../scale/client'
 import type { PathResult } from '../scale/engine'
 import { HOT, type Heat, type ScaleAnalysis } from '../scale/model'
@@ -758,6 +759,8 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
         arrangement: doc.diagram.arrangement,
         camera: { ...doc.diagram.camera, zoom },
         selection: selectedId,
+        // Software risk / Log gaps are enterprise-only lenses with no diagram.lens value; they export without one.
+        ...((DIAGRAM_LENSES as readonly string[]).includes(lens) ? { lens: lens as DiagramLens, frame: 'org' as const } : {}),
       })
       saveMithFile(file)
       setExportNote(

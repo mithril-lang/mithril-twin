@@ -1,6 +1,6 @@
 # Twin profile of Mithril .mith — specification
 
-Mithril Twin is the **twin vocabulary/viewer for Mithril `.mith`** ([github.com/mithril-lang/mithril](https://github.com/mithril-lang/mithril)). It is not a separate language: `.mith` is Mithril Form, and this repository defines how twin diagrams are spelled in it and how the viewer draws them. Twin documents are written in upstream Mithril Form as `(mithril/twin-document …)`, which lowers to JSON-LD `@type TwinDocument` with the pinned context `https://mithril.fund/context/twin/v1`. Twin-local terms live in `https://mithril.fund/lib/twin/v1#`. The tag, the context and the closed vocabulary were added upstream in [mithril-lang/mithril#7](https://github.com/mithril-lang/mithril/pull/7) (merge commit `dd014e419c9dcca2911540f222c735e7d7c3d931`); this reader follows that pin.
+Mithril Twin is the **twin vocabulary/viewer for Mithril `.mith`** ([github.com/mithril-lang/mithril](https://github.com/mithril-lang/mithril)). It is not a separate language: `.mith` is Mithril Form, and this repository defines how twin diagrams are spelled in it and how the viewer draws them. Twin documents are written in upstream Mithril Form as `(mithril/twin-document …)`, which lowers to JSON-LD `@type TwinDocument` with the pinned context `https://mithril.fund/context/twin/v1`. Twin-local terms live in `https://mithril.fund/lib/twin/v1#`. The tag, the context and the closed vocabulary were added upstream in [mithril-lang/mithril#7](https://github.com/mithril-lang/mithril/pull/7) (merge commit `dd014e419c9dcca2911540f222c735e7d7c3d931`) and extended by [#8](https://github.com/mithril-lang/mithril/pull/8) (merge commit `ba4919f2a1435ca895d6673d2de4334a859def9d`: `lens` / `frame` terms and the closed `datasetKind` set), which this reader follows.
 
 The viewer loads the generated enterprise pack by default; `?doc=polaris-org` opens the org sample and `?doc=polaris-fi` opens the layer-board sample `polaris-fi.mith`. The grid imports and exports `.mith` files (see *Import and export* below). `fromLayers` can still turn legacy per-layer JSON into a document for tests; that JSON is not a grid import. All three samples in `packages/mith/samples/` (`polaris-org`, `polaris-fi`, `polaris-floor`) are Form. Upstream `twin/compile-twin-text` admits each of them, and the checks it runs include the rule that no term is lost in RDF lowering.
 
@@ -18,16 +18,15 @@ The in-memory shape below is unchanged from v0; Form only changes the spelling. 
 
 ### Import and export
 
-Import (file picker or drop) reads Form, twin JSON-LD, or legacy v0 JSON; a legacy file opens with a note that the spelling is deprecated. Export writes `(mithril/twin-document …)` Form with media type `application/vnd.mithril.form`. Two view fields have no upstream twin term yet, so Form export does not carry them:
+Import (file picker or drop) reads Form, twin JSON-LD, or legacy v0 JSON; a legacy file opens with a note that the spelling is deprecated. Export writes `(mithril/twin-document …)` Form with media type `application/vnd.mithril.form`, including `diagram.lens` and `diagram.frame`. The twin vocabulary admits a closed `dataset_kind` set, `synthetic-demo` and `workshop-export` (an illustrative workshop diagram, not collected from live systems); both export as Form with their label. A document that declares any other label cannot be spelled as twin Form, so export writes it as legacy v0 JSON and says so rather than relabelling it.
 
-- `diagram.lens` / `diagram.frame` are not written; the next open picks Org or Layers from the content. Legacy v0 JSON that carries them still restores them on import.
-- A document whose `dataset_kind` is not `synthetic-demo` cannot be written as twin Form (upstream admits only that label). Export writes it as legacy v0 JSON and says so, rather than relabelling it.
+The lens / frame terms and the `workshop-export` label come from the upstream follow-up [mithril-lang/mithril#8](https://github.com/mithril-lang/mithril/pull/8) (merge commit `ba4919f2a1435ca895d6673d2de4334a859def9d`); this reader follows that pin.
 
 ## Sections (BPMN analog)
 
 | .mith | BPMN analog | Holds |
 | --- | --- | --- |
-| `model` | semantic model | Entities (org / network / firewall / node / server), edges, citations. `dataset_kind` is `synthetic-demo`. |
+| `model` | semantic model | Entities (org / network / firewall / node / server), edges, citations. `dataset_kind` is `synthetic-demo` or `workshop-export`. |
 | `diagram` | BPMN DI | `arrangement`, planes (one board each), placements (`x`/`y` in 0..1), plane `transform` (`x`,`y`,`z`,`tilt`,`yaw`), `camera`, `selection`, `crossLinks`, optional `lens` and `frame`. The same entity id on two planes is a shared object. |
 | `inference` | analysis overlay | Optional hypotheses. `honesty` is `hypothesis`, `observation_count` is `0`, `relative_score` is an illustrative rank. `viz_only` and `no_runners` are required. |
 
@@ -68,7 +67,7 @@ Export writes the current diagram view into the file:
 - `diagram.arrangement` — the Stack toggle. A stacked view of a shared-z floor assigns a distinct `transform.z` and keeps board `x`/`y`. A coplanar view of an overlapping stair spreads boards so the 280×176 rectangles do not intersect.
 - `diagram.camera` — 2D maps to `ortho`, otherwise `iso`; zoom and the focused plane are included.
 - `diagram.selection` — the selected entity, or a boundary / role / grant / actor / channel / reach id. A selection that is not in the model (a person loaded from a company chunk, for example) is left null.
-- `diagram.lens` and `diagram.frame` — the active lens and the Frames toggle, read from legacy v0 JSON only. Form export omits them (no upstream twin term yet); files without them open on Org when they have boundaries, and on Layers otherwise.
+- `diagram.lens` and `diagram.frame` — the active lens and the Frames toggle, written as the twin `:lens` / `:frame` terms. Files without them open on Org when they have boundaries, and on Layers otherwise.
 
 The enterprise pack exports its **index** as one `.mith` (the in-memory index, about 2.2 MB). People and devices stay in the per-company chunks and are not copied into the download. The status line states the file size.
 
@@ -76,4 +75,4 @@ The enterprise pack exports its **index** as one `.mith` (the in-memory index, a
 
 `diagram.camera.mode` is `iso` (tilted floor) or `ortho` (2D). The grid’s 2D control flips that view. Export writes the mode that is on screen. `focusPlane` is the board the Select Layer control highlights. On a coplanar floor every board stays visible; focus draws that board forward. Stacked view still windows three planes around the focus.
 
-`diagram.lens` is `layers`, `org`, `network`, `access`, `impersonation`, or `shadow`. `diagram.frame` is `org` or `network`. Both are optional and legacy-only (see *Import and export*).
+`diagram.lens` is `layers`, `org`, `network`, `access`, `impersonation`, or `shadow`. `diagram.frame` is `org` or `network`. Both are optional closed enums, the same sets upstream `mithril.twin` admits.

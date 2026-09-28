@@ -1,0 +1,26 @@
+(mithril/twin-document
+  ;; Twin document profile (mithril.twin): an illustrative floor hand-authored
+  ;; in a workshop and exported from the viewer with its view state. Display
+  ;; only: no runners, no scanning, and nothing collected from live systems.
+  :id "https://mithril.fund/lib/twin/example/workshop-view"
+  :title "Workshop floor (illustrative)"
+  :dataset-kind "workshop-export"
+  :generated-at "2026-09-28T09:45:00+09:00"
+  :disclaimer "Illustrative workshop sketch. Not collected from live systems or customer records."
+  :boundaries
+  [(rdf/node :key "b:hq" :label "Head office" :kind "company")]
+  :entities
+  [(rdf/node :type "Entity" :key "org:hq" :label "Head office" :entity-type "Holding" :layer "organization" :boundary "b:hq")
+   (rdf/node :type "Entity" :key "net:corp" :label "Corp VLAN" :entity-type "VLAN" :layer "network")]
+  :edges
+  [(rdf/node :type "Edge" :key "e:hq-corp" :from "org:hq" :to "net:corp" :kind "uses")]
+  :diagram
+  (rdf/node :type "Diagram"
+            :arrangement "coplanar"
+            :lens "impersonation"
+            :frame "network"
+            :camera (rdf/node :mode "iso" :tilt 55 :yaw -45 :zoom 1 :focus-plane "p:org")
+            :planes [(rdf/node :type "Plane" :key "p:org" :layer "organization" :label "Organization"
+                               :transform (rdf/node :x 0 :y 0 :z 0 :tilt 0 :yaw 0)
+                               :placements [(rdf/node :type "Placement" :entity "org:hq" :x (rdf/literal "0.5" :datatype "xsd:decimal") :y (rdf/literal "0.5" :datatype "xsd:decimal") :tone "accent")])])
+  :inference (rdf/node :type "Inference" :viz-only true :no-runners true :hypotheses []))

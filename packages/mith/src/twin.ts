@@ -1,6 +1,6 @@
 import { isFormSource, parseForm, TWIN_CONTEXT } from './form'
 import { MithParseError, parseMith } from './parse'
-import type { MithDocument, MithEntity, MithWeights } from './types'
+import { DIAGRAM_FRAMES, DIAGRAM_LENSES, type MithDocument, type MithEntity, type MithWeights } from './types'
 
 /**
  * Twin vocabulary for Mithril .mith: the `mithril/twin-document` profile (pinned context
@@ -29,7 +29,7 @@ export const TWIN_TERMS = [
   'blastRadius', 'networkValue', 'sync', 'heatSaturation', 'device', 'unsanctioned', 'maxEase', 'low', 'medium',
   'high', 'critical', 'minRetentionDays',
   'arrangement', 'camera', 'mode', 'tilt', 'yaw', 'zoom', 'focusPlane', 'selection', 'planes', 'transform', 'x', 'y',
-  'z', 'placements', 'entity', 'tone', 'showLabel', 'crossLinks',
+  'z', 'placements', 'entity', 'tone', 'showLabel', 'crossLinks', 'lens', 'frame',
   'vizOnly', 'noRunners', 'hypotheses', 'summary', 'category', 'honesty', 'observationCount', 'relativeScore',
   'scoreNote', 'nodeIds', 'steps',
 ] as const
@@ -48,6 +48,15 @@ export const TWIN_KEYWORDS: Record<string, string> = {
   vizOnly: 'viz-only', noRunners: 'no-runners', observationCount: 'observation-count', relativeScore: 'relative-score',
   scoreNote: 'score-note', nodeIds: 'node-ids',
 }
+
+/**
+ * Closed `datasetKind` labels upstream admits (`mithril.twin/dataset-kinds`). Both are non-live:
+ * `synthetic-demo` is generated / fictional sample data; `workshop-export` is an illustrative diagram
+ * hand-authored in a workshop and exported from the viewer, not collected from live systems.
+ */
+export const TWIN_DATASET_KINDS = ['synthetic-demo', 'workshop-export'] as const
+export type TwinDatasetKind = (typeof TWIN_DATASET_KINDS)[number]
+export const isTwinDatasetKind = (v: unknown): v is TwinDatasetKind => (TWIN_DATASET_KINDS as readonly unknown[]).includes(v)
 
 export type MithFormat = 'form' | 'jsonld' | 'legacy-v0'
 export type ReadMith = { doc: MithDocument; format: MithFormat; deprecated: boolean }
@@ -85,7 +94,14 @@ export function admitTwin(doc: J): Record<string, J> {
   if (typeof id !== 'string' || !/^https:\/\/mithril\.fund\/[A-Za-z0-9._~:/?#[\]@!$&'()*+,;=%-]+$/.test(id)) {
     refuse('twin document @id must be a mithril.fund HTTPS IRI')
   }
-  if (doc.datasetKind !== 'synthetic-demo') refuse('twin datasetKind must be synthetic-demo')
+  if (!isTwinDatasetKind(doc.datasetKind)) refuse(`twin datasetKind must be one of ${TWIN_DATASET_KINDS.join(', ')}`)
+  if (isObj(doc.diagram)) {
+    for (const [term, allowed] of [['lens', DIAGRAM_LENSES], ['frame', DIAGRAM_FRAMES]] as const) {
+      if (term in doc.diagram && !(allowed as readonly unknown[]).includes(doc.diagram[term])) {
+        refuse(`twin diagram ${term} must be one of ${allowed.join(', ')}`)
+      }
+    }
+  }
   const inf = doc.inference
   if (inf != null && !(isObj(inf) && inf.vizOnly === true && inf.noRunners === true)) refuse('twin inference must be vizOnly and noRunners')
   for (const [k, v] of Object.entries(doc)) if (!k.startsWith('@')) checkNode(v, k)
@@ -229,6 +245,7 @@ export function twinToLegacy(doc: Record<string, J>): Record<string, J> {
         }
       }),
       crossLinks: many(d.crossLinks).map((c, i) => pick(node(c, `diagram.crossLinks[${i}]`), { key: 'id', from: 'from', to: 'to', kind: 'kind' })),
+      ...pick(d, { lens: 'lens', frame: 'frame' }),
     }
   }
   const inf = doc.inference != null ? node(doc.inference, 'inference') : { vizOnly: true, noRunners: true }
@@ -344,16 +361,16 @@ function weightsForm(w: MithWeights): Record<string, unknown> {
  * literals. One top-level node per line so diffs stay readable.
  */
 export function toTwinForm(doc: MithDocument, iri = `https://mithril.fund/lib/twin/${doc.id}`): string {
-  if (doc.dataset_kind !== 'synthetic-demo') {
-    refuse(`Mithril twin Form only admits dataset-kind "synthetic-demo"; this document declares ${JSON.stringify(doc.dataset_kind)}`)
+  if (!isTwinDatasetKind(doc.dataset_kind)) {
+    refuse(`Mithril twin Form only admits dataset-kind ${TWIN_DATASET_KINDS.join(' / ')}; this document declares ${JSON.stringify(doc.dataset_kind)}`)
   }
   const m = doc.model
   const lines: string[] = [
     '(mithril/twin-document',
-    `  ;; Twin vocabulary for Mithril .mith (twin-local terms: https://mithril.fund/lib/twin/v1#). Synthetic, display-only.`,
+    `  ;; Twin vocabulary for Mithril .mith (twin-local terms: https://mithril.fund/lib/twin/v1#). ${doc.dataset_kind === 'synthetic-demo' ? 'Synthetic' : 'Illustrative workshop export'}, display-only.`,
     `  :id ${q(iri)}`,
     `  :title ${q(doc.title)}`,
-    `  :dataset-kind "synthetic-demo"`,
+    `  :dataset-kind ${q(doc.dataset_kind)}`,
     `  :generated-at ${q(doc.generated_at)}`,
     `  :disclaimer ${q(doc.disclaimer)}`,
   ]
@@ -378,6 +395,8 @@ export function toTwinForm(doc: MithDocument, iri = `https://mithril.fund/lib/tw
     ...(d.selection ? { selection: d.selection } : {}),
     planes: d.planes.map((p) => ({ key: p.id, layer: p.layer, label: p.label, transform: p.transform, placements: p.placements })),
     crossLinks: d.crossLinks.map((c) => ren(c, { id: 'key' })),
+    ...(d.lens ? { lens: d.lens } : {}),
+    ...(d.frame ? { frame: d.frame } : {}),
   }
   lines.push(`  :diagram ${rdfNode(diagram)}`)
   const inf = {

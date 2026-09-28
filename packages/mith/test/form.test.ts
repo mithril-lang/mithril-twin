@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { isFormSource, MithFormError, parseForm, TWIN_CONTEXT } from '../src/form'
+import { readMith, toTwinForm } from '../src/twin'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const fixture = (name: string) => readFileSync(resolve(here, 'fixtures', name), 'utf8')
@@ -23,6 +24,16 @@ describe('Mithril Form reader (mirrors upstream mithril.form)', () => {
     expect(JSON.parse(JSON.stringify(lowered))).toEqual(upstream)
     expect(lowered['@context']).toBe(TWIN_CONTEXT)
     expect(lowered['@type']).toBe('TwinDocument')
+  })
+
+  it('lowers the upstream workshop-view example (lens, frame, workshop-export) exactly like upstream', () => {
+    const lowered = parseForm(fixture('upstream-twin-workshop-view.mith'))
+    expect(JSON.parse(JSON.stringify(lowered))).toEqual(JSON.parse(fixture('upstream-twin-workshop-view.lowered.json')))
+    const read = readMith(fixture('upstream-twin-workshop-view.mith'))
+    expect(read.doc.dataset_kind).toBe('workshop-export')
+    expect(read.doc.diagram.lens).toBe('impersonation')
+    expect(read.doc.diagram.frame).toBe('network')
+    expect(readMith(toTwinForm(read.doc)).doc).toEqual(read.doc)
   })
 
   it('maps kebab keywords to camelCase terms and keeps typed decimals', () => {

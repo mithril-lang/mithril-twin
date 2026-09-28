@@ -1,0 +1,91 @@
+{
+  "generatedAt": "2026-09-28T09:45:00+09:00",
+  "@context": "https://mithril.fund/context/twin/v1",
+  "inference": {
+    "@type": "Inference",
+    "vizOnly": true,
+    "noRunners": true,
+    "hypotheses": []
+  },
+  "@id": "https://mithril.fund/lib/twin/example/workshop-view",
+  "boundaries": [
+    {
+      "key": "b:hq",
+      "label": "Head office",
+      "kind": "company"
+    }
+  ],
+  "diagram": {
+    "@type": "Diagram",
+    "arrangement": "coplanar",
+    "lens": "impersonation",
+    "frame": "network",
+    "camera": {
+      "mode": "iso",
+      "tilt": 55,
+      "yaw": -45,
+      "zoom": 1,
+      "focusPlane": "p:org"
+    },
+    "planes": [
+      {
+        "@type": "Plane",
+        "key": "p:org",
+        "layer": "organization",
+        "label": "Organization",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "tilt": 0,
+          "yaw": 0
+        },
+        "placements": [
+          {
+            "@type": "Placement",
+            "entity": "org:hq",
+            "x": {
+              "@value": "0.5",
+              "@type": "xsd:decimal"
+            },
+            "y": {
+              "@value": "0.5",
+              "@type": "xsd:decimal"
+            },
+            "tone": "accent"
+          }
+        ]
+      }
+    ]
+  },
+  "datasetKind": "workshop-export",
+  "title": "Workshop floor (illustrative)",
+  "disclaimer": "Illustrative workshop sketch. Not collected from live systems or customer records.",
+  "edges": [
+    {
+      "@type": "Edge",
+      "key": "e:hq-corp",
+      "from": "org:hq",
+      "to": "net:corp",
+      "kind": "uses"
+    }
+  ],
+  "@type": "TwinDocument",
+  "entities": [
+    {
+      "@type": "Entity",
+      "key": "org:hq",
+      "label": "Head office",
+      "entityType": "Holding",
+      "layer": "organization",
+      "boundary": "b:hq"
+    },
+    {
+      "@type": "Entity",
+      "key": "net:corp",
+      "label": "Corp VLAN",
+      "entityType": "VLAN",
+      "layer": "network"
+    }
+  ]
+}
