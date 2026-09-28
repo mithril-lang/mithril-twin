@@ -45,6 +45,11 @@ export function useTwinLocale(): LocaleState {
   return context
 }
 
+/** Component tests can render the viewer without the site-level locale provider. */
+export function useViewerLocale(): TwinLocale {
+  return useContext(LocaleContext)?.locale ?? 'en'
+}
+
 export function TwinLocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setState] = useState<TwinLocale>(initialLocale)
   useEffect(() => {
@@ -67,7 +72,7 @@ export function TwinLocaleProvider({ children }: { children: ReactNode }) {
   }, [])
   const value = useMemo(() => ({ locale, setLocale }), [locale, setLocale])
   return <LocaleContext.Provider value={value}>
-    {locale !== 'en' && locale !== 'ja' && <p className="twin-fallback" data-locale-fallback lang={locale}>
+    {locale !== 'en' && <p className="twin-fallback" data-locale-fallback lang={locale}>
       {(fallbackNotice as Record<string, string>)[locale] ?? 'Some content is available in English only.'}
     </p>}
     <div className="twin-language-bar">

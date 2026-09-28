@@ -22,6 +22,7 @@ describe('Twin language selection', () => {
     expect(window.location.search).toContain('lang=ja')
     expect(document.cookie).toContain('mf_locale=ja')
     expect(document.documentElement.dir).toBe('ltr')
+    expect(screen.getByText('一部の内容は英語のみで提供しています。')).toBeTruthy()
   })
 
   it('uses the cookie when the query does not specify a locale', () => {

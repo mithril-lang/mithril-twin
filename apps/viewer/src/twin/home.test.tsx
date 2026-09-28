@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TwinHome } from './home'
+import { TwinLocaleProvider } from '../locale'
 import { labelLines } from './components/TokenNode'
 import { orthoPath } from './components/ortho'
 import { twinSymbol } from './themes/symbols'
@@ -85,6 +86,7 @@ const tinyPackage = {
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  document.cookie = 'mf_locale=;Path=/;Max-Age=0'
 })
 
 const setDoc = (id: string) => window.history.replaceState(null, '', `/twin?doc=${id}`)
@@ -116,6 +118,16 @@ beforeEach(() => {
 })
 
 describe('Twin Polaris surface', () => {
+  it('translates viewer controls while preserving labels loaded from a .mith document', async () => {
+    window.history.replaceState(null, '', '/twin?doc=polaris-fi&lang=ja')
+    render(<TwinLocaleProvider><TwinHome /></TwinLocaleProvider>)
+    await waitFor(() => expect(screen.getByRole('heading', { name: '北極星 FI' })).toBeTruthy())
+    expect(screen.getByText('非本番')).toBeTruthy()
+    expect(screen.getByRole('button', { name: '詳細' })).toBeTruthy()
+    expect(screen.getByRole('tab', { name: /オブジェクト/ })).toBeTruthy()
+    expect(screen.getAllByText('Core VLAN').length).toBeGreaterThan(0)
+  })
+
   it('renders synthetic-demo labels and the Polaris title from .mith', async () => {
     render(<TwinHome />)
     expect(screen.getAllByText('synthetic-demo').length).toBeGreaterThan(0)
