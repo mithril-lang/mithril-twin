@@ -134,6 +134,27 @@ describe('Twin Polaris surface', () => {
     expect(gh.getAttribute('rel')).toBe('noopener noreferrer')
   })
 
+  it('reveals the detail panel when an object is selected and lets mobile users close it', async () => {
+    render(<TwinHome />)
+    await waitFor(() => expect(document.querySelector('[data-entity="org:holdings"]')).toBeTruthy())
+
+    const detail = screen.getByRole('complementary', { name: 'Object detail' })
+    const toggle = screen.getByRole('button', { name: 'Details' })
+    expect(detail.className).not.toContain('is-mobile-open')
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+
+    fireEvent.click(document.querySelector('[data-entity="org:holdings"]')!)
+    expect(detail.className).toContain('is-mobile-open')
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
+    expect(detail.querySelector('h2')?.textContent).toBe('Holdings')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close details' }))
+    expect(detail.className).not.toContain('is-mobile-open')
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(toggle)
+    expect(detail.className).toContain('is-mobile-open')
+  })
+
   it('defaults to the lilac Make grid and keeps the flat board secondary', async () => {
     localStorage.setItem('polaris-twin-theme', 'make-light')
     render(<TwinHome />)

@@ -128,6 +128,7 @@ export default function MakeGrid({
 }: Props) {
   const stageRef = useRef<HTMLDivElement>(null)
   const [tab, setTab] = useState<RailTab>('objects')
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [zoom, setZoom] = useState(1)
   const [flat, setFlat] = useState(false)
@@ -142,6 +143,10 @@ export default function MakeGrid({
   const [lensPick, setLensPick] = useState<{ epoch: number; lens: Lens } | null>(null)
   const [framePick, setFramePick] = useState<{ epoch: number; frame: FrameDim } | null>(null)
   const [exportNote, setExportNote] = useState<{ epoch: number; text: string } | null>(null)
+  const selectAndReveal = (id: string | null) => {
+    onSelect(id)
+    setMobileDetailOpen(id !== null)
+  }
   const exportText = exportNote && exportNote.epoch === docEpoch ? exportNote.text : null
   const { over, handlers: dropHandlers } = useMithFileDrop((files) => onImportFiles?.(files))
 
@@ -484,6 +489,15 @@ export default function MakeGrid({
           <button type="button" className="make-board-btn" onClick={onOpenBoard}>
             Board
           </button>
+          <button
+            type="button"
+            className="make-detail-toggle"
+            aria-controls="make-object-detail"
+            aria-expanded={mobileDetailOpen}
+            onClick={() => setMobileDetailOpen((open) => !open)}
+          >
+            Details
+          </button>
         </div>
       </header>
 
@@ -524,7 +538,7 @@ export default function MakeGrid({
                 selectedId={selectedId}
                 hot={focus.hot}
                 query={query}
-                onSelect={onSelect}
+                onSelect={selectAndReveal}
                 glyph={(type) => <ModGlyph type={type} />}
               />
             )}
@@ -586,7 +600,7 @@ export default function MakeGrid({
                           aria-label={entity.label}
                           onClick={(event) => {
                             event.stopPropagation()
-                            onSelect(placement.entity)
+                            selectAndReveal(placement.entity)
                             onFocusPlane(plane.id)
                           }}
                         >
@@ -665,7 +679,7 @@ export default function MakeGrid({
                   type="button"
                   className={`make-row ${row.entity.id === selectedId ? 'active' : ''}`}
                   onClick={() => {
-                    onSelect(row.entity.id)
+                    selectAndReveal(row.entity.id)
                     onFocusPlane(row.plane.id)
                   }}
                 >
@@ -747,14 +761,19 @@ export default function MakeGrid({
           </div>
         </aside>
 
-        <aside className="make-rail make-rail-right" aria-label="Object detail">
+        <aside
+          id="make-object-detail"
+          className={`make-rail make-rail-right${mobileDetailOpen ? ' is-mobile-open' : ''}`}
+          aria-label="Object detail"
+        >
+          <button type="button" className="make-mobile-detail-close" aria-label="Close details" onClick={() => setMobileDetailOpen(false)}>×</button>
           {lensOn && doc ? (
-            <LensPanel doc={doc} lens={lens} dim={frameDim} selectedId={selectedId} onSelect={onSelect} />
+            <LensPanel doc={doc} lens={lens} dim={frameDim} selectedId={selectedId} onSelect={selectAndReveal} />
           ) : selected ? (
             <>
               <div className="make-detail-head">
                 <div className={`make-detail-icon tone-${selectedTone}`}><ModGlyph type={selected.type} /></div>
-                <button type="button" className="make-icon-btn" aria-label="Close detail" onClick={() => onSelect(null)}>×</button>
+                <button type="button" className="make-icon-btn" aria-label="Close detail" onClick={() => selectAndReveal(null)}>×</button>
               </div>
               <div className="make-detail">
                 <h2>{selected.label}</h2>
@@ -794,7 +813,7 @@ export default function MakeGrid({
                         type="button"
                         className="make-link"
                         onClick={() => {
-                          onSelect(link.otherId)
+                          selectAndReveal(link.otherId)
                           const host = planes.find((p) => p.placements.some((pl) => pl.entity === link.otherId))
                           if (host) onFocusPlane(host.id)
                         }}
