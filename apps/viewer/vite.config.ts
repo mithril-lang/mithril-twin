@@ -3,6 +3,7 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
+  base: process.env.GITHUB_PAGES === 'true' ? '/mithril-twin/' : '/',
   plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
   test: { environment: 'jsdom' },
 })

@@ -147,7 +147,7 @@ function TwinApp() {
       setLoading(true)
       setError('')
       try {
-        const response = await fetch(`/data/layers/${drillLayer}.json`)
+        const response = await fetch(`${import.meta.env.BASE_URL}data/layers/${drillLayer}.json`)
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         const data = (await response.json()) as LayerData
         if (!cancelled) setDrillData(data)

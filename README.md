@@ -4,6 +4,8 @@ Mithril Twin is the **twin vocabulary/viewer for Mithril `.mith`** ([github.com/
 
 Live demo: **https://twin.mithril.fund**
 
+GitHub Pages mirror: **https://mithril-lang.github.io/mithril-twin/**. The mirror is built from this repository's `main` branch by GitHub Actions. `twin.mithril.fund` remains hosted separately.
+
 ```clojure
 (mithril/twin-document
   :id "https://mithril.fund/lib/twin/polaris-floor"

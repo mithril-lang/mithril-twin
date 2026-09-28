@@ -4,9 +4,11 @@ import { parseMithrilPackage } from './parse'
 import { readMith } from './twin'
 import type { MithDocument, MithHypothesis } from './types'
 
-export const SAMPLE_MITH_URL = '/data/polaris-fi.mith'
-export const SAMPLE_PACKAGE_URL = '/data/polaris-fi.mithril'
-export const ORG_SAMPLE_MITH_URL = '/data/polaris-org.mith'
+const dataUrl = (name: string) => `${import.meta.env.BASE_URL}data/${name}`
+
+export const SAMPLE_MITH_URL = dataUrl('polaris-fi.mith')
+export const SAMPLE_PACKAGE_URL = dataUrl('polaris-fi.mithril')
+export const ORG_SAMPLE_MITH_URL = dataUrl('polaris-org.mith')
 
 /**
  * Synthetic samples the grid can open. The first entry loads by default.
@@ -17,7 +19,7 @@ export const SAMPLE_DOCS: { id: string; file: string; url: string; label: string
   { id: 'polaris-enterprise', file: 'polaris-enterprise (generated in browser)', url: '', label: 'Enterprise scale (synthetic)', pack: true, seed: 20260927 },
   { id: 'polaris-org', file: 'polaris-org.mith', url: ORG_SAMPLE_MITH_URL, label: 'Org & access lenses' },
   { id: 'polaris-fi', file: 'polaris-fi.mith', url: SAMPLE_MITH_URL, label: 'Layer boards' },
-  { id: 'polaris-floor', file: 'polaris-floor.mith', url: '/data/polaris-floor.mith', label: 'Tiny floor' },
+  { id: 'polaris-floor', file: 'polaris-floor.mith', url: dataUrl('polaris-floor.mith'), label: 'Tiny floor' },
 ]
 
 /** `?doc=polaris-fi` picks a committed sample; anything else falls back to the default. */
