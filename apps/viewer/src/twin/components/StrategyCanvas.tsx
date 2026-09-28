@@ -7,6 +7,8 @@ import { edgeColor, nodeToken } from '../themes/index'
 import TokenNode from './TokenNode'
 import { layoutSpread } from './layoutGrid'
 import { orthoPath } from './ortho'
+import { useViewerLocale } from '../../locale'
+import { twinCopy } from '../twin-copy'
 
 type Props = {
   orgNodes: GraphItem[]
@@ -66,6 +68,8 @@ export default function StrategyCanvas({
   attackScenario = null, attackOverlayNodes = [],
 }: Props) {
   const { theme } = useTheme()
+  const locale = useViewerLocale()
+  const t = useCallback((english: string) => twinCopy(locale, english), [locale])
   const viewportRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(READABLE_SCALE)
   const [pan, setPan] = useState({ x: 12, y: 8 })
@@ -103,8 +107,8 @@ export default function StrategyCanvas({
       }))
       return {
         id: board.id,
-        label: board.label,
-        subtitle: board.subtitle,
+        label: t(board.label),
+        subtitle: t(board.subtitle),
         openable: true,
         rect,
         nodes: laid,
@@ -123,15 +127,15 @@ export default function StrategyCanvas({
       }))
       base.push({
         id: 'threat-entry',
-        label: 'Threat entry',
-        subtitle: 'hypothesis overlay',
+        label: t('Threat entry'),
+        subtitle: t('hypothesis overlay'),
         openable: false,
         rect,
         nodes: laid,
       })
     }
     return base
-  }, [orgNodes, orgEdges, attackScenario, attackOverlayNodes])
+  }, [orgNodes, orgEdges, attackScenario, attackOverlayNodes, t])
 
   const pos = useMemo(() => {
     const m = new Map<string, { x: number; y: number; item: GraphItem }>()
@@ -205,11 +209,24 @@ export default function StrategyCanvas({
   return (
     <div className="strategy-canvas">
       <div className="strategy-canvas-hint">
-        Flat overview. Pan the empty board, scroll to zoom. Open a zone to drill in.
+        {t('Flat overview. Pan the empty board, scroll to zoom. Open a zone to drill in.')}
       </div>
       <div className="strategy-toolbar">
-        <button type="button" className="strategy-tool-btn" onClick={resetView}>Reset view</button>
+        <button type="button" className="strategy-tool-btn" onClick={resetView}>{t('Reset view')}</button>
+        {onOpenBoard && (
+          <button type="button" className="strategy-tool-btn" onClick={() => onOpenBoard('holding')}>
+            {t('Open organization drill-in')}
+          </button>
+        )}
         <span className="strategy-zoom-label">{Math.round(scale * 100)}%</span>
+      </div>
+      <div className="strategy-zone-summary" aria-label={t('FI overview board')}>
+        {zones.filter((zone) => zone.openable).map((zone) => (
+          <div className="strategy-zone-summary-item" key={zone.id}>
+            <strong>{zone.label}</strong>
+            <span>{zone.subtitle}</span>
+          </div>
+        ))}
       </div>
       <div
         ref={viewportRef}
@@ -220,7 +237,7 @@ export default function StrategyCanvas({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         role="application"
-        aria-label="FI overview board"
+        aria-label={t('FI overview board')}
       >
         <div
           className="strategy-stage"
@@ -288,7 +305,7 @@ export default function StrategyCanvas({
                       onOpenBoard?.(zone.id)
                     }}
                   >
-                    <title>Open organization drill-in</title>
+                    <title>{t('Open organization drill-in')}</title>
                   </rect>
                 )}
               </g>
@@ -393,9 +410,9 @@ export default function StrategyCanvas({
                 top: zone.rect.y + 6,
               }}
               onClick={() => onOpenBoard?.(zone.id)}
-              title="Open layer drill-in"
+              title={t('Open layer drill-in')}
             >
-              Open
+              {t('Open')}
             </button>
           ))}
         </div>

@@ -19,7 +19,7 @@ import GridOverview from './views/GridOverview'
 import MakeGrid from './views/MakeGrid'
 import ScaleGrid from './views/ScaleGrid'
 import { useViewerLocale } from '../locale'
-import { loadTwinCopy } from './twin-copy'
+import { loadTwinCopy, twinCopy } from './twin-copy'
 import { importLocalFiles, readLocalFiles } from './mith/io'
 import {
   hypothesisToScenario,
@@ -41,6 +41,8 @@ const LAYERS: { id: TwinLayer; label: string }[] = [
 ]
 
 function TwinApp() {
+  const locale = useViewerLocale()
+  const t = (english: string, values?: Record<string, string | number>) => twinCopy(locale, english, values)
   const [view, setView] = useState<ViewMode>('make')
   const [sampleId, setSampleId] = useState(
     () => sampleDocFromSearch(typeof window === 'undefined' ? '' : window.location.search).id,
@@ -266,18 +268,18 @@ function TwinApp() {
     <main className="twin-polaris app-shell">
       <header className="header">
         <div>
-          <div className="eyebrow">Topology twin</div>
+          <div className="eyebrow">{t('Topology twin')}</div>
           <h1>{doc?.title ?? '北極星 FI'}</h1>
           <p className="subtitle">
             {view === 'board'
-              ? 'Secondary flat board for the same synthetic-demo model.'
-              : `${layerLabel} drill-in. Grid remains the main overview.`}
+              ? t('Secondary flat board for the same synthetic-demo model.')
+              : t('{layer} drill-in. Grid remains the main overview.', { layer: t(layerLabel) })}
           </p>
         </div>
         <div className="badges">
           <span className="badge">{doc?.dataset_kind ?? 'synthetic-demo'}</span>
-          <span className="badge warn">non-prod</span>
-          <span className="badge">no-runners</span>
+          <span className="badge warn">{t('non-prod')}</span>
+          <span className="badge">{t('no-runners')}</span>
           <GitHubLink className="badge" />
         </div>
       </header>
@@ -300,7 +302,7 @@ function TwinApp() {
       )}
 
       {view === 'drill' && (
-        <nav className="tabs" aria-label="Topology layers">
+        <nav className="tabs" aria-label={t('Topology layers')}>
           {LAYERS.map((layer) => (
             <button
               key={layer.id}
@@ -308,7 +310,7 @@ function TwinApp() {
               className={`tab ${drillLayer === layer.id ? 'active' : ''}`}
               onClick={() => setDrillLayer(layer.id)}
             >
-              {layer.label}
+              {t(layer.label)}
             </button>
           ))}
         </nav>
@@ -318,15 +320,15 @@ function TwinApp() {
         <div className="card graph-card">
           <div className="graph-toolbar">
             <span className="layer-name">
-              {view === 'board' && 'Board · flat zones'}
-              {view === 'drill' && `${layerLabel} · drill-in`}
+              {view === 'board' && t('Board · flat zones')}
+              {view === 'drill' && t('{layer} · drill-in', { layer: t(layerLabel) })}
             </span>
             <span className="meta">
-              {loading && 'loading…'}
-              {!loading && view === 'board' && `${org.nodes.length} org nodes`}
+              {loading && t('loading…')}
+              {!loading && view === 'board' && t('{count} org nodes', { count: org.nodes.length })}
               {!loading && view === 'drill' && drillData &&
-                `${drillData.elements.nodes.length} nodes · ${drillData.elements.edges.length} edges`}
-              {activeScenario && ` · path: ${activeScenario.label}`}
+                t('{nodes} nodes · {edges} edges', { nodes: drillData.elements.nodes.length, edges: drillData.elements.edges.length })}
+              {activeScenario && ` · ${t('path')}: ${activeScenario.label}`}
             </span>
           </div>
 
@@ -362,8 +364,7 @@ function TwinApp() {
       </section>
 
       <footer className="footer">
-        Fictional institution. Local synthetic-demo content. Attack paths are hypothesis overlays
-        (observation_count=0), visualization only.
+        {t('Fictional institution. Local synthetic-demo content. Attack paths are hypothesis overlays (observation_count=0), visualization only.')}
       </footer>
     </main>
   )

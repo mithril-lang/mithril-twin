@@ -118,6 +118,20 @@ beforeEach(() => {
 })
 
 describe('Twin Polaris surface', () => {
+  it('translates the secondary board controls without changing model labels', async () => {
+    window.history.replaceState(null, '', '/twin?doc=polaris-fi&lang=ja')
+    render(<TwinLocaleProvider><TwinHome /></TwinLocaleProvider>)
+    await waitFor(() => expect(screen.getByRole('heading', { name: '北極星 FI' })).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: 'ボード' }))
+    expect(screen.getByText('同じ合成デモモデルを平面ボードで表示しています。')).toBeTruthy()
+    expect(screen.getByRole('heading', { name: '選択項目の詳細' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: '表示をリセット' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: '組織の詳細を開く' })).toBeTruthy()
+    expect(document.querySelector('.strategy-zone-title')?.textContent).toBe('持株会社')
+    expect(document.querySelectorAll('.strategy-zone-summary-item')).toHaveLength(4)
+    expect(document.body.textContent).toContain('Holdings')
+  })
+
   it('translates viewer controls while preserving labels loaded from a .mith document', async () => {
     window.history.replaceState(null, '', '/twin?doc=polaris-fi&lang=ja')
     render(<TwinLocaleProvider><TwinHome /></TwinLocaleProvider>)
