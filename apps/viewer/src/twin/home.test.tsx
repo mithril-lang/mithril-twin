@@ -279,6 +279,9 @@ describe('Enterprise-scale pack', () => {
     expect(screen.getByText('このブラウザでの測定値')).toBeTruthy()
     expect(screen.queryByText('Measured in this browser')).toBeNull()
     expect(screen.getAllByText(/北極星/).length).toBeGreaterThan(0)
+    const company = document.querySelector('[data-tile-kind="company"]')
+    expect(company?.querySelector('.scale-tile-meta')?.textContent).toMatch(/人員.*端末/)
+    expect(company?.getAttribute('title')).toMatch(/人員.*端末/)
   })
 
   it('generates the 北極星 pack in the browser, drills company → department → team, and ranks exposure', async () => {

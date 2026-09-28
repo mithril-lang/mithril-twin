@@ -1,0 +1,230 @@
+{
+  "date": "2026-09-29",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "scope": "local production preview; generated company, department and network-zone tile metadata",
+  "results": [
+    {
+      "host": "pages",
+      "locale": "en",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 people · 2,506 devices",
+      "dept": "Operations — 139 people · 189 devices · 10 teams",
+      "zone": "Internet edge — 388 systems · 215 crown jewels · crown jewel cost 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "zh-Hans",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 人 · 2,506 台设备",
+      "dept": "Operations — 人员 139 人 · 设备 189 台 · 团队 10 个",
+      "zone": "Internet edge — 388 个系统 · 215 个核心资产 · 核心资产到达成本 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "hi",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 लोग · 2,506 डिवाइस",
+      "dept": "Operations — 139 लोग · 189 डिवाइस · 10 टीमें",
+      "zone": "Internet edge — 388 सिस्टम · 215 क्राउन ज्वेल · क्राउन ज्वेल लागत 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "es",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 personas · 2,506 dispositivos",
+      "dept": "Operations — 139 personas · 189 dispositivos · 10 equipos",
+      "zone": "Internet edge — 388 sistemas · 215 activos críticos · costo de activo crítico 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "ar",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 فرد · 2,506 جهاز",
+      "dept": "Operations — 139 فرد · 189 جهاز · 10 فريق",
+      "zone": "Internet edge — 388 نظام · 215 أصل حيوي · تكلفة الوصول إلى الأصل الجوهري 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "fr",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 personnes · 2,506 appareils",
+      "dept": "Operations — 139 personnes · 189 appareils · 10 équipes",
+      "zone": "Internet edge — 388 systèmes · 215 actifs critiques · coût vers les joyaux de la couronne 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "bn",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 জন · 2,506টি ডিভাইস",
+      "dept": "Operations — ব্যক্তি 139 জন · ডিভাইস 189টি · টিম 10টি",
+      "zone": "Internet edge — 388টি সিস্টেম · 215টি ক্রাউন জুয়েল · মূল সম্পদে পৌঁছানোর খরচ 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "pt",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 pessoas · 2,506 dispositivos",
+      "dept": "Operations — 139 pessoas · 189 dispositivos · 10 equipas",
+      "zone": "Internet edge — 388 sistemas · 215 ativos críticos · custo do ativo essencial 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "id",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 orang · 2,506 perangkat",
+      "dept": "Operations — 139 orang · 189 perangkat · 10 tim",
+      "zone": "Internet edge — 388 sistem · 215 aset penting · biaya aset mahkota 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "ur",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 افراد · 2,506 آلات",
+      "dept": "Operations — 139 افراد · 189 آلات · 10 ٹیمیں",
+      "zone": "Internet edge — 388 سسٹمز · 215 اہم اثاثے · اہم ترین اثاثے تک رسائی کی لاگت 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "ru",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 человек · 2,506 устройств",
+      "dept": "Operations — 139 чел. · 189 устройств · 10 команд",
+      "zone": "Internet edge — 388 систем · 215 ключевых активов · стоимость доступа к важному активу 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "de",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 Personen · 2,506 Geräte",
+      "dept": "Operations — 139 Personen · 189 Geräte · 10 Teams",
+      "zone": "Internet edge — 388 Systeme · 215 Kronjuwelen · Kronjuwelen-Kosten 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "ja",
+      "ok": true,
+      "company": "Bank Fukuoka — 人員 1,737人・端末 2,506台",
+      "dept": "Operations — 人員 139人・端末 189台・チーム 10件",
+      "zone": "Internet edge — システム 388件 · 重要資産 215件 · 重要資産への到達コスト 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "ko",
+      "ok": true,
+      "company": "Bank Fukuoka — 인원 1,737명 · 장치 2,506대",
+      "dept": "Operations — 인원 139명 · 기기 189대 · 팀 10개",
+      "zone": "Internet edge — 시스템 388개 · 핵심 자산 215개 · 핵심 자산 도달 비용 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "pcm",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 pipo · 2,506 devices",
+      "dept": "Operations — 139 pipo · 189 device · 10 team",
+      "zone": "Internet edge — 388 systems · 215 crown jewels · cost to reach crown jewel 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "arz",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 شخص · 2,506 جهاز",
+      "dept": "Operations — 139 فرد · 189 جهاز · 10 فريق",
+      "zone": "Internet edge — 388 نظام · 215 أصل حيوي · تكلفة الوصول للأصل الحيوي 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "mr",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 लोक · 2,506 डिव्हाइस",
+      "dept": "Operations — 139 लोक · 189 डिव्हाइसेस · 10 टीम्स",
+      "zone": "Internet edge — 388 सिस्टीम्स · 215 क्राउन ज्युएल्स · मुख्य मालमत्तेपर्यंत पोहोचण्याचा खर्च 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "jv",
+      "ok": true,
+      "company": "Bank Fukuoka — wong 1,737 · device 2,506",
+      "dept": "Operations — 139 wong · 189 piranti · 10 tim",
+      "zone": "Internet edge — sistem 388 · aset utama 215 · biaya aset mahkota 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "su",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 jalma · 2,506 alat",
+      "dept": "Operations — 139 jalma · 189 alat · 10 tim",
+      "zone": "Internet edge — 388 sistem · 215 aset utama · biaya nepi ka aset penting 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "he",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 אנשים · 2,506 מכשירים",
+      "dept": "Operations — 139 אנשים · 189 מכשירים · 10 צוותים",
+      "zone": "Internet edge — 388 מערכות · 215 נכסים קריטיים · עלות נכס הכתר 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "it",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 persone · 2,506 dispositivi",
+      "dept": "Operations — 139 persone · 189 dispositivi · 10 team",
+      "zone": "Internet edge — 388 sistemi · 215 asset critici · costo per il gioiello della corona 1",
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "ar-MA",
+      "ok": true,
+      "company": "Bank Fukuoka — 1,737 شخص · 2,506 جهاز",
+      "dept": "Operations — 139 ناس · 189 جهاز · 10 فريق",
+      "zone": "Internet edge — 388 نظام · 215 crown jewels · تكلفة الوصول للأصل الثمين 1",
+      "overflow": 0,
+      "errors": []
+    }
+  ]
+}

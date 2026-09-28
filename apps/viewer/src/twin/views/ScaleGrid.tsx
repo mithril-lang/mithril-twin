@@ -56,7 +56,7 @@ const SCALE_LENSES: { id: ScaleLens; label: string }[] = [
 ]
 function useScaleCopy() {
   const locale = useViewerLocale()
-  return (english: string, values?: Record<string, string | number>) => twinCopy(locale, english, values)
+  return useCallback((english: string, values?: Record<string, string | number>) => twinCopy(locale, english, values), [locale])
 }
 const DEVICE_LENS = (l: ScaleLens) => l === 'software' || l === 'logs'
 /** Device-share heat saturates here (device shares run higher than hot-role shares). */
@@ -399,6 +399,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
   }
 
   // ---- Floor layout (pure, memoized per level / lens) -----------------------------------
+  const copy = t
   const floor = useMemo(() => {
     const frames: FrameSpec[] = []
     const tiles: TileSpec[] = []
@@ -413,9 +414,9 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
     const devMeta = (counts: [number, number, number, number] | undefined) =>
       counts
         ? lens === 'software'
-          ? `${fmt(counts[1])} of ${fmt(counts[0])} dev high-ease`
-          : `${fmt(counts[2])} of ${fmt(counts[0])} dev log gaps${counts[3] ? ` · ${fmt(counts[3])} unknown` : ''}`
-        : 'device data pending'
+          ? copy('{high} of {total} devices with high ease', { high: fmt(counts[1]), total: fmt(counts[0]) })
+          : `${copy('{gaps} of {total} devices with log gaps', { gaps: fmt(counts[2]), total: fmt(counts[0]) })}${counts[3] ? ` · ${copy('{count} unknown', { count: fmt(counts[3]) })}` : ''}`
+        : copy('device data pending')
     const companyFill = (c: PackCompany) =>
       DEVICE_LENS(lens)
         ? shareColor(devShare(analysis?.devices?.company[c.id]), DEVICE_HEAT_SATURATION)
@@ -427,7 +428,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
     const shadowFrame = (apps: NonNullable<typeof analysis>['shadowApps'], filterDepts?: Set<string>) => {
       width = WORLD_W + 40 + SHADOW_W
       const rect = { x: WORLD_W + 40, y: 0, w: SHADOW_W, h: height }
-      frames.push({ id: 'shadow', label: 'Unsanctioned SaaS (outside the org boundary)', rect, kind: 'shadow', dashed: true, tag: true, root: true })
+      frames.push({ id: 'shadow', label: copy('Unsanctioned SaaS (outside the org boundary)'), rect, kind: 'shadow', dashed: true, tag: true, root: true })
       const used = apps
         .map((a) => ({ a, n: filterDepts ? a.departments.filter((d) => filterDepts.has(d)).length : a.departments.length }))
         .filter((x) => x.n > 0)
@@ -438,7 +439,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
           label: t.item.a.label.replace(' (synthetic SaaS)', ''),
           rect: inset(t, 1.5),
           fill: shadowColor(t.item.n, maxN),
-          meta: `${t.item.n} dept${t.item.n === 1 ? '' : 's'} · ${t.item.a.source}`,
+          meta: copy('{count} departments · {source}', { count: t.item.n, source: t.item.a.source }),
           kind: 'shadow',
           onClick: () => selectAndReveal(t.item.a.id),
         })
@@ -447,7 +448,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
 
     if (!level.company) {
       const root = { x: 0, y: 0, w: WORLD_W, h: height }
-      frames.push({ id: 'b:polaris', label: `北極星 Group · ${fmt(manifest.counts.subsidiaries)} subsidiaries (synthetic)`, rect: root, kind: 'company', root: true })
+      frames.push({ id: 'b:polaris', label: copy('北極星 Group · {count} subsidiaries (synthetic)', { count: fmt(manifest.counts.subsidiaries) }), rect: root, kind: 'company', root: true })
       if (lens === 'network') {
         // Every subsidiary zone (incl. server-only segments), sized by devices, colored by reach risk.
         const byKind = new Map<string, { id: string; zone: string; company: PackCompany; devices: number; risk: number }[]>()
@@ -465,7 +466,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
         for (const cl of treemap(clusters, (x) => x.total, inset(root, 12, 36))) {
           const r = inset(cl, 5)
           const red = cl.item.list.filter((x) => x.risk === 2).length
-          frames.push({ id: `zk:${cl.item.k}`, label: `${cl.item.k} · ${cl.item.list.length} zones${red ? ` · ${red} open → crown jewel` : ''}`, rect: r, kind: 'zone', tag: true })
+          frames.push({ id: `zk:${cl.item.k}`, label: `${copy('{kind} · {count} zones', { kind: cl.item.k, count: cl.item.list.length })}${red ? ` · ${copy('{count} open → crown jewel', { count: red })}` : ''}`, rect: r, kind: 'zone', tag: true })
           const sorted = [...cl.item.list].sort((a, b) => b.risk - a.risk || b.devices - a.devices)
           const shown = sorted.slice(0, 80)
           const rest = sorted.slice(80)
@@ -475,10 +476,10 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
             const zs = zoneScore.get(it.zone)
             tiles.push({
               id: it.id,
-              label: it.company ? it.company.label.replace('北極星 ', '') : `+${it.more} more zones`,
+              label: it.company ? it.company.label.replace('北極星 ', '') : copy('+{count} more zones', { count: it.more ?? 0 }),
               rect: inset(t, 1.2),
               fill: it.company ? zoneFill(zs) : 'rgba(230, 236, 232, 0.9)',
-              meta: it.company ? `${fmt(it.devices)} dev${zs?.openToCrownJewel ? ' · open → crown jewel' : zs?.hostsCrownJewel ? ' · hosts crown jewel' : ''}` : `${fmt(it.devices)} devices`,
+              meta: `${copy('{count} devices', { count: fmt(it.devices) })}${it.company && zs?.openToCrownJewel ? ` · ${copy('open → crown jewel')}` : it.company && zs?.hostsCrownJewel ? ` · ${copy('hosts crown jewel')}` : ''}`,
               kind: it.company ? 'zone' : 'more',
               hot: it.risk === 2,
               tag: it.risk === 2,
@@ -494,7 +495,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
       const placed: TileSpec[] = []
       for (const cl of treemap(clusters, (x) => x.people, inset(root, 12, 36))) {
         const r = inset(cl, 5)
-        frames.push({ id: `sector:${cl.item.sector}`, label: `${cl.item.sector} · ${cl.item.list.length} cos · ${fmt(cl.item.people)} people`, rect: r, kind: 'subsidiary', tag: true })
+        frames.push({ id: `sector:${cl.item.sector}`, label: copy('{sector} · {companies} companies · {people} people', { sector: cl.item.sector, companies: cl.item.list.length, people: fmt(cl.item.people) }), rect: r, kind: 'subsidiary', tag: true })
         for (const t of treemap(cl.item.list, (c) => c.people, inset(r, 6, 26))) {
           const c = t.item
           const hot = (lens === 'access' ? analysis?.companyAccessHeat[c.id]?.hot : analysis?.companyHeat[c.id]?.hot) ?? 0
@@ -507,8 +508,8 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
               DEVICE_LENS(lens)
                 ? devMeta(analysis?.devices?.company[c.id])
                 : lens === 'shadow'
-                ? `${analysis?.companyShadow[c.id] ?? 0} shadow apps · ${fmt(c.people)} ppl`
-                : `${fmt(c.people)} ppl · ${fmt(c.devices)} dev${hot ? ` · ${hot} hot` : ''}`,
+                ? copy('{count} shadow apps · {people} people', { count: analysis?.companyShadow[c.id] ?? 0, people: fmt(c.people) })
+                : `${copy('{people} people · {devices} devices', { people: fmt(c.people), devices: fmt(c.devices) })}${hot ? ` · ${copy('{count} hot', { count: hot })}` : ''}`,
             kind: 'company',
             hot: DEVICE_LENS(lens) ? devShare(analysis?.devices?.company[c.id]) >= DEVICE_HEAT_SATURATION : hot > 0,
             onClick: () => void goTo({ company: c.id, dept: null, team: null }),
@@ -529,7 +530,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
 
     if (!level.dept) {
       const root = { x: 0, y: 0, w: WORLD_W, h: height }
-      frames.push({ id: company.id, label: `${company.label} · ${company.departments} departments`, rect: root, kind: 'subsidiary', root: true })
+      frames.push({ id: company.id, label: copy('{company} · {count} departments', { company: company.label, count: company.departments }), rect: root, kind: 'subsidiary', root: true })
       if (lens === 'network') {
         // Subsidiary zones in the middle, internet / mobile on the left, group zones on the right;
         // reach edges drawn between them (red = open into a crown-jewel zone).
@@ -562,7 +563,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
             label: GROUP_ZONES.includes(z) ? labelOf(z) : labelOf(z).replace(`${company.label} · `, ''),
             rect,
             fill: zoneFill(zs),
-            meta: `${devices ? `${fmt(devices)} dev · ` : ''}${hostedIds.length} systems${cj ? ` · ${cj} crown jewel` : ''}${zs?.crownJewelCost != null ? ` · CJ cost ${zs.crownJewelCost}` : ''}`,
+            meta: `${devices ? `${copy('{count} devices', { count: fmt(devices) })} · ` : ''}${copy('{count} systems', { count: hostedIds.length })}${cj ? ` · ${copy('{count} crown jewels', { count: cj })}` : ''}${zs?.crownJewelCost != null ? ` · ${copy('crown jewel cost {cost}', { cost: zs.crownJewelCost })}` : ''}`,
             kind: 'zone',
             hot: !!zs?.openToCrownJewel,
             tag: true,
@@ -596,7 +597,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
             : lens === 'shadow' ? shadowColor(analysis?.deptShadow[d.id]?.length ?? 0, maxDeptShadow) : shareColor(heat?.share ?? 0, sat),
           meta: DEVICE_LENS(lens)
             ? devMeta(analysis?.devices?.dept[d.id])
-            : lens === 'shadow' ? `${analysis?.deptShadow[d.id]?.length ?? 0} shadow apps` : `${fmt(p)} ppl · ${fmt(dv)} dev · ${tm} teams`,
+            : lens === 'shadow' ? copy('{count} shadow apps', { count: analysis?.deptShadow[d.id]?.length ?? 0 }) : copy('{people} people · {devices} devices · {teams} teams', { people: fmt(p), devices: fmt(dv), teams: tm }),
           kind: 'department',
           hot: DEVICE_LENS(lens) ? devShare(analysis?.devices?.dept[d.id]) >= DEVICE_HEAT_SATURATION : (heat?.hot ?? 0) > 0,
           tag: true,
@@ -613,7 +614,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
     frames.push({ id: level.dept, label: `${company.label} › ${dept?.label ?? ''}`, rect: root, kind: 'department', root: true })
     const roles = index.rolesByDept.get(level.dept) ?? []
     const roleRow = { x: 12, y: 44, w: WORLD_W - 24, h: 120 }
-    frames.push({ id: `${level.dept}#roles`, label: 'Roles in this department', rect: roleRow, kind: 'team' })
+    frames.push({ id: `${level.dept}#roles`, label: copy('Roles in this department'), rect: roleRow, kind: 'team' })
     const rw = Math.min(360, (roleRow.w - 20) / Math.max(1, roles.length))
     roles.forEach((r, i) => {
       const s = roleScore.get(r.id)
@@ -622,7 +623,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
         label: r.label,
         rect: { x: roleRow.x + 10 + i * rw, y: roleRow.y + 32, w: rw - 10, h: roleRow.h - 42 },
         fill: heatColor(s?.score ?? 0),
-        meta: s ? `score ${s.score} · cost ${s.minCost ?? '—'} · ${chunk?.holders.get(r.id)?.length ?? 0} holders` : 'score —',
+        meta: s ? copy('score {score} · cost {cost} · {holders} holders', { score: s.score, cost: s.minCost ?? '—', holders: chunk?.holders.get(r.id)?.length ?? 0 }) : copy('score —'),
         kind: 'role',
         hot: (s?.score ?? 0) >= HOT,
         tag: true,
@@ -639,7 +640,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
         label: tm.label.replace(`${dept?.label ?? ''} · `, ''),
         rect: inset(t, 5),
         fill: tm.id === level.team ? 'rgba(236, 244, 255, 1)' : 'rgba(255, 255, 255, 0.96)',
-        meta: `${chunk?.teamPeople.get(tm.id)?.length ?? 0} ppl · ${chunk?.teamDevices.get(tm.id)?.length ?? 0} dev`,
+        meta: copy('{people} people · {devices} devices', { people: chunk?.teamPeople.get(tm.id)?.length ?? 0, devices: chunk?.teamDevices.get(tm.id)?.length ?? 0 }),
         kind: 'team',
         tag: true,
         canvas: { team: tm.id },
@@ -647,7 +648,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
       })
     }
     return { frames, tiles, links, width, height }
-  }, [manifest, doc, analysis, lens, level, companies, chunks, index, roleScore, labelOf, goTo, zoneScore, weights, sat, selectAndReveal])
+  }, [manifest, doc, analysis, lens, level, companies, chunks, index, roleScore, labelOf, goTo, zoneScore, weights, sat, selectAndReveal, copy])
 
   // ---- Fit to the safe area (same rule as the Make grid) -------------------------------
   const viewKey = `${level.company}|${level.dept}|${level.team}|${lens}|${floor.width}`
