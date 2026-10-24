@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TwinHome } from './home'
+import { TwinLocaleProvider } from '../locale'
 import { labelLines } from './components/TokenNode'
 import { orthoPath } from './components/ortho'
 import { twinSymbol } from './themes/symbols'
@@ -85,6 +86,7 @@ const tinyPackage = {
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  document.cookie = 'mf_locale=;Path=/;Max-Age=0'
 })
 
 const setDoc = (id: string) => window.history.replaceState(null, '', `/twin?doc=${id}`)
@@ -116,6 +118,30 @@ beforeEach(() => {
 })
 
 describe('Twin Polaris surface', () => {
+  it('translates the secondary board controls without changing model labels', async () => {
+    window.history.replaceState(null, '', '/twin?doc=polaris-fi&lang=ja')
+    render(<TwinLocaleProvider><TwinHome /></TwinLocaleProvider>)
+    await waitFor(() => expect(screen.getByRole('heading', { name: '北極星 FI' })).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: 'ボード' }))
+    expect(screen.getByText('同じ合成デモモデルを平面ボードで表示しています。')).toBeTruthy()
+    expect(screen.getByRole('heading', { name: '選択項目の詳細' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: '表示をリセット' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: '組織の詳細を開く' })).toBeTruthy()
+    expect(document.querySelector('.strategy-zone-title')?.textContent).toBe('持株会社')
+    expect(document.querySelectorAll('.strategy-zone-summary-item')).toHaveLength(4)
+    expect(document.body.textContent).toContain('Holdings')
+  })
+
+  it('translates viewer controls while preserving labels loaded from a .mith document', async () => {
+    window.history.replaceState(null, '', '/twin?doc=polaris-fi&lang=ja')
+    render(<TwinLocaleProvider><TwinHome /></TwinLocaleProvider>)
+    await waitFor(() => expect(screen.getByRole('heading', { name: '北極星 FI' })).toBeTruthy())
+    expect(screen.getByText('非本番')).toBeTruthy()
+    expect(screen.getByRole('button', { name: '詳細' })).toBeTruthy()
+    expect(screen.getByRole('tab', { name: /オブジェクト/ })).toBeTruthy()
+    expect(screen.getAllByText('Core VLAN').length).toBeGreaterThan(0)
+  })
+
   it('renders synthetic-demo labels and the Polaris title from .mith', async () => {
     render(<TwinHome />)
     expect(screen.getAllByText('synthetic-demo').length).toBeGreaterThan(0)
@@ -132,6 +158,27 @@ describe('Twin Polaris surface', () => {
     expect(gh.getAttribute('href')).toBe('https://github.com/mithril-lang/mithril-twin')
     expect(gh.getAttribute('target')).toBe('_blank')
     expect(gh.getAttribute('rel')).toBe('noopener noreferrer')
+  })
+
+  it('reveals the detail panel when an object is selected and lets mobile users close it', async () => {
+    render(<TwinHome />)
+    await waitFor(() => expect(document.querySelector('[data-entity="org:holdings"]')).toBeTruthy())
+
+    const detail = screen.getByRole('complementary', { name: 'Object detail' })
+    const toggle = screen.getByRole('button', { name: 'Details' })
+    expect(detail.className).not.toContain('is-mobile-open')
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+
+    fireEvent.click(document.querySelector('[data-entity="org:holdings"]')!)
+    expect(detail.className).toContain('is-mobile-open')
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
+    expect(detail.querySelector('h2')?.textContent).toBe('Holdings')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close details' }))
+    expect(detail.className).not.toContain('is-mobile-open')
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(toggle)
+    expect(detail.className).toContain('is-mobile-open')
   })
 
   it('defaults to the lilac Make grid and keeps the flat board secondary', async () => {
@@ -208,6 +255,35 @@ describe('Twin lenses', () => {
 })
 
 describe('Enterprise-scale pack', () => {
+  it('localizes the document lens and its exposure ranking in Japanese', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => String(input).includes('.mithril')
+      ? new Response(JSON.stringify(tinyPackage), { status: 200 })
+      : new Response(orgMith, { status: 200 })))
+    window.history.replaceState(null, '', '/twin?doc=polaris-org&lang=ja')
+    render(<TwinLocaleProvider><TwinHome /></TwinLocaleProvider>)
+    await waitFor(() => expect(document.querySelector('[data-lens-panel="org"]')).toBeTruthy())
+    expect(screen.getByText('区切りの軸')).toBeTruthy()
+    fireEvent.click(screen.getByRole('group', { name: 'レンズ' }).querySelector('button:nth-child(3)')!)
+    expect(screen.getByRole('table', { name: '露出スコア順の資源' })).toBeTruthy()
+  })
+
+  it('uses the selected locale for the default pack controls and keeps generated labels as source data', async () => {
+    window.history.replaceState(null, '', '/twin?lang=ja')
+    render(<TwinLocaleProvider><TwinHome /></TwinLocaleProvider>)
+    await waitFor(() => expect(document.querySelector('.make-app')?.getAttribute('data-scale-ready')).toBe('true'))
+    expect(screen.getByRole('button', { name: '詳細' })).toBeTruthy()
+    expect(screen.getByLabelText('データ件数')).toBeTruthy()
+    expect(screen.getByRole('group', { name: 'レンズ' })).toBeTruthy()
+    expect(screen.getByText('組織 レンズ')).toBeTruthy()
+    expect(screen.getByText(/子会社を業種別にまとめ/)).toBeTruthy()
+    expect(screen.getByText('このブラウザでの測定値')).toBeTruthy()
+    expect(screen.queryByText('Measured in this browser')).toBeNull()
+    expect(screen.getAllByText(/北極星/).length).toBeGreaterThan(0)
+    const company = document.querySelector('[data-tile-kind="company"]')
+    expect(company?.querySelector('.scale-tile-meta')?.textContent).toMatch(/人員.*端末/)
+    expect(company?.getAttribute('title')).toMatch(/人員.*端末/)
+  })
+
   it('generates the 北極星 pack in the browser, drills company → department → team, and ranks exposure', async () => {
     const fetchMock = vi.fn(async () => new Response('', { status: 404 }))
     vi.stubGlobal('fetch', fetchMock)
@@ -220,6 +296,14 @@ describe('Enterprise-scale pack', () => {
     })
     expect(app().getAttribute('data-scale-level')).toBe('group')
     expect(app().getAttribute('data-lens')).toBe('org')
+    const details = screen.getByRole('button', { name: 'Details' })
+    const detailPanel = screen.getByRole('complementary', { name: 'Lens detail' })
+    expect(details.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(details)
+    expect(details.getAttribute('aria-expanded')).toBe('true')
+    expect(detailPanel.className).toContain('is-mobile-open')
+    fireEvent.click(screen.getByRole('button', { name: 'Close details' }))
+    expect(detailPanel.className).not.toContain('is-mobile-open')
     const gh = screen.getByRole('link', { name: /GitHub repository mithril-lang\/mithril-twin/ })
     expect(gh.getAttribute('href')).toBe('https://github.com/mithril-lang/mithril-twin')
     expect(gh.closest('.make-top-actions')).toBeTruthy()

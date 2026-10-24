@@ -1,0 +1,29 @@
+{
+  "checkedAt": "2026-09-28T16:53:03.562Z",
+  "scope": "draft selected-locale asset and in-app switch at 390px",
+  "initial": {
+    "url": "http://127.0.0.1:5199/mithril-twin/?doc=polaris-org&lang=ja",
+    "requests": []
+  },
+  "arabic": {
+    "url": "http://127.0.0.1:5199/mithril-twin/?doc=polaris-org&lang=ar",
+    "lang": "ar",
+    "dir": "rtl",
+    "lens": "impersonation",
+    "requests": [
+      "ar-CA_ZdlED.js"
+    ],
+    "cookieLocalePresent": true
+  },
+  "restored": {
+    "url": "http://127.0.0.1:5199/mithril-twin/?doc=polaris-org&lang=ja",
+    "lang": "ja",
+    "lens": "impersonation",
+    "requests": [
+      "ar-CA_ZdlED.js"
+    ],
+    "cookieLocalePresent": true
+  },
+  "errors": [],
+  "failures": []
+}

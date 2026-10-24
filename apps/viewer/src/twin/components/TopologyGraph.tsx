@@ -4,6 +4,8 @@ import type { AttackScenario, GraphItem, SelectMode } from '../data/types'
 import { edgeMatchesMode, nodeMatchesMode } from '../data/halo'
 import { useTheme } from '../themes/ThemeContext'
 import { edgeColor, nodeToken } from '../themes/index'
+import { useViewerLocale } from '../../locale'
+import { twinCopy } from '../twin-copy'
 
 type GraphElements = { nodes: GraphItem[]; edges: GraphItem[] }
 type Props = {
@@ -17,6 +19,7 @@ export default function TopologyGraph({ elements, selectMode, onSelect, attackSc
   const container = useRef<HTMLDivElement>(null)
   const graph = useRef<Core | null>(null)
   const { theme } = useTheme()
+  const locale = useViewerLocale()
 
   useEffect(() => {
     if (!container.current) return
@@ -143,7 +146,7 @@ export default function TopologyGraph({ elements, selectMode, onSelect, attackSc
     }
   }, [elements, onSelect, theme, selectMode, attackScenario])
 
-  return <div ref={container} className="graph" aria-label="Cytoscape topology graph" />
+  return <div ref={container} className="graph" aria-label={twinCopy(locale, 'Topology graph')} />
 }
 
 /** Map theme shapes to Cytoscape-supported shapes. All are flat. */

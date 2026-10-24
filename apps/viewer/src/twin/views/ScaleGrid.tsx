@@ -12,6 +12,8 @@ import {
 } from 'react'
 import GitHubLink from '../components/GitHubLink'
 import ThemeSwitcher from '../components/ThemeSwitcher'
+import { useViewerLocale } from '../../locale'
+import { twinCopy } from '../twin-copy'
 import { CONTROL_WEIGHTS, type MixedHop, type RoleScore, type ZoneScore } from '../mith/exposure'
 import {
   DEFAULT_DEVICE_WEIGHTS,
@@ -52,6 +54,10 @@ const SCALE_LENSES: { id: ScaleLens; label: string }[] = [
   { id: 'software', label: 'Software risk' },
   { id: 'logs', label: 'Log gaps' },
 ]
+function useScaleCopy() {
+  const locale = useViewerLocale()
+  return useCallback((english: string, values?: Record<string, string | number>) => twinCopy(locale, english, values), [locale])
+}
 const DEVICE_LENS = (l: ScaleLens) => l === 'software' || l === 'logs'
 /** Device-share heat saturates here (device shares run higher than hot-role shares). */
 const DEVICE_HEAT_SATURATION = 0.5
@@ -164,7 +170,9 @@ type FrameSpec = { id: string; label: string; rect: Rect; kind: string; dashed?:
  * Never more than a few hundred DOM tiles at once. Analysis runs in a Web Worker.
  */
 export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles }: Props) {
+  const t = useScaleCopy()
   const stageRef = useRef<HTMLDivElement>(null)
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
   const [manifest, setManifest] = useState<PackManifest | null>(null)
   const [doc, setDoc] = useState<MithDocument | null>(null)
   const [analysis, setAnalysis] = useState<ScaleAnalysis | null>(null)
@@ -173,6 +181,10 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
   const [lens, setLens] = useState<ScaleLens>('org')
   const [level, setLevel] = useState<Level>({ company: null, dept: null, team: null })
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const selectAndReveal = useCallback((id: string | null) => {
+    setSelectedId(id)
+    setMobileDetailOpen(id !== null)
+  }, [])
   const [chunks, setChunks] = useState<Map<string, ExpandedChunk>>(new Map())
   const [busy, setBusy] = useState('')
   const [query, setQuery] = useState('')
@@ -356,14 +368,14 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
       }
       setMark({ name, t0, note })
       setLevel(next)
-      setSelectedId(select)
+      selectAndReveal(select)
     },
-    [loadChunk],
+    [loadChunk, selectAndReveal],
   )
 
   const openRole = useCallback(
     (id: string | null) => {
-      if (!id) return setSelectedId(null)
+      if (!id) return selectAndReveal(null)
       const r = index.roles.get(id)
       if (r) {
         const company = index.companyOf(r.boundary)
@@ -376,9 +388,9 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
         void goTo({ company, dept: null, team: null }, id)
         return
       }
-      setSelectedId(id)
+      selectAndReveal(id)
     },
-    [index, goTo],
+    [index, goTo, selectAndReveal],
   )
 
   const pickLens = (next: ScaleLens) => {
@@ -387,6 +399,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
   }
 
   // ---- Floor layout (pure, memoized per level / lens) -----------------------------------
+  const copy = t
   const floor = useMemo(() => {
     const frames: FrameSpec[] = []
     const tiles: TileSpec[] = []
@@ -401,9 +414,9 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
     const devMeta = (counts: [number, number, number, number] | undefined) =>
       counts
         ? lens === 'software'
-          ? `${fmt(counts[1])} of ${fmt(counts[0])} dev high-ease`
-          : `${fmt(counts[2])} of ${fmt(counts[0])} dev log gaps${counts[3] ? ` · ${fmt(counts[3])} unknown` : ''}`
-        : 'device data pending'
+          ? copy('{high} of {total} devices with high ease', { high: fmt(counts[1]), total: fmt(counts[0]) })
+          : `${copy('{gaps} of {total} devices with log gaps', { gaps: fmt(counts[2]), total: fmt(counts[0]) })}${counts[3] ? ` · ${copy('{count} unknown', { count: fmt(counts[3]) })}` : ''}`
+        : copy('device data pending')
     const companyFill = (c: PackCompany) =>
       DEVICE_LENS(lens)
         ? shareColor(devShare(analysis?.devices?.company[c.id]), DEVICE_HEAT_SATURATION)
@@ -415,7 +428,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
     const shadowFrame = (apps: NonNullable<typeof analysis>['shadowApps'], filterDepts?: Set<string>) => {
       width = WORLD_W + 40 + SHADOW_W
       const rect = { x: WORLD_W + 40, y: 0, w: SHADOW_W, h: height }
-      frames.push({ id: 'shadow', label: 'Unsanctioned SaaS (outside the org boundary)', rect, kind: 'shadow', dashed: true, tag: true, root: true })
+      frames.push({ id: 'shadow', label: copy('Unsanctioned SaaS (outside the org boundary)'), rect, kind: 'shadow', dashed: true, tag: true, root: true })
       const used = apps
         .map((a) => ({ a, n: filterDepts ? a.departments.filter((d) => filterDepts.has(d)).length : a.departments.length }))
         .filter((x) => x.n > 0)
@@ -426,16 +439,16 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
           label: t.item.a.label.replace(' (synthetic SaaS)', ''),
           rect: inset(t, 1.5),
           fill: shadowColor(t.item.n, maxN),
-          meta: `${t.item.n} dept${t.item.n === 1 ? '' : 's'} · ${t.item.a.source}`,
+          meta: copy('{count} departments · {source}', { count: t.item.n, source: t.item.a.source }),
           kind: 'shadow',
-          onClick: () => setSelectedId(t.item.a.id),
+          onClick: () => selectAndReveal(t.item.a.id),
         })
       }
     }
 
     if (!level.company) {
       const root = { x: 0, y: 0, w: WORLD_W, h: height }
-      frames.push({ id: 'b:polaris', label: `北極星 Group · ${fmt(manifest.counts.subsidiaries)} subsidiaries (synthetic)`, rect: root, kind: 'company', root: true })
+      frames.push({ id: 'b:polaris', label: copy('北極星 Group · {count} subsidiaries (synthetic)', { count: fmt(manifest.counts.subsidiaries) }), rect: root, kind: 'company', root: true })
       if (lens === 'network') {
         // Every subsidiary zone (incl. server-only segments), sized by devices, colored by reach risk.
         const byKind = new Map<string, { id: string; zone: string; company: PackCompany; devices: number; risk: number }[]>()
@@ -453,7 +466,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
         for (const cl of treemap(clusters, (x) => x.total, inset(root, 12, 36))) {
           const r = inset(cl, 5)
           const red = cl.item.list.filter((x) => x.risk === 2).length
-          frames.push({ id: `zk:${cl.item.k}`, label: `${cl.item.k} · ${cl.item.list.length} zones${red ? ` · ${red} open → crown jewel` : ''}`, rect: r, kind: 'zone', tag: true })
+          frames.push({ id: `zk:${cl.item.k}`, label: `${copy('{kind} · {count} zones', { kind: cl.item.k, count: cl.item.list.length })}${red ? ` · ${copy('{count} open → crown jewel', { count: red })}` : ''}`, rect: r, kind: 'zone', tag: true })
           const sorted = [...cl.item.list].sort((a, b) => b.risk - a.risk || b.devices - a.devices)
           const shown = sorted.slice(0, 80)
           const rest = sorted.slice(80)
@@ -463,10 +476,10 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
             const zs = zoneScore.get(it.zone)
             tiles.push({
               id: it.id,
-              label: it.company ? it.company.label.replace('北極星 ', '') : `+${it.more} more zones`,
+              label: it.company ? it.company.label.replace('北極星 ', '') : copy('+{count} more zones', { count: it.more ?? 0 }),
               rect: inset(t, 1.2),
               fill: it.company ? zoneFill(zs) : 'rgba(230, 236, 232, 0.9)',
-              meta: it.company ? `${fmt(it.devices)} dev${zs?.openToCrownJewel ? ' · open → crown jewel' : zs?.hostsCrownJewel ? ' · hosts crown jewel' : ''}` : `${fmt(it.devices)} devices`,
+              meta: `${copy('{count} devices', { count: fmt(it.devices) })}${it.company && zs?.openToCrownJewel ? ` · ${copy('open → crown jewel')}` : it.company && zs?.hostsCrownJewel ? ` · ${copy('hosts crown jewel')}` : ''}`,
               kind: it.company ? 'zone' : 'more',
               hot: it.risk === 2,
               tag: it.risk === 2,
@@ -482,7 +495,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
       const placed: TileSpec[] = []
       for (const cl of treemap(clusters, (x) => x.people, inset(root, 12, 36))) {
         const r = inset(cl, 5)
-        frames.push({ id: `sector:${cl.item.sector}`, label: `${cl.item.sector} · ${cl.item.list.length} cos · ${fmt(cl.item.people)} people`, rect: r, kind: 'subsidiary', tag: true })
+        frames.push({ id: `sector:${cl.item.sector}`, label: copy('{sector} · {companies} companies · {people} people', { sector: cl.item.sector, companies: cl.item.list.length, people: fmt(cl.item.people) }), rect: r, kind: 'subsidiary', tag: true })
         for (const t of treemap(cl.item.list, (c) => c.people, inset(r, 6, 26))) {
           const c = t.item
           const hot = (lens === 'access' ? analysis?.companyAccessHeat[c.id]?.hot : analysis?.companyHeat[c.id]?.hot) ?? 0
@@ -495,8 +508,8 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
               DEVICE_LENS(lens)
                 ? devMeta(analysis?.devices?.company[c.id])
                 : lens === 'shadow'
-                ? `${analysis?.companyShadow[c.id] ?? 0} shadow apps · ${fmt(c.people)} ppl`
-                : `${fmt(c.people)} ppl · ${fmt(c.devices)} dev${hot ? ` · ${hot} hot` : ''}`,
+                ? copy('{count} shadow apps · {people} people', { count: analysis?.companyShadow[c.id] ?? 0, people: fmt(c.people) })
+                : `${copy('{people} people · {devices} devices', { people: fmt(c.people), devices: fmt(c.devices) })}${hot ? ` · ${copy('{count} hot', { count: hot })}` : ''}`,
             kind: 'company',
             hot: DEVICE_LENS(lens) ? devShare(analysis?.devices?.company[c.id]) >= DEVICE_HEAT_SATURATION : hot > 0,
             onClick: () => void goTo({ company: c.id, dept: null, team: null }),
@@ -517,7 +530,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
 
     if (!level.dept) {
       const root = { x: 0, y: 0, w: WORLD_W, h: height }
-      frames.push({ id: company.id, label: `${company.label} · ${company.departments} departments`, rect: root, kind: 'subsidiary', root: true })
+      frames.push({ id: company.id, label: copy('{company} · {count} departments', { company: company.label, count: company.departments }), rect: root, kind: 'subsidiary', root: true })
       if (lens === 'network') {
         // Subsidiary zones in the middle, internet / mobile on the left, group zones on the right;
         // reach edges drawn between them (red = open into a crown-jewel zone).
@@ -550,11 +563,11 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
             label: GROUP_ZONES.includes(z) ? labelOf(z) : labelOf(z).replace(`${company.label} · `, ''),
             rect,
             fill: zoneFill(zs),
-            meta: `${devices ? `${fmt(devices)} dev · ` : ''}${hostedIds.length} systems${cj ? ` · ${cj} crown jewel` : ''}${zs?.crownJewelCost != null ? ` · CJ cost ${zs.crownJewelCost}` : ''}`,
+            meta: `${devices ? `${copy('{count} devices', { count: fmt(devices) })} · ` : ''}${copy('{count} systems', { count: hostedIds.length })}${cj ? ` · ${copy('{count} crown jewels', { count: cj })}` : ''}${zs?.crownJewelCost != null ? ` · ${copy('crown jewel cost {cost}', { cost: zs.crownJewelCost })}` : ''}`,
             kind: 'zone',
             hot: !!zs?.openToCrownJewel,
             tag: true,
-            onClick: () => setSelectedId(z),
+            onClick: () => selectAndReveal(z),
           })
         }
         for (const z of own) {
@@ -584,7 +597,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
             : lens === 'shadow' ? shadowColor(analysis?.deptShadow[d.id]?.length ?? 0, maxDeptShadow) : shareColor(heat?.share ?? 0, sat),
           meta: DEVICE_LENS(lens)
             ? devMeta(analysis?.devices?.dept[d.id])
-            : lens === 'shadow' ? `${analysis?.deptShadow[d.id]?.length ?? 0} shadow apps` : `${fmt(p)} ppl · ${fmt(dv)} dev · ${tm} teams`,
+            : lens === 'shadow' ? copy('{count} shadow apps', { count: analysis?.deptShadow[d.id]?.length ?? 0 }) : copy('{people} people · {devices} devices · {teams} teams', { people: fmt(p), devices: fmt(dv), teams: tm }),
           kind: 'department',
           hot: DEVICE_LENS(lens) ? devShare(analysis?.devices?.dept[d.id]) >= DEVICE_HEAT_SATURATION : (heat?.hot ?? 0) > 0,
           tag: true,
@@ -601,7 +614,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
     frames.push({ id: level.dept, label: `${company.label} › ${dept?.label ?? ''}`, rect: root, kind: 'department', root: true })
     const roles = index.rolesByDept.get(level.dept) ?? []
     const roleRow = { x: 12, y: 44, w: WORLD_W - 24, h: 120 }
-    frames.push({ id: `${level.dept}#roles`, label: 'Roles in this department', rect: roleRow, kind: 'team' })
+    frames.push({ id: `${level.dept}#roles`, label: copy('Roles in this department'), rect: roleRow, kind: 'team' })
     const rw = Math.min(360, (roleRow.w - 20) / Math.max(1, roles.length))
     roles.forEach((r, i) => {
       const s = roleScore.get(r.id)
@@ -610,11 +623,11 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
         label: r.label,
         rect: { x: roleRow.x + 10 + i * rw, y: roleRow.y + 32, w: rw - 10, h: roleRow.h - 42 },
         fill: heatColor(s?.score ?? 0),
-        meta: s ? `score ${s.score} · cost ${s.minCost ?? '—'} · ${chunk?.holders.get(r.id)?.length ?? 0} holders` : 'score —',
+        meta: s ? copy('score {score} · cost {cost} · {holders} holders', { score: s.score, cost: s.minCost ?? '—', holders: chunk?.holders.get(r.id)?.length ?? 0 }) : copy('score —'),
         kind: 'role',
         hot: (s?.score ?? 0) >= HOT,
         tag: true,
-        onClick: () => setSelectedId(r.id),
+        onClick: () => selectAndReveal(r.id),
       })
     })
     const teams = (chunk?.teams ?? []).filter((t) => t.parent === level.dept)
@@ -627,7 +640,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
         label: tm.label.replace(`${dept?.label ?? ''} · `, ''),
         rect: inset(t, 5),
         fill: tm.id === level.team ? 'rgba(236, 244, 255, 1)' : 'rgba(255, 255, 255, 0.96)',
-        meta: `${chunk?.teamPeople.get(tm.id)?.length ?? 0} ppl · ${chunk?.teamDevices.get(tm.id)?.length ?? 0} dev`,
+        meta: copy('{people} people · {devices} devices', { people: chunk?.teamPeople.get(tm.id)?.length ?? 0, devices: chunk?.teamDevices.get(tm.id)?.length ?? 0 }),
         kind: 'team',
         tag: true,
         canvas: { team: tm.id },
@@ -635,7 +648,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
       })
     }
     return { frames, tiles, links, width, height }
-  }, [manifest, doc, analysis, lens, level, companies, chunks, index, roleScore, labelOf, goTo, zoneScore, weights, sat])
+  }, [manifest, doc, analysis, lens, level, companies, chunks, index, roleScore, labelOf, goTo, zoneScore, weights, sat, selectAndReveal, copy])
 
   // ---- Fit to the safe area (same rule as the Make grid) -------------------------------
   const viewKey = `${level.company}|${level.dept}|${level.team}|${lens}|${floor.width}`
@@ -792,21 +805,28 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
         </div>
         <div className="make-top-actions">
           <span className="make-chip">synthetic-demo</span>
-          <span className="make-chip warn">generated</span>
-          <span className="make-chip">no-runners</span>
-          <span className="make-chip warn">viz only</span>
+          <span className="make-chip warn">{t('generated')}</span>
+          <span className="make-chip">{t('no-runners')}</span>
+          <span className="make-chip warn">{t('viz only')}</span>
           <ThemeSwitcher />
           <GitHubLink className="make-github-link" />
+          <button
+            type="button"
+            className="make-detail-toggle"
+            aria-controls="scale-lens-detail"
+            aria-expanded={mobileDetailOpen}
+            onClick={() => setMobileDetailOpen((open) => !open)}
+          >{t('Details')}</button>
         </div>
       </header>
 
       <div className="make-stage" ref={stageRef} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={() => { drag.current = null }} onWheel={onWheel}>
-        {!ready && !error && <div className="make-loading">Loading synthetic enterprise pack…</div>}
+        {!ready && !error && <div className="make-loading">{t('Loading synthetic enterprise pack…')}</div>}
         {busy && <div className="make-loading scale-busy">{busy}</div>}
         {error && <div className="make-error" role="alert">{error}</div>}
-        {over && <div className="make-drop-hint">Drop a .mith file</div>}
+        {over && <div className="make-drop-hint">{t('Drop a .mith file')}</div>}
 
-        <nav className="scale-crumbs" aria-label="Drill path">
+        <nav className="scale-crumbs" aria-label={t('Drill path')}>
           {crumbs.map((c, i) => (
             <button key={c.id} type="button" className={i === crumbs.length - 1 ? 'active' : ''} onClick={c.go} disabled={i === crumbs.length - 1}>
               {c.label}
@@ -840,7 +860,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
                 lens={lens}
                 roleScore={roleScore}
                 weights={weights}
-                onPick={setSelectedId}
+                onPick={selectAndReveal}
               />
             ))}
           </div>
@@ -852,7 +872,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
             if (!a) return null
             return (
               <span key={f.id} className={`lens-frame-tag kind-${f.kind} ${f.dashed ? 'is-dashed' : ''}`} data-frame-tag={f.id} style={{ left: a.x, top: a.y }}>
-                <em>{f.kind === 'subsidiary' && !f.root ? 'sector' : f.kind === 'company' ? 'group' : f.kind === 'shadow' ? 'shadow IT' : f.kind === 'team' ? 'roles' : f.kind}</em>
+                <em>{t(f.kind === 'subsidiary' && !f.root ? 'sector' : f.kind === 'company' ? 'group' : f.kind === 'shadow' ? 'shadow IT' : f.kind === 'team' ? 'roles' : f.kind)}</em>
                 {f.label}
               </span>
             )
@@ -868,44 +888,44 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
           })}
         </div>
 
-        <aside className="make-rail make-rail-left" aria-label="Search">
+        <aside className="make-rail make-rail-left" aria-label={t('Search')}>
           <label className="make-rail-search">
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search companies, depts, roles, systems" aria-label="Search the enterprise" />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('Search companies, depts, roles, systems')} aria-label={t('Search the enterprise')} />
           </label>
           <div className="make-list scale-results" role="list">
-            {q && results.length === 0 && <p className="lens-blurb">No match.</p>}
+            {q && results.length === 0 && <p className="lens-blurb">{t('No match.')}</p>}
             {results.map((r) => (
               <button key={`${r.kind}:${r.id}`} type="button" className="make-row" onClick={r.go}>
                 <span className="make-row-copy">
                   <strong>{r.label}</strong>
-                  <span>{r.kind}</span>
+                  <span>{t(r.kind)}</span>
                 </span>
               </button>
             ))}
             {!q && manifest && (
-              <dl className="lens-stats scale-counts" aria-label="Dataset counts">
-                <div><dt>Subsidiaries</dt><dd>{fmt(manifest.counts.subsidiaries)}</dd></div>
-                <div><dt>Departments</dt><dd>{fmt(manifest.counts.departments)}</dd></div>
-                <div><dt>Teams</dt><dd>{fmt(manifest.counts.teams)}</dd></div>
-                <div><dt>Employees</dt><dd>{fmt(manifest.counts.employees)}</dd></div>
-                <div><dt>Devices</dt><dd>{fmt(manifest.counts.devices)}</dd></div>
-                <div><dt>Systems / SaaS</dt><dd>{fmt(manifest.counts.systems)}</dd></div>
-                <div><dt>Unsanctioned</dt><dd>{fmt(manifest.counts.unsanctioned)}</dd></div>
-                <div><dt>Zones</dt><dd>{fmt(manifest.counts.zones)}</dd></div>
-                <div><dt>Roles</dt><dd>{fmt(manifest.counts.roles)}</dd></div>
-                <div><dt>Grants</dt><dd>{fmt(manifest.counts.grants)}</dd></div>
-                <div><dt>Channels</dt><dd>{fmt(manifest.counts.channels)}</dd></div>
-                <div><dt>Ext. actors</dt><dd>{fmt(manifest.counts.actors)}</dd></div>
+              <dl className="lens-stats scale-counts" aria-label={t('Dataset counts')}>
+                <div><dt>{t('Subsidiaries')}</dt><dd>{fmt(manifest.counts.subsidiaries)}</dd></div>
+                <div><dt>{t('Departments')}</dt><dd>{fmt(manifest.counts.departments)}</dd></div>
+                <div><dt>{t('Teams')}</dt><dd>{fmt(manifest.counts.teams)}</dd></div>
+                <div><dt>{t('Employees')}</dt><dd>{fmt(manifest.counts.employees)}</dd></div>
+                <div><dt>{t('Devices')}</dt><dd>{fmt(manifest.counts.devices)}</dd></div>
+                <div><dt>{t('Systems / SaaS')}</dt><dd>{fmt(manifest.counts.systems)}</dd></div>
+                <div><dt>{t('Unsanctioned')}</dt><dd>{fmt(manifest.counts.unsanctioned)}</dd></div>
+                <div><dt>{t('Zones')}</dt><dd>{fmt(manifest.counts.zones)}</dd></div>
+                <div><dt>{t('Roles')}</dt><dd>{fmt(manifest.counts.roles)}</dd></div>
+                <div><dt>{t('Grants')}</dt><dd>{fmt(manifest.counts.grants)}</dd></div>
+                <div><dt>{t('Channels')}</dt><dd>{fmt(manifest.counts.channels)}</dd></div>
+                <div><dt>{t('Ext. actors')}</dt><dd>{fmt(manifest.counts.actors)}</dd></div>
               </dl>
             )}
             {!q && manifest && (
               <p className="lens-blurb">
-                Seeded synthetic generator {manifest.generator.name} v{manifest.generator.version} (seed {manifest.generator.seed}). No real people, companies, or systems.
+                {t('Seeded synthetic generator {name} v{version} (seed {seed}). No real people, companies, or systems.', { name: manifest.generator.name, version: manifest.generator.version, seed: manifest.generator.seed })}
               </p>
             )}
           </div>
           <div className="make-rail-foot">
-            <select className="make-sample-select" aria-label="Sample document" value={sampleId} onChange={(e) => onPickSample(e.target.value)}>
+            <select className="make-sample-select" aria-label={t('Sample document')} value={sampleId} onChange={(e) => onPickSample(e.target.value)}>
               {SAMPLE_DOCS.map((d) => (
                 <option key={d.id} value={d.id}>{d.file}</option>
               ))}
@@ -914,13 +934,18 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
               onFiles={onImportFiles}
               onExport={onExport}
               exportDisabled={!doc}
-              exportTitle="Download the index as one .mith file. Company chunks stay in the pack."
+              exportTitle={t('Download the index as one .mith file. Company chunks stay in the pack.')}
             />
             {exportNote && <p className="make-file-note" role="status">{exportNote}</p>}
           </div>
         </aside>
 
-        <aside className="make-rail make-rail-right" aria-label="Lens detail">
+        <aside
+          id="scale-lens-detail"
+          className={`make-rail make-rail-right${mobileDetailOpen ? ' is-mobile-open' : ''}`}
+          aria-label={t('Lens detail')}
+        >
+          <button type="button" className="make-mobile-detail-close" aria-label={t('Close details')} onClick={() => setMobileDetailOpen(false)}>×</button>
           <ScalePanel
             lens={lens}
             levelName={levelName}
@@ -942,7 +967,7 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
             path={path}
             sat={sat}
             weights={weights}
-            onPick={setSelectedId}
+            onPick={selectAndReveal}
             onDrill={(id) => {
               if (!id) return
               const company = index.companyOf(id)
@@ -952,21 +977,21 @@ export default function ScaleGrid({ seed, sampleId, onPickSample, onImportFiles 
         </aside>
 
         <div className="make-bottom">
-          <div className="lens-switch" role="group" aria-label="Lens">
+          <div className="lens-switch" role="group" aria-label={t('Lens')}>
             {SCALE_LENSES.map((l) => (
               <button key={l.id} type="button" className={lens === l.id ? 'active' : ''} aria-pressed={lens === l.id} onClick={() => pickLens(l.id)}>
-                {l.label}
+                {t(l.label)}
               </button>
             ))}
           </div>
-          <span className="scale-level-chip" data-level={levelName}>{levelName} · {tileCount} tiles</span>
+          <span className="scale-level-chip" data-level={levelName}>{t('{level} · {count} tiles', { level: t(levelName), count: tileCount })}</span>
         </div>
 
         <div className="make-zoom">
-          <button type="button" onClick={() => { userMoved.current = false; fitPasses.current = 0; setZoom((z) => z * 0.999) }}>Fit</button>
-          <button type="button" aria-label="Zoom out" onClick={() => { userMoved.current = true; setZoom((z) => Math.max(0.25, z / 1.15)) }}>−</button>
+          <button type="button" onClick={() => { userMoved.current = false; fitPasses.current = 0; setZoom((z) => z * 0.999) }}>{t('Fit')}</button>
+          <button type="button" aria-label={t('Zoom out')} onClick={() => { userMoved.current = true; setZoom((z) => Math.max(0.25, z / 1.15)) }}>−</button>
           <span>{Math.round(zoom * 100)}%</span>
-          <button type="button" aria-label="Zoom in" onClick={() => { userMoved.current = true; setZoom((z) => Math.min(3, z * 1.15)) }}>+</button>
+          <button type="button" aria-label={t('Zoom in')} onClick={() => { userMoved.current = true; setZoom((z) => Math.min(3, z * 1.15)) }}>+</button>
         </div>
       </div>
     </div>
@@ -1173,6 +1198,7 @@ function ScalePanel(props: {
   onDrill: (id: string | null) => void
 }) {
   const { lens, manifest, analysis, scopedReport, scopeCompany, level, chunks, index, roleScore, selectedId, onSelect, labelOf, roleLabel, perf } = props
+  const t = useScaleCopy()
   const chunk = level.company ? chunks.get(level.company) ?? null : null
   const personDevices = useMemo(() => (chunk ? devicesByPerson(chunk) : new Map<string, never[]>()), [chunk])
   const roleWhere = (id: string) => {
@@ -1197,24 +1223,24 @@ function ScalePanel(props: {
   return (
     <div className="lens-panel scale-panel" data-lens-panel={lens}>
       <div className="lens-panel-head">
-        <strong>{SCALE_LENSES.find((l) => l.id === lens)?.label ?? lens} lens</strong>
-        <span className="lens-badge">display-only · synthetic</span>
+        <strong>{t('{lens} lens', { lens: t(SCALE_LENSES.find((l) => l.id === lens)?.label ?? lens) })}</strong>
+        <span className="lens-badge">{t('display-only · synthetic')}</span>
       </div>
-      <p className="lens-blurb">{LENS_BLURB[lens]}</p>
-      {!analysis && <p className="lens-blurb" data-analysis-pending>Exposure analysis running in a Web Worker…</p>}
+      <p className="lens-blurb">{t(LENS_BLURB[lens])}</p>
+      {!analysis && <p className="lens-blurb" data-analysis-pending>{t('Exposure analysis running in a Web Worker…')}</p>}
 
       {selectedId && (
-        <div className="lens-detail" aria-label="Selection">
+        <div className="lens-detail" aria-label={t('Selection')}>
           <div className="lens-detail-head">
             <h2>{selectedRole ? selectedRole.label : selectedDevice ? selectedDevice.label : selectedPerson ? selectedPerson.label : labelOf(selectedId)}</h2>
-            <button type="button" className="make-icon-btn" aria-label="Clear selection" onClick={() => onSelect(null)}>×</button>
+            <button type="button" className="make-icon-btn" aria-label={t('Clear selection')} onClick={() => onSelect(null)}>×</button>
           </div>
           {selectedRole && analysis && (
             <>
               <dl className="lens-kv">
-                <div><dt>where</dt><dd>{roleLabel(selectedRole.id)}</dd></div>
-                <div><dt>holders</dt><dd>{chunk?.holders.get(selectedRole.id)?.length ?? '—'} (synthetic people)</dd></div>
-                <div><dt>unverified paths</dt><dd>{roleScore.get(selectedRole.id)?.unverifiedPaths ?? 0} of {roleScore.get(selectedRole.id)?.paths ?? 0} (≤4 hops) · min hops {roleScore.get(selectedRole.id)?.minHops ?? '—'}</dd></div>
+                <div><dt>{t('where')}</dt><dd>{roleLabel(selectedRole.id)}</dd></div>
+                <div><dt>{t('holders')}</dt><dd>{t('{count} synthetic people', { count: chunk?.holders.get(selectedRole.id)?.length ?? '—' })}</dd></div>
+                <div><dt>{t('unverified paths')}</dt><dd>{t('{unverified} of {paths} (≤4 hops) · min hops {minimum}', { unverified: roleScore.get(selectedRole.id)?.unverifiedPaths ?? 0, paths: roleScore.get(selectedRole.id)?.paths ?? 0, minimum: roleScore.get(selectedRole.id)?.minHops ?? '—' })}</dd></div>
               </dl>
               <MixedPath path={props.path} index={index} labelOf={labelOf} />
             </>
@@ -1223,28 +1249,28 @@ function ScalePanel(props: {
           {selectedPerson && <PersonDevices person={selectedPerson} devices={personDevices.get(selectedPerson.id) ?? []} weights={props.weights} onPick={pick} />}
           {selectedEntity && !shadowApp && !selectedDevice && !selectedPerson && (
             <dl className="lens-kv">
-              <div><dt>type</dt><dd>{selectedEntity.type}</dd></div>
-              <div><dt>criticality</dt><dd>{selectedEntity.criticality ?? 'not declared (level fallback)'}</dd></div>
-              <div><dt>zone</dt><dd>{selectedEntity.zone ? labelOf(selectedEntity.zone) : '—'}</dd></div>
+              <div><dt>{t('type')}</dt><dd>{selectedEntity.type}</dd></div>
+              <div><dt>{t('criticality')}</dt><dd>{selectedEntity.criticality ? t(selectedEntity.criticality) : t('not declared (level fallback)')}</dd></div>
+              <div><dt>{t('zone')}</dt><dd>{selectedEntity.zone ? labelOf(selectedEntity.zone) : '—'}</dd></div>
               {analysis && (
-                <div><dt>exposure</dt><dd>{(() => { const r = analysis.report.resources.find((x) => x.resource === selectedEntity.id); return r ? `score ${r.score} via ${r.viaRole ? roleLabel(r.viaRole) : r.viaNetwork ? 'network / shadow SaaS' : '—'}${r.viaNetwork ? ' · network-reachable' : ''}` : 'no grants' })()}</dd></div>
+                <div><dt>{t('exposure')}</dt><dd>{(() => { const r = analysis.report.resources.find((x) => x.resource === selectedEntity.id); return r ? t('score {score} via {route}{reach}', { score: r.score, route: r.viaRole ? roleLabel(r.viaRole) : r.viaNetwork ? t('network / shadow SaaS') : '—', reach: r.viaNetwork ? t(' · network-reachable') : '' }) : t('no grants') })()}</dd></div>
               )}
               {selectedEntity.layer === 'network' && (() => {
                 const z = analysis?.report.zones.find((x) => x.zone === selectedEntity.id)
-                return z ? <div><dt>reach</dt><dd>{z.reachableZones} zones reachable · crown jewel {z.crownJewelCost != null ? `at cost ${z.crownJewelCost} (${labelOf(z.crownJewel!)})` : 'not reachable'}{z.openToCrownJewel ? ' · OPEN path' : ''}</dd></div> : null
+                return z ? <div><dt>{t('reach')}</dt><dd>{t('{count} zones reachable · crown jewel {target}{open}', { count: z.reachableZones, target: z.crownJewelCost != null ? t('at cost {cost} ({name})', { cost: z.crownJewelCost, name: labelOf(z.crownJewel!) }) : t('not reachable'), open: z.openToCrownJewel ? t(' · OPEN path') : '' })}</dd></div> : null
               })()}
             </dl>
           )}
           {selectedEntity?.layer === 'server' && !shadowApp && <MixedPath path={props.path} index={index} labelOf={labelOf} />}
           {shadowApp && (
             <dl className="lens-kv">
-              <div><dt>source</dt><dd>{shadowApp.source}</dd></div>
-              <div><dt>criticality</dt><dd>{shadowApp.criticality}</dd></div>
-              <div><dt>used by</dt><dd>{shadowApp.departments.length} departments in {shadowApp.companies.length} subsidiaries</dd></div>
-              <div><dt>first users</dt><dd>{shadowApp.departments.slice(0, 6).map((d) => `${labelOf(d)} (${d.split('.')[0]!.replace('b:', '').toUpperCase()})`).join(', ')}</dd></div>
+              <div><dt>{t('source')}</dt><dd>{shadowApp.source}</dd></div>
+              <div><dt>{t('criticality')}</dt><dd>{t(shadowApp.criticality)}</dd></div>
+              <div><dt>{t('used by')}</dt><dd>{t('{departments} departments in {subsidiaries} subsidiaries', { departments: shadowApp.departments.length, subsidiaries: shadowApp.companies.length })}</dd></div>
+              <div><dt>{t('first users')}</dt><dd>{shadowApp.departments.slice(0, 6).map((d) => `${labelOf(d)} (${d.split('.')[0]!.replace('b:', '').toUpperCase()})`).join(', ')}</dd></div>
               {(() => {
                 const x = analysis?.report.shadowEntries.find((e) => e.system === shadowApp.id)
-                return x ? <div><dt>entry path</dt><dd>syncs into {x.syncZones} zones · {x.reachableZones} reachable · crown jewel {x.crownJewelCost != null ? `at cost ${x.crownJewelCost} (${labelOf(x.crownJewel!)})` : 'not reachable'}</dd></div> : null
+                return x ? <div><dt>{t('entry path')}</dt><dd>{t('syncs into {zones} zones · {reachable} reachable · crown jewel {target}', { zones: x.syncZones, reachable: x.reachableZones, target: x.crownJewelCost != null ? t('at cost {cost} ({name})', { cost: x.crownJewelCost, name: labelOf(x.crownJewel!) }) : t('not reachable') })}</dd></div> : null
               })()}
             </dl>
           )}
@@ -1254,32 +1280,32 @@ function ScalePanel(props: {
       {lens === 'org' && (
         <>
           {level.dept && manifest?.departments[level.dept] && (
-            <Section title={`Department · ${labelOf(level.dept)}`}>
+            <Section title={t('Department · {name}', { name: labelOf(level.dept) })}>
               <dl className="lens-stats">
-                <div><dt>People</dt><dd>{fmt(manifest.departments[level.dept]![0])}</dd></div>
-                <div><dt>Devices</dt><dd>{fmt(manifest.departments[level.dept]![1])}</dd></div>
-                <div><dt>Teams</dt><dd>{manifest.departments[level.dept]![2]}</dd></div>
-                <div><dt>Roles ≥ {HOT}</dt><dd>{analysis?.deptHeat[level.dept] ? `${analysis.deptHeat[level.dept]!.hot} of ${analysis.deptHeat[level.dept]!.roles}` : '—'}</dd></div>
+                <div><dt>{t('People')}</dt><dd>{fmt(manifest.departments[level.dept]![0])}</dd></div>
+                <div><dt>{t('Devices')}</dt><dd>{fmt(manifest.departments[level.dept]![1])}</dd></div>
+                <div><dt>{t('Teams')}</dt><dd>{manifest.departments[level.dept]![2]}</dd></div>
+                <div><dt>{t('Roles ≥ {threshold}', { threshold: HOT })}</dt><dd>{analysis?.deptHeat[level.dept] ? t('{hot} of {roles}', { hot: analysis.deptHeat[level.dept]!.hot, roles: analysis.deptHeat[level.dept]!.roles }) : '—'}</dd></div>
               </dl>
             </Section>
           )}
           {scopeCompany && !level.dept && (
             <dl className="lens-stats">
-              <div><dt>People</dt><dd>{fmt(scopeCompany.people)}</dd></div>
-              <div><dt>Devices</dt><dd>{fmt(scopeCompany.devices)}</dd></div>
-              <div><dt>Departments</dt><dd>{scopeCompany.departments}</dd></div>
-              <div><dt>Teams</dt><dd>{scopeCompany.teams}</dd></div>
+              <div><dt>{t('People')}</dt><dd>{fmt(scopeCompany.people)}</dd></div>
+              <div><dt>{t('Devices')}</dt><dd>{fmt(scopeCompany.devices)}</dd></div>
+              <div><dt>{t('Departments')}</dt><dd>{scopeCompany.departments}</dd></div>
+              <div><dt>{t('Teams')}</dt><dd>{scopeCompany.teams}</dd></div>
             </dl>
           )}
           {!scopeCompany && analysis && (
-            <Section title={`Hottest subsidiaries (share of roles ≥ ${HOT})`}>
+            <Section title={t('Hottest subsidiaries (share of roles ≥ {threshold})', { threshold: HOT })}>
               <div className="lens-list">
                 {Object.entries(analysis.companyHeat)
                   .sort((a, b) => b[1].share - a[1].share || b[1].max - a[1].max)
                   .slice(0, 8)
                   .map(([id, h]) => (
                     <button key={id} type="button" className="lens-row" onClick={() => h.top && onSelect(h.top)}>
-                      <span><strong>{labelOf(id)}</strong><small>{Math.round(h.share * 100)}% · {h.hot} of {h.roles} roles ≥ {HOT} · max {h.max} · top {h.top ? labelOf(h.top) : '—'}</small></span>
+                      <span><strong>{labelOf(id)}</strong><small>{t('{share}% · {hot} of {roles} roles ≥ {threshold} · max {max} · top {top}', { share: Math.round(h.share * 100), hot: h.hot, roles: h.roles, threshold: HOT, max: h.max, top: h.top ? labelOf(h.top) : '—' })}</small></span>
                     </button>
                   ))}
               </div>
@@ -1301,16 +1327,16 @@ function ScalePanel(props: {
       {lens === 'impersonation' && scopedReport && (
         <>
           <p className="lens-metric">
-            <b className="lens-num-hot">{fmt(scopedReport.totals.unverifiedPaths)}</b> unverified of {fmt(scopedReport.totals.paths)} paths (≤{scopedReport.totals.maxHops} hops){scopedReport.totals.capped ? ' (capped)' : ''} · {fmt(scopedReport.totals.reachableRoles)} of {fmt(scopedReport.totals.roles)} roles reachable from outside
+            <b className="lens-num-hot">{fmt(scopedReport.totals.unverifiedPaths)}</b> {t('unverified of {paths} paths (≤{hops} hops){capped} · {reachable} of {roles} roles reachable from outside', { paths: fmt(scopedReport.totals.paths), hops: scopedReport.totals.maxHops, capped: scopedReport.totals.capped ? t(' (capped)') : '', reachable: fmt(scopedReport.totals.reachableRoles), roles: fmt(scopedReport.totals.roles) })}
           </p>
-          <Section title="Mixed org + network paths (role → device → zone → system)">
+          <Section title={t('Mixed org + network paths (role → device → zone → system)')}>
             <div className="lens-list" data-mixed-roles>
               {scopedReport.roles
                 .filter((r) => r.viaNetwork && r.score > 0)
                 .slice(0, 8)
                 .map((r) => (
                   <button key={r.role} type="button" className={`lens-row ${r.role === selectedId ? 'active' : ''}`} onClick={() => onSelect(r.role)}>
-                    <span><strong>{roleLabel(r.role)}</strong><small>score {r.score} · seize {r.minCost} + network {r.topCost} → {r.topResource ? labelOf(r.topResource) : '—'} (no grant)</small></span>
+                    <span><strong>{roleLabel(r.role)}</strong><small>{t('score {score} · seize {seize} + network {network} → {resource} (no grant)', { score: r.score, seize: r.minCost ?? '—', network: r.topCost ?? '—', resource: r.topResource ? labelOf(r.topResource) : '—' })}</small></span>
                   </button>
                 ))}
             </div>
@@ -1325,27 +1351,27 @@ function ScalePanel(props: {
       )}
 
       {lens === 'shadow' && (
-        <Section title={`Unsanctioned SaaS in scope (${scopedShadow.length})`}>
+        <Section title={t('Unsanctioned SaaS in scope ({count})', { count: scopedShadow.length })}>
           <div className="lens-list">
             {scopedShadow.slice(0, 40).map((a) => (
               <button key={a.id} type="button" className={`lens-row ${a.id === selectedId ? 'active' : ''}`} onClick={() => onSelect(a.id)}>
-                <span><strong>{a.label}</strong><small>{a.source} · {a.criticality} · {a.departments.length} depts · {a.companies.length} subsidiaries</small></span>
+                <span><strong>{a.label}</strong><small>{t('{source} · {criticality} · {departments} depts · {subsidiaries} subsidiaries', { source: a.source, criticality: t(a.criticality), departments: a.departments.length, subsidiaries: a.companies.length })}</small></span>
               </button>
             ))}
           </div>
         </Section>
       )}
 
-      <Section title="Measured in this browser">
+      <Section title={t('Measured in this browser')}>
         <ul className="scale-perf" data-scale-perf>
           {perf.map((p) => (
             <li key={p.name}><span>{p.name}</span><b>{p.ms.toFixed(1)} ms</b>{p.note && <small>{p.note}</small>}</li>
           ))}
-          <li><span>DOM tiles at this level</span><b>{props.tileCount}</b></li>
-          {props.analysisVia && <li><span>analysis ran in</span><b>{props.analysisVia}</b></li>}
+          <li><span>{t('DOM tiles at this level')}</span><b>{props.tileCount}</b></li>
+          {props.analysisVia && <li><span>{t('analysis ran in')}</span><b>{props.analysisVia}</b></li>}
         </ul>
       </Section>
-      <p className="lens-foot">Measures exposure in the synthetic model only. No runners, no scanning, no credential collection.</p>
+      <p className="lens-foot">{t('Measures exposure in the synthetic model only. No runners, no scanning, no credential collection.')}</p>
     </div>
   )
 }
@@ -1354,15 +1380,16 @@ const NET_EDGE_TYPES = new Set<number>([EDGE.pivot, EDGE.device, EDGE.reach, EDG
 
 /** Mixed org + network hop chain from the engine (actor → role → device → zone → … → system). */
 function MixedPath({ path, index, labelOf }: { path: PathResult | null; index: IndexLike; labelOf: (id: string) => string }) {
-  if (!path) return <p className="lens-blurb" data-path-pending>Computing mixed path…</p>
-  if (!path.hops.length) return <p className="lens-blurb">No path from an external actor in the model.</p>
+  const t = useScaleCopy()
+  if (!path) return <p className="lens-blurb" data-path-pending>{t('Computing mixed path…')}</p>
+  if (!path.hops.length) return <p className="lens-blurb">{t('No path from an external actor in the model.')}</p>
   const net = path.hops.filter((h) => NET_EDGE_TYPES.has(h.edge)).length
   return (
     <div className="scale-path" data-mixed-path={path.target ?? path.role ?? ''}>
       <p className="lens-metric">
-        cost <b>{path.cost ?? '—'}</b> · {path.hops.length} hops ({path.hops.length - net} org, {net} network){path.target ? ` → ${labelOf(path.target)}` : ''}
+        {t('cost')} <b>{path.cost ?? '—'}</b> · {t('{hops} hops ({org} org, {network} network)', { hops: path.hops.length, org: path.hops.length - net, network: net })}{path.target ? ` → ${labelOf(path.target)}` : ''}
       </p>
-      <ol className="scale-hops" aria-label="Mixed org and network path">
+      <ol className="scale-hops" aria-label={t('Mixed org and network path')}>
         {path.hops.map((h: MixedHop, i) => {
           const ch = h.edge === EDGE.channel ? index.channels.get(h.ref) : undefined
           const dim = NET_EDGE_TYPES.has(h.edge) ? 'net' : 'org'
@@ -1373,20 +1400,20 @@ function MixedPath({ path, index, labelOf }: { path: PathResult | null; index: I
                 {labelOf(h.from)} → {labelOf(h.to)}
               </span>
               <small>
-                {ch ? `${ch.kind} · ${h.red ? 'no verification' : ch.verification.join(' + ')}` : h.kind}
-                {h.edge === EDGE.reach ? ` · ${h.red ? 'open' : 'conditional'}` : ''} · cost {Number.isInteger(h.cost) ? h.cost : h.cost.toFixed(2)}
+                {ch ? `${t(ch.kind)} · ${h.red ? t('no verification') : ch.verification.map((v) => t(v)).join(' + ')}` : t(h.kind)}
+                {h.edge === EDGE.reach ? ` · ${h.red ? t('open') : t('conditional')}` : ''} · {t('cost')} {Number.isInteger(h.cost) ? h.cost : h.cost.toFixed(2)}
               </small>
-              {h.blind && <em className={`scale-hop-blind blind-${h.blind}`} data-hop-blind={h.blind}>{h.blind === 'blind' ? 'detection blind spot' : 'short log retention'}</em>}
+              {h.blind && <em className={`scale-hop-blind blind-${h.blind}`} data-hop-blind={h.blind}>{t(h.blind === 'blind' ? 'detection blind spot' : 'short log retention')}</em>}
               {h.notes?.map((n) => <small key={n} className="scale-hop-note">{n}</small>)}
             </li>
           )
         })}
       </ol>
       {path.blast && (
-        <dl className="lens-kv" aria-label="Weighted blast radius">
-          <div><dt>blast radius</dt><dd>{path.blast.count} resources within cost ≤ {path.blast.maxCost} · {path.blast.crownJewels} crown jewel · {path.blast.network} network-only</dd></div>
+        <dl className="lens-kv" aria-label={t('Weighted blast radius')}>
+          <div><dt>{t('blast radius')}</dt><dd>{t('{resources} resources within cost ≤ {cost} · {jewels} crown jewel · {network} network-only', { resources: path.blast.count, cost: path.blast.maxCost, jewels: path.blast.crownJewels, network: path.blast.network })}</dd></div>
           {path.blast.top.slice(0, 5).map((r) => (
-            <div key={r.resource}><dt>{r.level}</dt><dd>{labelOf(r.resource)} · cost {r.cost}</dd></div>
+            <div key={r.resource}><dt>{t(r.level)}</dt><dd>{labelOf(r.resource)} · {t('cost')} {r.cost}</dd></div>
           ))}
         </dl>
       )}
@@ -1396,6 +1423,7 @@ function MixedPath({ path, index, labelOf }: { path: PathResult | null; index: I
 
 /** Zone→zone reach edges on the floor. Red: open into a crown-jewel zone; dashed: conditional. */
 function ReachLinks({ links, width, height }: { links: LinkSpec[]; width: number; height: number }) {
+  const t = useScaleCopy()
   const center = (r: Rect) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 })
   const clip = (r: Rect, from: { x: number; y: number }, to: { x: number; y: number }) => {
     const dx = to.x - from.x
@@ -1404,7 +1432,7 @@ function ReachLinks({ links, width, height }: { links: LinkSpec[]; width: number
     return { x: from.x + dx * t, y: from.y + dy * t }
   }
   return (
-    <svg className="scale-reach" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-label="Zone reach" data-reach-links={links.length}>
+    <svg className="scale-reach" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-label={t('Zone reach')} data-reach-links={links.length}>
       <defs>
         {['red', 'open', 'conditional', 'blocked'].map((k) => (
           <marker key={k} id={`reach-arrow-${k}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -1427,7 +1455,7 @@ function ReachLinks({ links, width, height }: { links: LinkSpec[]; width: number
           <g key={l.id} className={`reach-link reach-${k}`} data-reach={l.kind} data-reach-red={l.red ? 'true' : undefined}>
             <line x1={p.x} y1={p.y} x2={q.x} y2={q.y} markerEnd={`url(#reach-arrow-${k})`} />
             {l.kind !== 'blocked' && (
-              <text x={(p.x + q.x) / 2 + nx} y={(p.y + q.y) / 2 + ny}>{l.kind === 'open' ? `open ${l.weight}` : `${l.weight}`}</text>
+              <text x={(p.x + q.x) / 2 + nx} y={(p.y + q.y) / 2 + ny}>{l.kind === 'open' ? t('open {weight}', { weight: l.weight }) : `${l.weight}`}</text>
             )}
           </g>
         )
@@ -1446,6 +1474,7 @@ function NetworkPanel(props: {
   selectedId: string | null
   onSelect: (id: string | null) => void
 }) {
+  const t = useScaleCopy()
   const { analysis, scopeCompany, index, labelOf, roleLabel, selectedId, onSelect } = props
   const key = scopeCompany?.id.replace('b:', '')
   const inScopeZone = (z: string | null) => !key || (!!z && z.startsWith(`net:${key}.`))
@@ -1458,65 +1487,77 @@ function NetworkPanel(props: {
   const shadow = analysis.report.shadowEntries.filter((x) => x.crownJewelCost != null)
   return (
     <>
-      <dl className="lens-stats" aria-label="Zone reach">
-        <div><dt>Zones</dt><dd>{fmt(zones.length)}</dd></div>
-        <div><dt>Reach open</dt><dd className="lens-num-hot">{fmt(counts.open)}</dd></div>
-        <div><dt>Conditional</dt><dd>{fmt(counts.conditional)}</dd></div>
-        <div><dt>Blocked</dt><dd>{fmt(counts.blocked)}</dd></div>
+      <dl className="lens-stats" aria-label={t('Zone reach')}>
+        <div><dt>{t('Zones')}</dt><dd>{fmt(zones.length)}</dd></div>
+        <div><dt>{t('Reach open')}</dt><dd className="lens-num-hot">{fmt(counts.open)}</dd></div>
+        <div><dt>{t('Conditional')}</dt><dd>{fmt(counts.conditional)}</dd></div>
+        <div><dt>{t('Blocked')}</dt><dd>{fmt(counts.blocked)}</dd></div>
       </dl>
-      <Section title={`Open paths into crown-jewel zones (${open.length})`}>
+      <Section title={t('Open paths into crown-jewel zones ({count})', { count: open.length })}>
         <div className="lens-list" data-open-cj>
           {open.slice(0, 10).map((z) => (
             <button key={z.zone} type="button" className={`lens-row ${z.zone === selectedId ? 'active' : ''}`} onClick={() => onSelect(z.zone)}>
-              <span><strong className="lens-num-hot">{labelOf(z.zone)}</strong><small>open reach only → {z.crownJewel ? labelOf(z.crownJewel) : 'crown-jewel zone'} · weighted cost {z.crownJewelCost ?? '—'}</small></span>
+              <span><strong className="lens-num-hot">{labelOf(z.zone)}</strong><small>{t('open reach only → {target} · weighted cost {cost}', { target: z.crownJewel ? labelOf(z.crownJewel) : t('crown-jewel zone'), cost: z.crownJewelCost ?? '—' })}</small></span>
             </button>
           ))}
-          {!open.length && <p className="lens-blurb">No open-only path into a crown-jewel zone in scope.</p>}
+          {!open.length && <p className="lens-blurb">{t('No open-only path into a crown-jewel zone in scope.')}</p>}
         </div>
       </Section>
-      <Section title={`Network-reachable without a grant (${fmt(netExp.length)})`}>
+      <Section title={t('Network-reachable without a grant ({count})', { count: fmt(netExp.length) })}>
         <div className="lens-list" data-net-no-grant>
           {netExp.slice(0, 8).map((x) => (
             <button key={x.resource} type="button" className={`lens-row ${x.resource === selectedId ? 'active' : ''}`} onClick={() => onSelect(x.resource)}>
-              <span><strong>{labelOf(x.resource)}</strong><small>{x.criticality} · cost {x.cost} · via {x.viaRole ? roleLabel(x.viaRole) : 'shadow SaaS entry'} · hosted in {x.hostZone ? labelOf(x.hostZone) : '—'}</small></span>
+              <span><strong>{labelOf(x.resource)}</strong><small>{t('{criticality} · cost {cost} · via {route} · hosted in {zone}', { criticality: t(x.criticality), cost: x.cost, route: x.viaRole ? roleLabel(x.viaRole) : t('shadow SaaS entry'), zone: x.hostZone ? labelOf(x.hostZone) : '—' })}</small></span>
             </button>
           ))}
         </div>
       </Section>
-      <Section title={`Shadow-IT SaaS entry paths to crown jewels (${shadow.length})`}>
+      <Section title={t('Shadow-IT SaaS entry paths to crown jewels ({count})', { count: shadow.length })}>
         <div className="lens-list" data-shadow-entry>
           {shadow.slice(0, 6).map((x) => (
             <button key={x.system} type="button" className={`lens-row ${x.system === selectedId ? 'active' : ''}`} onClick={() => onSelect(x.system)}>
-              <span><strong>{labelOf(x.system)}</strong><small>internet → SaaS → sync into {x.syncZones} zones → {x.crownJewel ? labelOf(x.crownJewel) : '—'} · cost {x.crownJewelCost}</small></span>
+              <span><strong>{labelOf(x.system)}</strong><small>{t('internet → SaaS → sync into {zones} zones → {target} · cost {cost}', { zones: x.syncZones, target: x.crownJewel ? labelOf(x.crownJewel) : '—', cost: x.crownJewelCost ?? '—' })}</small></span>
             </button>
           ))}
         </div>
       </Section>
-      <div className="scale-legend" aria-label="Zone legend">
-        <span style={{ background: zoneFill({ openToCrownJewel: true } as ZoneScore) }}>open → CJ</span>
-        <span style={{ background: zoneFill({ hostsCrownJewel: true } as ZoneScore) }}>hosts CJ</span>
-        <span style={{ background: zoneFill(undefined) }}>other</span>
-        <small>arrows: red open into CJ zone · solid open · dashed conditional · dotted blocked</small>
+      <div className="scale-legend" aria-label={t('Zone legend')}>
+        <span style={{ background: zoneFill({ openToCrownJewel: true } as ZoneScore) }}>{t('open → CJ')}</span>
+        <span style={{ background: zoneFill({ hostsCrownJewel: true } as ZoneScore) }}>{t('hosts CJ')}</span>
+        <span style={{ background: zoneFill(undefined) }}>{t('other')}</span>
+        <small>{t('arrows: red open into CJ zone · solid open · dashed conditional · dotted blocked')}</small>
       </div>
     </>
   )
 }
 
 function WeightsNote() {
+  const t = useScaleCopy()
   return (
     <p className="lens-blurb scale-weights">
-      Hop cost = 1 + {Object.entries(CONTROL_WEIGHTS).filter(([k]) => k !== 'none').map(([k, v]) => `${k} ${v}`).join(', ')}; network reach open {DEFAULT_REACH_WEIGHTS.open}, conditional {DEFAULT_REACH_WEIGHTS.conditional}, blocked impassable; jump host {DEFAULT_JUMP_HOST_COST}, device pivot / host 1; device pivot × (1 − ease), ease = min({DEFAULT_DEVICE_WEIGHTS.maxEase}, EOL {DEFAULT_DEVICE_WEIGHTS.eol} + unsanctioned {DEFAULT_DEVICE_WEIGHTS.unsanctioned} + worst vuln {Object.entries(DEFAULT_DEVICE_WEIGHTS.vulnerability).map(([k, v]) => `${k} ${v}`).join(' / ')}); log retention minimum {DEFAULT_MIN_RETENTION_DAYS} days (tunable defaults, per-document overrides in model.weights; not real-world success rates). Score = 100 × criticality × level ÷ 8 ÷ (cost to seize the role + network cost to the system).
+      {t('Hop cost = 1 + {controls}; network reach open {open}, conditional {conditional}, blocked impassable; jump host {jump}, device pivot / host 1; device pivot × (1 − ease), ease = min({maxEase}, EOL {eol} + unsanctioned {unsanctioned} + worst vuln {vulnerability}); log retention minimum {days} days (tunable defaults, per-document overrides in model.weights; not real-world success rates). Score = 100 × criticality × level ÷ 8 ÷ (cost to seize the role + network cost to the system).', {
+        controls: Object.entries(CONTROL_WEIGHTS).filter(([k]) => k !== 'none').map(([k, v]) => `${t(k)} ${v}`).join(', '),
+        open: DEFAULT_REACH_WEIGHTS.open,
+        conditional: DEFAULT_REACH_WEIGHTS.conditional,
+        jump: DEFAULT_JUMP_HOST_COST,
+        maxEase: DEFAULT_DEVICE_WEIGHTS.maxEase,
+        eol: DEFAULT_DEVICE_WEIGHTS.eol,
+        unsanctioned: DEFAULT_DEVICE_WEIGHTS.unsanctioned,
+        vulnerability: Object.entries(DEFAULT_DEVICE_WEIGHTS.vulnerability).map(([k, v]) => `${t(k)} ${v}`).join(' / '),
+        days: DEFAULT_MIN_RETENTION_DAYS,
+      })}
     </p>
   )
 }
 
 function HeatLegend({ sat, note }: { sat: number; note?: string }) {
+  const t = useScaleCopy()
   return (
-    <div className="scale-legend" aria-label="Heat legend">
+    <div className="scale-legend" aria-label={t('Heat legend')}>
       {[0, 0.2, 0.4, 0.6, 0.8, 1].map((k) => (
         <span key={k} style={{ background: shareColor(k * sat, sat) }}>{Math.round(k * sat * 100)}%{k === 1 ? '+' : ''}</span>
       ))}
-      <small>{note ?? `tile = share of roles with score ≥ ${HOT}`}</small>
+      <small>{note ?? t('tile = share of roles with score ≥ {threshold}', { threshold: HOT })}</small>
     </div>
   )
 }
@@ -1537,6 +1578,7 @@ function TeamList({
   selectedId: string | null
   onPick: (id: string) => void
 }) {
+  const t = useScaleCopy()
   const rows = useMemo(() => {
     const people = (chunk.teamPeople.get(team) ?? []).map((i) => chunk.people[i]!)
     const devices = (chunk.teamDevices.get(team) ?? []).map((i) => chunk.devices[i]!)
@@ -1555,7 +1597,7 @@ function TeamList({
   const first = Math.max(0, Math.floor(top / ROW) - 4)
   const last = Math.min(rows.length, first + Math.ceil(H / ROW) + 8)
   return (
-    <Section title={`Team members & devices (${rows.length})`}>
+    <Section title={t('Team members & devices ({count})', { count: rows.length })}>
       <div className="scale-vlist" style={{ height: H }} onScroll={(e) => setTop(e.currentTarget.scrollTop)} data-vlist-rows={rows.length}>
         <div style={{ height: rows.length * ROW, position: 'relative' }}>
           {rows.slice(first, last).map((e, i) => {
@@ -1575,12 +1617,12 @@ function TeamList({
                   <small>
                     {e.type}
                     {e.attrs.title ? ` · ${e.attrs.title}` : ''}
-                    {risk && <> · ease <b style={{ color: easeColor(risk.ease) }}>{risk.ease.toFixed(2)}</b></>}
-                    {cov && <> · logs <b style={{ color: coverageColor(cov) }}>{cov}</b></>}
+                    {risk && <> · {t('ease')} <b style={{ color: easeColor(risk.ease) }}>{risk.ease.toFixed(2)}</b></>}
+                    {cov && <> · {t('logs')} <b style={{ color: coverageColor(cov) }}>{t(cov)}</b></>}
                   </small>
                 </button>
                 {mine.length > 0 && (
-                  <span className="scale-vrow-links" aria-label={`Devices of ${e.label}`}>
+                  <span className="scale-vrow-links" aria-label={t('Devices of {name}', { name: e.label })}>
                     {mine.slice(0, 3).map(({ device, relation }) => (
                       <button key={device.id} type="button" className="scale-dev-chip" title={`${device.label} (${relation})`} onClick={() => onPick(device.id)} data-person-device-link={device.id}>
                         {device.type}
@@ -1612,6 +1654,7 @@ function DeviceLensPanel(props: {
   onPick: (id: string) => void
   onOpen: (id: string | null) => void
 }) {
+  const t = useScaleCopy()
   const { lens, analysis, level, chunk, labelOf } = props
   const agg = analysis?.devices
   const col = lens === 'software' ? 1 : 2
@@ -1632,25 +1675,25 @@ function DeviceLensPanel(props: {
     <>
       {here && (
         <dl className="lens-stats" data-device-lens={lens}>
-          <div><dt>Devices</dt><dd>{fmt(here[0])}</dd></div>
+          <div><dt>{t('Devices')}</dt><dd>{fmt(here[0])}</dd></div>
           {lens === 'software' ? (
-            <div><dt>High-ease</dt><dd>{fmt(here[1])} ({Math.round((here[1] / Math.max(1, here[0])) * 100)}%)</dd></div>
+            <div><dt>{t('High-ease')}</dt><dd>{fmt(here[1])} ({Math.round((here[1] / Math.max(1, here[0])) * 100)}%)</dd></div>
           ) : (
             <>
-              <div><dt>Log gaps</dt><dd>{fmt(here[2])} ({Math.round((here[2] / Math.max(1, here[0])) * 100)}%)</dd></div>
-              <div><dt>Unknown</dt><dd>{fmt(here[3])}</dd></div>
+              <div><dt>{t('Log gaps')}</dt><dd>{fmt(here[2])} ({Math.round((here[2] / Math.max(1, here[0])) * 100)}%)</dd></div>
+              <div><dt>{t('Unknown')}</dt><dd>{fmt(here[3])}</dd></div>
             </>
           )}
         </dl>
       )}
       {ranked.length > 0 && (
-        <Section title={lens === 'software' ? 'Highest share of high-ease devices' : 'Highest share of log-coverage gaps'}>
+        <Section title={t(lens === 'software' ? 'Highest share of high-ease devices' : 'Highest share of log-coverage gaps')}>
           <div className="lens-list">
             {ranked.map(([id, c]) => (
               <button key={id} type="button" className="lens-row" onClick={() => props.onOpen(id)}>
                 <span>
                   <strong>{labelOf(id)}</strong>
-                  <small>{Math.round((c[col]! / c[0]) * 100)}% · {fmt(c[col]!)} of {fmt(c[0])} devices</small>
+                  <small>{t('{share}% · {count} of {total} devices', { share: Math.round((c[col]! / c[0]) * 100), count: fmt(c[col]!), total: fmt(c[0]) })}</small>
                 </span>
               </button>
             ))}
@@ -1658,8 +1701,8 @@ function DeviceLensPanel(props: {
         </Section>
       )}
       {level.team && chunk && <TeamList team={level.team} chunk={chunk} lens={lens} weights={props.weights} selectedId={props.selectedId} onPick={props.onPick} />}
-      {level.dept && !level.team && <p className="lens-blurb">Pick a team to list its devices; click a device for software, logs, and people.</p>}
-      <HeatLegend sat={DEVICE_HEAT_SATURATION} note={lens === 'software' ? 'tile = share of devices with ease ≥ 0.25' : 'tile = share of devices with a log gap'} />
+      {level.dept && !level.team && <p className="lens-blurb">{t('Pick a team to list its devices; click a device for software, logs, and people.')}</p>}
+      <HeatLegend sat={DEVICE_HEAT_SATURATION} note={t(lens === 'software' ? 'tile = share of devices with ease ≥ 0.25' : 'tile = share of devices with a log gap')} />
     </>
   )
 }

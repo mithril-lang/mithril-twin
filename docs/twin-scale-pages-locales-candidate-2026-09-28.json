@@ -1,0 +1,606 @@
+{
+  "checkedAt": "2026-09-28T15:24:44.835Z",
+  "scope": "draft default ScaleGrid chrome and mobile detail only; not a full Twin locale receipt",
+  "viewport": "390x844",
+  "results": [
+    {
+      "locale": "en",
+      "status": 200,
+      "lang": "en",
+      "dir": "ltr",
+      "generated": "generated",
+      "details": "Details",
+      "counts": "Dataset counts",
+      "selectedLocale": "en",
+      "overflow": false,
+      "panel": {
+        "title": "Org lens",
+        "perf": [
+          "Hottest subsidiaries (share of roles ≥ 50)",
+          "Measured in this browser"
+        ],
+        "blurb": "Subsidiaries clustered by sector, sized by headcount, tinted by the share of roles inside with exposure score ≥ 50. Click to drill: company → department → team."
+      },
+      "expected": {
+        "generated": "generated",
+        "details": "Details",
+        "counts": "Dataset counts",
+        "panelTitle": "Org lens",
+        "perf": "Measured in this browser"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "zh-Hans",
+      "status": 200,
+      "lang": "zh-Hans",
+      "dir": "ltr",
+      "generated": "生成数据",
+      "details": "详情",
+      "counts": "数据统计",
+      "selectedLocale": "zh-Hans",
+      "overflow": false,
+      "panel": {
+        "title": "组织 视角",
+        "perf": [
+          "在此浏览器中测得"
+        ],
+        "blurb": "子公司按行业分组，节点大小表示员工人数，颜色深浅表示暴露评分≥50的角色占比。点击可逐层查看：公司→部门→团队。"
+      },
+      "expected": {
+        "generated": "生成数据",
+        "details": "详情",
+        "counts": "数据统计",
+        "panelTitle": "组织 视角",
+        "perf": "在此浏览器中测得"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "hi",
+      "status": 200,
+      "lang": "hi",
+      "dir": "ltr",
+      "generated": "जनरेटेड",
+      "details": "विवरण",
+      "counts": "डेटासेट संख्या",
+      "selectedLocale": "hi",
+      "overflow": false,
+      "panel": {
+        "title": "ऑर्ग लेंस",
+        "perf": [
+          "इस ब्राउज़र में मापा गया"
+        ],
+        "blurb": "सहायक कंपनियों को क्षेत्र के अनुसार समूहित किया गया है, आकार कर्मचारियों की संख्या पर आधारित है, और रंग एक्सपोज़र स्कोर ≥ 50 वाली भूमिकाओं के अनुपात को दर्शाता है। विवरण देखने के लिए क्लिक करें: कंपनी → विभाग → टीम।"
+      },
+      "expected": {
+        "generated": "जनरेटेड",
+        "details": "विवरण",
+        "counts": "डेटासेट संख्या",
+        "panelTitle": "ऑर्ग लेंस",
+        "perf": "इस ब्राउज़र में मापा गया"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "es",
+      "status": 200,
+      "lang": "es",
+      "dir": "ltr",
+      "generated": "generado",
+      "details": "Detalles",
+      "counts": "Recuentos del conjunto de datos",
+      "selectedLocale": "es",
+      "overflow": false,
+      "panel": {
+        "title": "Lente Org",
+        "perf": [
+          "Medido en este navegador"
+        ],
+        "blurb": "Subsidiarias agrupadas por sector, con tamaño según plantilla y color según la proporción de roles internos con puntuación de exposición ≥ 50. Haz clic para explorar en detalle: empresa → departamento → equipo."
+      },
+      "expected": {
+        "generated": "generado",
+        "details": "Detalles",
+        "counts": "Recuentos del conjunto de datos",
+        "panelTitle": "Lente Org",
+        "perf": "Medido en este navegador"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "ar",
+      "status": 200,
+      "lang": "ar",
+      "dir": "rtl",
+      "generated": "بيانات مولّدة",
+      "details": "التفاصيل",
+      "counts": "عدد عناصر البيانات",
+      "selectedLocale": "ar",
+      "overflow": false,
+      "panel": {
+        "title": "عدسة المؤسسة",
+        "perf": [
+          "مقاس في هذا المتصفح"
+        ],
+        "blurb": "الشركات التابعة مجمّعة بحسب القطاع، ويحدَّد حجمها بعدد الموظفين، ويلوَّن بحصة الأدوار الداخلية التي تبلغ درجة تعرّضها ≥ 50. انقر للتفاصيل: الشركة ← القسم ← الفريق."
+      },
+      "expected": {
+        "generated": "بيانات مولّدة",
+        "details": "التفاصيل",
+        "counts": "عدد عناصر البيانات",
+        "panelTitle": "عدسة المؤسسة",
+        "perf": "مقاس في هذا المتصفح"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "fr",
+      "status": 200,
+      "lang": "fr",
+      "dir": "ltr",
+      "generated": "généré",
+      "details": "Détails",
+      "counts": "Comptages du jeu de données",
+      "selectedLocale": "fr",
+      "overflow": false,
+      "panel": {
+        "title": "Lentille Org",
+        "perf": [
+          "Mesuré dans ce navigateur"
+        ],
+        "blurb": "Filiales regroupées par secteur, dimensionnées selon les effectifs, teintées selon la part des rôles internes ayant un score d'exposition ≥ 50. Cliquez pour explorer : entreprise → département → équipe."
+      },
+      "expected": {
+        "generated": "généré",
+        "details": "Détails",
+        "counts": "Comptages du jeu de données",
+        "panelTitle": "Lentille Org",
+        "perf": "Mesuré dans ce navigateur"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "bn",
+      "status": 200,
+      "lang": "bn",
+      "dir": "ltr",
+      "generated": "জেনারেটেড",
+      "details": "বিবরণ",
+      "counts": "ডেটাসেট সংখ্যা",
+      "selectedLocale": "bn",
+      "overflow": false,
+      "panel": {
+        "title": "প্রতিষ্ঠান লেন্স",
+        "perf": [
+          "সবচেয়ে সক্রিয় সহায়ক সংস্থা (স্কোর 50 বা তার বেশি ভূমিকার অংশ)",
+          "এই ব্রাউজারে পরিমাপ করা হয়েছে"
+        ],
+        "blurb": "সহায়ক প্রতিষ্ঠানগুলিকে সেক্টর অনুযায়ী গুচ্ছবদ্ধ করা হয়েছে, কর্মী সংখ্যা অনুযায়ী আকার নির্ধারিত, এবং এক্সপোজার স্কোর ≥ 50 থাকা ভূমিকাগুলির অংশ অনুযায়ী রঙ দেওয়া হয়েছে। বিস্তারিত দেখতে ক্লিক করুন: কোম্পানি → বিভাগ → টিম।"
+      },
+      "expected": {
+        "generated": "জেনারেটেড",
+        "details": "বিবরণ",
+        "counts": "ডেটাসেট সংখ্যা",
+        "panelTitle": "প্রতিষ্ঠান লেন্স",
+        "perf": "এই ব্রাউজারে পরিমাপ করা হয়েছে"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "pt",
+      "status": 200,
+      "lang": "pt",
+      "dir": "ltr",
+      "generated": "gerado",
+      "details": "Detalhes",
+      "counts": "Contagens do conjunto de dados",
+      "selectedLocale": "pt",
+      "overflow": false,
+      "panel": {
+        "title": "Lente Org",
+        "perf": [
+          "Medido neste navegador"
+        ],
+        "blurb": "Subsidiárias agrupadas por setor, dimensionadas pelo número de funcionários, coloridas pela proporção de funções internas com pontuação de exposição ≥ 50. Clique para detalhar: empresa → departamento → equipe."
+      },
+      "expected": {
+        "generated": "gerado",
+        "details": "Detalhes",
+        "counts": "Contagens do conjunto de dados",
+        "panelTitle": "Lente Org",
+        "perf": "Medido neste navegador"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "id",
+      "status": 200,
+      "lang": "id",
+      "dir": "ltr",
+      "generated": "dihasilkan",
+      "details": "Detail",
+      "counts": "Jumlah dataset",
+      "selectedLocale": "id",
+      "overflow": false,
+      "panel": {
+        "title": "Lensa Organisasi",
+        "perf": [
+          "Diukur di browser ini"
+        ],
+        "blurb": "Anak perusahaan dikelompokkan berdasarkan sektor, ukurannya berdasarkan jumlah karyawan, dan warnanya menunjukkan proporsi peran dengan skor exposure ≥ 50. Klik untuk menelusuri: perusahaan → departemen → tim."
+      },
+      "expected": {
+        "generated": "dihasilkan",
+        "details": "Detail",
+        "counts": "Jumlah dataset",
+        "panelTitle": "Lensa Organisasi",
+        "perf": "Diukur di browser ini"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "ur",
+      "status": 200,
+      "lang": "ur",
+      "dir": "rtl",
+      "generated": "تیار کردہ ڈیٹا",
+      "details": "تفصیلات",
+      "counts": "ڈیٹاسیٹ کی تعداد",
+      "selectedLocale": "ur",
+      "overflow": false,
+      "panel": {
+        "title": "ادارہ لینس",
+        "perf": [
+          "اس براؤزر میں ناپا گیا"
+        ],
+        "blurb": "ذیلی کمپنیوں کو شعبے کے لحاظ سے گروپ کیا گیا ہے، عملے کی تعداد سے سائز، اور 50 یا اس سے زیادہ ایکسپوژر اسکور والے کرداروں کے تناسب سے رنگ دیا گیا ہے۔ تفصیل دیکھنے کے لیے کلک کریں: کمپنی → شعبہ → ٹیم۔"
+      },
+      "expected": {
+        "generated": "تیار کردہ ڈیٹا",
+        "details": "تفصیلات",
+        "counts": "ڈیٹاسیٹ کی تعداد",
+        "panelTitle": "ادارہ لینس",
+        "perf": "اس براؤزر میں ناپا گیا"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "ru",
+      "status": 200,
+      "lang": "ru",
+      "dir": "ltr",
+      "generated": "сгенерировано",
+      "details": "Детали",
+      "counts": "Количество данных",
+      "selectedLocale": "ru",
+      "overflow": false,
+      "panel": {
+        "title": "Линза «Организация»",
+        "perf": [
+          "Измерено в этом браузере"
+        ],
+        "blurb": "Дочерние компании сгруппированы по отраслям, размер отражает численность персонала, цвет — долю ролей с показателем экспозиции ≥ 50. Нажмите, чтобы перейти глубже: компания → отдел → команда."
+      },
+      "expected": {
+        "generated": "сгенерировано",
+        "details": "Детали",
+        "counts": "Количество данных",
+        "panelTitle": "Линза «Организация»",
+        "perf": "Измерено в этом браузере"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "de",
+      "status": 200,
+      "lang": "de",
+      "dir": "ltr",
+      "generated": "generiert",
+      "details": "Details",
+      "counts": "Datensatzanzahl",
+      "selectedLocale": "de",
+      "overflow": false,
+      "panel": {
+        "title": "Org-Ansicht",
+        "perf": [
+          "In diesem Browser gemessen"
+        ],
+        "blurb": "Tochtergesellschaften nach Branche gruppiert, Größe nach Mitarbeiterzahl, Farbe nach Anteil der Rollen mit Expositionswert ≥ 50. Klicken zum Vertiefen: Unternehmen → Abteilung → Team."
+      },
+      "expected": {
+        "generated": "generiert",
+        "details": "Details",
+        "counts": "Datensatzanzahl",
+        "panelTitle": "Org-Ansicht",
+        "perf": "In diesem Browser gemessen"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "ja",
+      "status": 200,
+      "lang": "ja",
+      "dir": "ltr",
+      "generated": "生成データ",
+      "details": "詳細",
+      "counts": "データ件数",
+      "selectedLocale": "ja",
+      "overflow": false,
+      "panel": {
+        "title": "組織 レンズ",
+        "perf": [
+          "このブラウザでの測定値"
+        ],
+        "blurb": "子会社を業種別にまとめ、従業員数を大きさ、露出スコア50以上の役割の割合を色で示します。選択すると会社→部門→チームの順に詳しく見られます。"
+      },
+      "expected": {
+        "generated": "生成データ",
+        "details": "詳細",
+        "counts": "データ件数",
+        "panelTitle": "組織 レンズ",
+        "perf": "このブラウザでの測定値"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "ko",
+      "status": 200,
+      "lang": "ko",
+      "dir": "ltr",
+      "generated": "생성 데이터",
+      "details": "세부 정보",
+      "counts": "데이터 수",
+      "selectedLocale": "ko",
+      "overflow": false,
+      "panel": {
+        "title": "조직 렌즈",
+        "perf": [
+          "이 브라우저에서 측정됨"
+        ],
+        "blurb": "자회사를 업종별로 묶고, 인원수로 크기를 표시하며, 노출 점수 50 이상인 역할의 비율로 색을 표시합니다. 클릭하면 회사 → 부서 → 팀 순으로 자세히 볼 수 있습니다."
+      },
+      "expected": {
+        "generated": "생성 데이터",
+        "details": "세부 정보",
+        "counts": "데이터 수",
+        "panelTitle": "조직 렌즈",
+        "perf": "이 브라우저에서 측정됨"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "pcm",
+      "status": 200,
+      "lang": "pcm",
+      "dir": "ltr",
+      "generated": "data wey dem generate",
+      "details": "Full tori",
+      "counts": "How data plenty reach",
+      "selectedLocale": "pcm",
+      "overflow": false,
+      "panel": {
+        "title": "Org lens",
+        "perf": [
+          "Wetin dem measure for dis browser"
+        ],
+        "blurb": "Subsidiaries dem dey group by sector, di size show how many staff, and di colour show how many roles inside get exposure score wey reach 50 and above. Click am to see more: company → department → team."
+      },
+      "expected": {
+        "generated": "data wey dem generate",
+        "details": "Full tori",
+        "counts": "How data plenty reach",
+        "panelTitle": "Org lens",
+        "perf": "Wetin dem measure for dis browser"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "arz",
+      "status": 200,
+      "lang": "arz",
+      "dir": "rtl",
+      "generated": "بيانات متولّدة",
+      "details": "التفاصيل",
+      "counts": "أعداد البيانات",
+      "selectedLocale": "arz",
+      "overflow": false,
+      "panel": {
+        "title": "لينز الجهة",
+        "perf": [
+          "القياس اتعمل في المتصفح ده"
+        ],
+        "blurb": "الشركات التابعة مجمعة حسب القطاع، الحجم بيوضح عدد الموظفين، والتلوين بيوضح نسبة الأدوار اللي فيها score تعرّض ≥ 50. دوس علشان تتعمق: شركة → قسم → فريق."
+      },
+      "expected": {
+        "generated": "بيانات متولّدة",
+        "details": "التفاصيل",
+        "counts": "أعداد البيانات",
+        "panelTitle": "لينز الجهة",
+        "perf": "القياس اتعمل في المتصفح ده"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "mr",
+      "status": 200,
+      "lang": "mr",
+      "dir": "ltr",
+      "generated": "जनरेट केलेले",
+      "details": "तपशील",
+      "counts": "डेटासेट संख्या",
+      "selectedLocale": "mr",
+      "overflow": false,
+      "panel": {
+        "title": "संस्था लेन्स",
+        "perf": [
+          "या ब्राउझरमध्ये मोजलेले"
+        ],
+        "blurb": "उपकंपन्या क्षेत्रानुसार गटबद्ध केल्या आहेत, कर्मचारी संख्येनुसार आकार दिला आहे, आणि एक्सपोजर स्कोअर ≥ 50 असलेल्या भूमिकांच्या प्रमाणानुसार रंग दिला आहे. सखोल पाहण्यासाठी क्लिक करा: कंपनी → विभाग → टीम."
+      },
+      "expected": {
+        "generated": "जनरेट केलेले",
+        "details": "तपशील",
+        "counts": "डेटासेट संख्या",
+        "panelTitle": "संस्था लेन्स",
+        "perf": "या ब्राउझरमध्ये मोजलेले"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "jv",
+      "status": 200,
+      "lang": "jv",
+      "dir": "ltr",
+      "generated": "digenerasi",
+      "details": "Detail",
+      "counts": "Jumlah dataset",
+      "selectedLocale": "jv",
+      "overflow": false,
+      "panel": {
+        "title": "Lensa Org",
+        "perf": [
+          "Diukur ing browser iki"
+        ],
+        "blurb": "Anak perusahaan dikelompokake miturut sektor, ukurane adhedhasar jumlah karyawan, warnane nuduhake pérangan peran ing njero sing skor eksposure-né ≥ 50. Klik kanggo mlebu luwih jero: perusahaan → departemen → tim."
+      },
+      "expected": {
+        "generated": "digenerasi",
+        "details": "Detail",
+        "counts": "Jumlah dataset",
+        "panelTitle": "Lensa Org",
+        "perf": "Diukur ing browser iki"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "su",
+      "status": 200,
+      "lang": "su",
+      "dir": "ltr",
+      "generated": "data anu dijieun",
+      "details": "Rinci",
+      "counts": "Jumlah dataset",
+      "selectedLocale": "su",
+      "overflow": false,
+      "panel": {
+        "title": "lensa Org",
+        "perf": [
+          "Diukur dina browser ieu"
+        ],
+        "blurb": "Anak perusahaan dikelompokkeun dumasar sektor, ukuranana dumasar jumlah pagawe, warnana nunjukkeun bagian peran anu skor exposure-na ≥ 50. Klik pikeun ngabedah: perusahaan → departemen → tim."
+      },
+      "expected": {
+        "generated": "data anu dijieun",
+        "details": "Rinci",
+        "counts": "Jumlah dataset",
+        "panelTitle": "lensa Org",
+        "perf": "Diukur dina browser ieu"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "he",
+      "status": 200,
+      "lang": "he",
+      "dir": "rtl",
+      "generated": "נוצר",
+      "details": "פרטים",
+      "counts": "ספירת מערכי נתונים",
+      "selectedLocale": "he",
+      "overflow": false,
+      "panel": {
+        "title": "עדשת ארגון",
+        "perf": [
+          "נמדד בדפדפן זה"
+        ],
+        "blurb": "חברות-בת מקובצות לפי תחום, בגודל לפי מספר עובדים, בצביעה לפי אחוז התפקידים בפנים עם ציון חשיפה ≥ 50. יש ללחוץ כדי להעמיק: חברה → מחלקה → צוות."
+      },
+      "expected": {
+        "generated": "נוצר",
+        "details": "פרטים",
+        "counts": "ספירת מערכי נתונים",
+        "panelTitle": "עדשת ארגון",
+        "perf": "נמדד בדפדפן זה"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "it",
+      "status": 200,
+      "lang": "it",
+      "dir": "ltr",
+      "generated": "generato",
+      "details": "Dettagli",
+      "counts": "Conteggi dataset",
+      "selectedLocale": "it",
+      "overflow": false,
+      "panel": {
+        "title": "Lente Org",
+        "perf": [
+          "Filiali più esposte (quota di ruoli ≥ 50)",
+          "Misurato in questo browser"
+        ],
+        "blurb": "Filiali raggruppate per settore, dimensionate in base al numero di dipendenti, colorate in base alla quota di ruoli con punteggio di esposizione ≥ 50. Clicca per approfondire: azienda → dipartimento → team."
+      },
+      "expected": {
+        "generated": "generato",
+        "details": "Dettagli",
+        "counts": "Conteggi dataset",
+        "panelTitle": "Lente Org",
+        "perf": "Misurato in questo browser"
+      },
+      "opened": true,
+      "closed": true
+    },
+    {
+      "locale": "ar-MA",
+      "status": 200,
+      "lang": "ar-MA",
+      "dir": "rtl",
+      "generated": "مولّد",
+      "details": "التفاصيل",
+      "counts": "عدد المعطيات",
+      "selectedLocale": "ar-MA",
+      "overflow": false,
+      "panel": {
+        "title": "المؤسسة lens",
+        "perf": [
+          "قيسان فهاد المتصفح"
+        ],
+        "blurb": "الفرعيات مجموعين حسب القطاع، الحجم كيعكس عدد الموظفين، والصبغة كتبين نسبة الأدوار فيها اللي عندها exposure score ≥ 50. كليكي بغيتي تدخل أكثر: شركة → قسم → فريق."
+      },
+      "expected": {
+        "generated": "مولّد",
+        "details": "التفاصيل",
+        "counts": "عدد المعطيات",
+        "panelTitle": "المؤسسة lens",
+        "perf": "قيسان فهاد المتصفح"
+      },
+      "opened": true,
+      "closed": true
+    }
+  ],
+  "errors": [],
+  "failures": []
+}

@@ -7,6 +7,8 @@ import { edgeMatchesMode, nodeMatchesMode } from '../data/halo'
 import TokenNode from '../components/TokenNode'
 import { layoutRow } from '../components/layoutGrid'
 import { orthoPath } from '../components/ortho'
+import { useViewerLocale } from '../../locale'
+import { twinCopy } from '../twin-copy'
 
 const STACK: { layer: TwinLayer; label: string; sampleType: string; maxNodes: number }[] = [
   { layer: 'organization', label: 'Organization', sampleType: 'HoldingCompany', maxNodes: 6 },
@@ -41,6 +43,8 @@ function refKeys(n: GraphItem): string[] {
 }
 
 export default function StackedPlanes({ layers, selectMode, selectedId, onSelect, attackScenario = null }: Props) {
+  const locale = useViewerLocale()
+  const t = (english: string, values?: Record<string, string | number>) => twinCopy(locale, english, values)
   const { theme } = useTheme()
 
   const planes = useMemo(() => {
@@ -99,14 +103,14 @@ export default function StackedPlanes({ layers, selectMode, selectedId, onSelect
   return (
     <div className="layer-board">
       <p className="layer-board-hint">
-        Flat lanes, top to bottom. Dashed tethers mark a shared id. A readable subset is drawn; Drill-in has the full layer.
+        {t('Flat lanes, top to bottom. Dashed tethers mark a shared id. A readable subset is drawn; Drill-in has the full layer.')}
       </p>
       <div className="layer-viewport">
         <svg
           viewBox={`0 0 ${STAGE_W} ${stageH}`}
           className="layer-svg"
           role="img"
-          aria-label="Flat dependency lanes"
+          aria-label={t('Flat dependency lanes')}
           onClick={() => onSelect(null)}
         >
           <rect x={0} y={0} width={STAGE_W} height={stageH} fill="var(--bg-secondary, var(--tw-bg))" />
@@ -141,9 +145,9 @@ export default function StackedPlanes({ layers, selectMode, selectedId, onSelect
                 showLabel={false}
                 scale={0.9}
               />
-              <text x={28} y={plane.y0 + 84} className="lane-title">{plane.label}</text>
+              <text x={28} y={plane.y0 + 84} className="lane-title">{t(plane.label)}</text>
               <text x={28} y={plane.y0 + 102} className="lane-count">
-                {plane.nodes.length} of {plane.total}
+                {t('{shown} of {total}', { shown: plane.nodes.length, total: plane.total })}
               </text>
               {plane.edges.map((e) => {
                 const s = plane.pos.get(e.data.source)

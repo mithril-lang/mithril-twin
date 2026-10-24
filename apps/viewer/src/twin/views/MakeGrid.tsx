@@ -10,6 +10,8 @@ import { SAMPLE_DOCS } from '../mith/load'
 import { MithFileActions, useMithFileDrop } from '../components/MithFileActions'
 import ThemeSwitcher from '../components/ThemeSwitcher'
 import GitHubLink from '../components/GitHubLink'
+import { useViewerLocale } from '../../locale'
+import { twinCopy } from '../twin-copy'
 import { BoardTags, iconKind, Node3D, useBoardAnchors } from './node3d'
 import LensFloor, { LensFrameTags } from './LensFloor'
 import LensPanel from './LensPanel'
@@ -126,8 +128,11 @@ export default function MakeGrid({
   onImportFiles, focusPlaneId, selectedId, hypothesisId,
   onFocusPlane, onSelect, onHypothesis, onOpenLayer, onOpenBoard,
 }: Props) {
+  const locale = useViewerLocale()
+  const t = (english: string, values?: Record<string, string | number>) => twinCopy(locale, english, values)
   const stageRef = useRef<HTMLDivElement>(null)
   const [tab, setTab] = useState<RailTab>('objects')
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [zoom, setZoom] = useState(1)
   const [flat, setFlat] = useState(false)
@@ -142,6 +147,10 @@ export default function MakeGrid({
   const [lensPick, setLensPick] = useState<{ epoch: number; lens: Lens } | null>(null)
   const [framePick, setFramePick] = useState<{ epoch: number; frame: FrameDim } | null>(null)
   const [exportNote, setExportNote] = useState<{ epoch: number; text: string } | null>(null)
+  const selectAndReveal = (id: string | null) => {
+    onSelect(id)
+    setMobileDetailOpen(id !== null)
+  }
   const exportText = exportNote && exportNote.epoch === docEpoch ? exportNote.text : null
   const { over, handlers: dropHandlers } = useMithFileDrop((files) => onImportFiles?.(files))
 
@@ -165,7 +174,7 @@ export default function MakeGrid({
   // to org frames and can be re-framed by network zone.
   const analysisLens = lens === 'access' || lens === 'impersonation' || lens === 'shadow'
 
-  const planes = doc?.diagram.planes ?? []
+  const planes = useMemo(() => doc?.diagram.planes ?? [], [doc])
   const focusId = focusPlaneId && planes.some((p) => p.id === focusPlaneId)
     ? focusPlaneId
     : doc?.diagram.camera.focusPlane ?? planes[0]?.id ?? null
@@ -186,9 +195,14 @@ export default function MakeGrid({
         frame: frameDim,
       })
       saveMithFile(file)
-      setExportNote({ epoch: docEpoch, text: `Exported ${file.filename} · ${formatBytes(file.bytes)} · ${file.format === 'form' ? 'Mithril Form' : 'legacy v0 JSON'}.${file.note ? ` ${file.note}` : ''}` })
+      setExportNote({ epoch: docEpoch, text: t('Exported {filename} · {bytes} · {format}.{note}', {
+        filename: file.filename,
+        bytes: formatBytes(file.bytes),
+        format: file.format === 'form' ? 'Mithril Form' : 'legacy v0 JSON',
+        note: file.note ? ` ${file.note}` : '',
+      }) })
     } catch (err) {
-      setExportNote({ epoch: docEpoch, text: err instanceof Error ? err.message : 'Export failed.' })
+      setExportNote({ epoch: docEpoch, text: err instanceof Error ? err.message : t('Export failed.') })
     }
   }
   const shown = useMemo(
@@ -468,21 +482,30 @@ export default function MakeGrid({
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search objects"
-            aria-label="Search objects"
+            placeholder={t('Search objects')}
+            aria-label={t('Search objects')}
           />
         </label>
         <div className="make-top-actions">
-          <span className="make-chip make-dataset" title={datasetKind === 'synthetic-demo' ? 'Synthetic sample' : 'Label declared by the file'}>
+          <span className="make-chip make-dataset" title={datasetKind === 'synthetic-demo' ? t('Synthetic sample') : t('Label declared by the file')}>
             {datasetKind}
           </span>
-          <span className="make-chip warn">non-prod</span>
-          <span className="make-chip">no-runners</span>
-          <span className="make-chip warn">viz only</span>
+          <span className="make-chip warn">{t('non-prod')}</span>
+          <span className="make-chip">{t('no-runners')}</span>
+          <span className="make-chip warn">{t('viz only')}</span>
           <ThemeSwitcher />
           <GitHubLink className="make-github-link" />
           <button type="button" className="make-board-btn" onClick={onOpenBoard}>
-            Board
+            {t('Board')}
+          </button>
+          <button
+            type="button"
+            className="make-detail-toggle"
+            aria-controls="make-object-detail"
+            aria-expanded={mobileDetailOpen}
+            onClick={() => setMobileDetailOpen((open) => !open)}
+          >
+            {t('Details')}
           </button>
         </div>
       </header>
@@ -495,12 +518,12 @@ export default function MakeGrid({
         onPointerUp={() => { drag.current = null }}
         onWheel={onWheel}
       >
-        {loading && <div className="make-loading">Loading .mith…</div>}
+        {loading && <div className="make-loading">{t('Loading .mith…')}</div>}
         {error && <div className="make-error" role="alert">{error}</div>}
-        {over && <div className="make-drop-hint">Drop a .mith file</div>}
+        {over && <div className="make-drop-hint">{t('Drop a .mith file')}</div>}
         {hypothesis && (
           <div className="make-hyp-banner">
-            hypothesis · {hypothesis.label} · score {hypothesis.relative_score.toFixed(2)} · no runners
+            {t('hypothesis · {name} · score {score} · no runners', { name: hypothesis.label, score: hypothesis.relative_score.toFixed(2) })}
           </div>
         )}
 
@@ -524,7 +547,7 @@ export default function MakeGrid({
                 selectedId={selectedId}
                 hot={focus.hot}
                 query={query}
-                onSelect={onSelect}
+                onSelect={selectAndReveal}
                 glyph={(type) => <ModGlyph type={type} />}
               />
             )}
@@ -548,7 +571,7 @@ export default function MakeGrid({
                         : { left: board?.x ?? 0, top: board?.y ?? 0 }
                   }
                   role="group"
-                  aria-label={`${plane.label} layer`}
+                  aria-label={t('{label} layer', { label: plane.label })}
                 >
                   <svg className="make-plane-edges" viewBox="0 0 100 100" preserveAspectRatio="none">
                     {inPlane.map((edge) => {
@@ -586,7 +609,7 @@ export default function MakeGrid({
                           aria-label={entity.label}
                           onClick={(event) => {
                             event.stopPropagation()
-                            onSelect(placement.entity)
+                            selectAndReveal(placement.entity)
                             onFocusPlane(plane.id)
                           }}
                         >
@@ -635,25 +658,25 @@ export default function MakeGrid({
           <BoardTags planes={shown} anchors={boardAnchors} focusId={focusId} />
         )}
 
-        <aside className="make-rail make-rail-left" aria-label="Objects">
+        <aside className="make-rail make-rail-left" aria-label={t('Objects')}>
           <label className="make-rail-search">
             <SearchIcon />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search"
-              aria-label="Filter objects"
+              placeholder={t('Search')}
+              aria-label={t('Filter objects')}
             />
           </label>
           <div className="make-tabs" role="tablist">
             <button type="button" role="tab" aria-selected={tab === 'objects'} className={tab === 'objects' ? 'active' : ''} onClick={() => setTab('objects')}>
-              Objects<span className="make-tab-count">{objectRows.length}</span>
+              {t('Objects')}<span className="make-tab-count">{objectRows.length}</span>
             </button>
             <button type="button" role="tab" aria-selected={tab === 'attributes'} className={tab === 'attributes' ? 'active' : ''} onClick={() => setTab('attributes')}>
-              Attributes<span className="make-tab-count">{attrRows.length}</span>
+              {t('Attributes')}<span className="make-tab-count">{attrRows.length}</span>
             </button>
             <button type="button" role="tab" aria-selected={tab === 'filters'} className={tab === 'filters' ? 'active' : ''} onClick={() => setTab('filters')}>
-              Filters<span className="make-tab-count">{hypothesis ? 1 : 0}</span>
+              {t('Filters')}<span className="make-tab-count">{hypothesis ? 1 : 0}</span>
             </button>
           </div>
 
@@ -665,7 +688,7 @@ export default function MakeGrid({
                   type="button"
                   className={`make-row ${row.entity.id === selectedId ? 'active' : ''}`}
                   onClick={() => {
-                    onSelect(row.entity.id)
+                    selectAndReveal(row.entity.id)
                     onFocusPlane(row.plane.id)
                   }}
                 >
@@ -681,7 +704,7 @@ export default function MakeGrid({
 
           {tab === 'attributes' && (
             <dl className="make-kv">
-              {attrRows.length === 0 && <div><dt>Selection</dt><dd>Choose an object on a plane.</dd></div>}
+              {attrRows.length === 0 && <div><dt>{t('Selection')}</dt><dd>{t('Choose an object on a plane.')}</dd></div>}
               {attrRows.map(([key, value]) => (
                 <div key={key}><dt>{key}</dt><dd>{value}</dd></div>
               ))}
@@ -690,19 +713,19 @@ export default function MakeGrid({
 
           {tab === 'filters' && (
             <div className="make-filters">
-              <div className="make-filter-label">Dataset</div>
+              <div className="make-filter-label">{t('Dataset')}</div>
               <button type="button" className="make-filter-btn active" disabled>
                 {datasetKind}
                 <small>
                   {datasetKind === 'synthetic-demo'
-                    ? 'Synthetic sample. This twin stays fictional.'
-                    : 'Declared by the file. This viewer does not verify it and does not connect to any system.'}
+                    ? t('Synthetic sample. This twin stays fictional.')
+                    : t('Declared by the file. This viewer does not verify it and does not connect to any system.')}
                 </small>
               </button>
-              <div className="make-filter-label">Hypotheses</div>
+              <div className="make-filter-label">{t('Hypotheses')}</div>
               <button type="button" className={`make-filter-btn ${hypothesisId == null ? 'active' : ''}`} onClick={() => onHypothesis(null)}>
-                None
-                <small>Clear the overlay.</small>
+                {t('None')}
+                <small>{t('Clear the overlay.')}</small>
               </button>
               {(doc?.inference.hypotheses ?? []).map((h) => (
                 <button
@@ -712,7 +735,7 @@ export default function MakeGrid({
                   onClick={() => onHypothesis(h.id)}
                 >
                   {h.label}
-                  <small>hypothesis · relative {h.relative_score.toFixed(2)} · observation_count=0</small>
+                  <small>{t('hypothesis · relative {score} · observation_count=0', { score: h.relative_score.toFixed(2) })}</small>
                 </button>
               ))}
             </div>
@@ -722,7 +745,7 @@ export default function MakeGrid({
             {onPickSample ? (
               <select
                 className="make-sample-select"
-                aria-label="Sample document"
+                aria-label={t('Sample document')}
                 title={packageId ?? sourceName}
                 value={source === 'file' ? '' : (sampleId ?? '')}
                 onChange={(e) => {
@@ -741,28 +764,33 @@ export default function MakeGrid({
               onFiles={(files) => onImportFiles?.(files)}
               onExport={onExport}
               exportDisabled={!doc}
-              exportTitle="Download this document as .mith"
+              exportTitle={t('Download this document as .mith')}
             />
             {(fileNote || exportText) && <p className="make-file-note" role="status">{exportText ?? fileNote}</p>}
           </div>
         </aside>
 
-        <aside className="make-rail make-rail-right" aria-label="Object detail">
+        <aside
+          id="make-object-detail"
+          className={`make-rail make-rail-right${mobileDetailOpen ? ' is-mobile-open' : ''}`}
+          aria-label={t('Object detail')}
+        >
+          <button type="button" className="make-mobile-detail-close" aria-label={t('Close details')} onClick={() => setMobileDetailOpen(false)}>×</button>
           {lensOn && doc ? (
-            <LensPanel doc={doc} lens={lens} dim={frameDim} selectedId={selectedId} onSelect={onSelect} />
+            <LensPanel doc={doc} lens={lens} dim={frameDim} selectedId={selectedId} onSelect={selectAndReveal} />
           ) : selected ? (
             <>
               <div className="make-detail-head">
                 <div className={`make-detail-icon tone-${selectedTone}`}><ModGlyph type={selected.type} /></div>
-                <button type="button" className="make-icon-btn" aria-label="Close detail" onClick={() => onSelect(null)}>×</button>
+                <button type="button" className="make-icon-btn" aria-label={t('Close detail')} onClick={() => selectAndReveal(null)}>×</button>
               </div>
               <div className="make-detail">
                 <h2>{selected.label}</h2>
                 <p className="make-crumb">{selected.type} / {selectedBoard?.label ?? selected.layer}</p>
                 <p className="make-summary">
                   {selected.attrs.cidr ? `${selected.attrs.cidr}. ` : ''}
-                  {datasetKind === 'synthetic-demo' ? 'Synthetic-demo object' : 'Object'} on the {String(selected.layer)} layer.
-                  {hypothesis && hot.has(selected.id) ? ` Hypothesis “${hypothesis.label}” touches this object.` : ''}
+                  {t(datasetKind === 'synthetic-demo' ? 'Synthetic-demo object' : 'Object')} {t('on the {layer} layer.', { layer: t(String(selected.layer)) })}
+                  {hypothesis && hot.has(selected.id) ? ` ${t('Hypothesis “{name}” touches this object.', { name: hypothesis.label })}` : ''}
                 </p>
                 <div className="make-actions">
                   <button
@@ -770,22 +798,22 @@ export default function MakeGrid({
                     className="make-open"
                     onClick={() => onOpenLayer(selected.layer as TwinLayer)}
                   >
-                    Open
+                    {t('Open')}
                   </button>
                 </div>
                 {shared.has(selected.id) && (
                   <div className="make-shared">
                     <div>
-                      <strong>Shared object</strong>
-                      <span>This object is part of multiple layers.</span>
+                      <strong>{t('Shared object')}</strong>
+                      <span>{t('This object is part of multiple layers.')}</span>
                     </div>
                     {otherSharedPlane && (
-                      <button type="button" onClick={() => onFocusPlane(otherSharedPlane.id)}>Explore</button>
+                      <button type="button" onClick={() => onFocusPlane(otherSharedPlane.id)}>{t('Explore')}</button>
                     )}
                   </div>
                 )}
                 <div className="make-links">
-                  <h3>Links</h3>
+                  <h3>{t('Links')}</h3>
                   {linksFor(doc!, selected.id).map((link) => {
                     const other = entities.get(link.otherId)
                     return (
@@ -794,7 +822,7 @@ export default function MakeGrid({
                         type="button"
                         className="make-link"
                         onClick={() => {
-                          onSelect(link.otherId)
+                          selectAndReveal(link.otherId)
                           const host = planes.find((p) => p.placements.some((pl) => pl.entity === link.otherId))
                           if (host) onFocusPlane(host.id)
                         }}
@@ -806,14 +834,14 @@ export default function MakeGrid({
                     )
                   })}
                   {linksFor(doc!, selected.id).length === 0 && (
-                    <p className="make-summary">No links in this sample.</p>
+                    <p className="make-summary">{t('No links in this sample.')}</p>
                   )}
                 </div>
               </div>
             </>
           ) : (
             <div className="make-empty-detail">
-              Select an object on a plane. Detail, links, and the Open action stay on this side.
+              {t('Select an object on a plane. Detail, links, and the Open action stay on this side.')}
             </div>
           )}
         </aside>
@@ -821,7 +849,7 @@ export default function MakeGrid({
         <div className="make-bottom">
           {orgMode && (
             <>
-              <div className="lens-switch" role="group" aria-label="Lens">
+              <div className="lens-switch" role="group" aria-label={t('Lens')}>
                 {LENSES.map((l) => (
                   <button
                     key={l.id}
@@ -830,13 +858,13 @@ export default function MakeGrid({
                     aria-pressed={lens === l.id}
                     onClick={() => pickLens(l.id)}
                   >
-                    {l.label}
+                    {t(l.label)}
                   </button>
                 ))}
               </div>
               {analysisLens && (
-                <div className="lens-switch" role="group" aria-label="Frame the grid by">
-                  <span className="lens-switch-label">Frames</span>
+                <div className="lens-switch" role="group" aria-label={t('Frame the grid by')}>
+                  <span className="lens-switch-label">{t('Frames')}</span>
                   {(['org', 'network'] as const).map((d) => (
                     <button
                       key={d}
@@ -845,7 +873,7 @@ export default function MakeGrid({
                       aria-pressed={frameDim === d}
                       onClick={() => setFramePick({ epoch: docEpoch, frame: d })}
                     >
-                      {d === 'org' ? 'Org' : 'Network'}
+                      {t(d === 'org' ? 'Org' : 'Network')}
                     </button>
                   ))}
                 </div>
@@ -854,9 +882,9 @@ export default function MakeGrid({
           )}
           {!lensOn && (
           <label className="make-select">
-            Select Layer
+            {t('Select Layer')}
             <select
-              aria-label="Select Layer"
+              aria-label={t('Select Layer')}
               value={focusId ?? ''}
               onChange={(e) => onFocusPlane(e.target.value)}
             >
@@ -883,15 +911,15 @@ export default function MakeGrid({
             type="button"
             className={`make-zoom-text ${stackedView ? 'active' : ''}`}
             aria-pressed={stackedView}
-            aria-label="Stack layers"
+            aria-label={t('Stack layers')}
             disabled={lensOn}
-            title={lensOn ? 'Stack applies to the Layers lens' : 'Stack layers on separate planes'}
+            title={lensOn ? t('Stack applies to the Layers lens') : t('Stack layers on separate planes')}
             onClick={() => {
               setStacked((v) => !v)
               setPan({ x: 0, y: 8 })
             }}
           >
-            Stack
+            {t('Stack')}
           </button>
           <button
             type="button"
@@ -901,9 +929,9 @@ export default function MakeGrid({
           >
             2D
           </button>
-          <button type="button" aria-label="Zoom out" onClick={() => { userMoved.current = true; setZoom((z) => Math.max(0.55, Number((z - 0.1).toFixed(2)))) }}>−</button>
+          <button type="button" aria-label={t('Zoom out')} onClick={() => { userMoved.current = true; setZoom((z) => Math.max(0.55, Number((z - 0.1).toFixed(2)))) }}>−</button>
           <span>{Math.round(zoom * 100)}%</span>
-          <button type="button" aria-label="Zoom in" onClick={() => { userMoved.current = true; setZoom((z) => Math.min(1.45, Number((z + 0.1).toFixed(2)))) }}>+</button>
+          <button type="button" aria-label={t('Zoom in')} onClick={() => { userMoved.current = true; setZoom((z) => Math.min(1.45, Number((z + 0.1).toFixed(2)))) }}>+</button>
         </div>
       </div>
     </div>

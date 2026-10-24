@@ -1,0 +1,162 @@
+{
+  "checkedAt": "2026-09-28T13:22:25.936Z",
+  "preview": "http://127.0.0.1:5199/mithril-twin/",
+  "visits": [
+    {
+      "locale": "en",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "zh-Hans",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "hi",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "es",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "ar",
+      "dir": "rtl",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "fr",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "bn",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "pt",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "id",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "ur",
+      "dir": "rtl",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "ru",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "de",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "ja",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "ko",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "pcm",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "arz",
+      "dir": "rtl",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "mr",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "jv",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "su",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "he",
+      "dir": "rtl",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "it",
+      "dir": "ltr",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    },
+    {
+      "locale": "ar-MA",
+      "dir": "rtl",
+      "headerVisible": true,
+      "railVisible": true,
+      "overflow": false
+    }
+  ],
+  "queryCookiePass": true,
+  "pageErrors": []
+}

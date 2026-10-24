@@ -11,6 +11,8 @@ import {
 import { analyzeExposure, type ExposureReport } from '../mith/exposure'
 import { buildGraph, dijkstra, NODE, reconstruct, resolveWeights } from '../mith/graph'
 import type { MithDocument, MithEntity } from '../mith/types'
+import { useViewerLocale } from '../../locale'
+import { twinCopy } from '../twin-copy'
 import { DeviceDetail, PersonDevices } from './DeviceDetail'
 
 type Props = {
@@ -29,6 +31,10 @@ const LENS_BLURB: Record<Lens, string> = {
   shadow: 'Unsanctioned systems sit outside the org boundary in dashed frames, linked to who uses them.',
   layers: 'Layer boards from the diagram section.',
 }
+function useLensCopy() {
+  const locale = useViewerLocale()
+  return (english: string, values?: Record<string, string | number>) => twinCopy(locale, english, values)
+}
 
 function Row({ children, onClick, active }: { children: ReactNode; onClick?: () => void; active?: boolean }) {
   return (
@@ -40,6 +46,7 @@ function Row({ children, onClick, active }: { children: ReactNode; onClick?: () 
 
 /** Right-rail analysis for the active lens. Every number is computed from the synthetic document. */
 export default function LensPanel({ doc, lens, dim, selectedId, onSelect }: Props) {
+  const t = useLensCopy()
   const org = useMemo(() => orgModel(doc), [doc])
   const labelOf = useMemo(() => {
     const m = new Map<string, string>()
@@ -76,26 +83,26 @@ export default function LensPanel({ doc, lens, dim, selectedId, onSelect }: Prop
   return (
     <div className="lens-panel" data-lens-panel={lens}>
       <div className="lens-panel-head">
-        <strong>{lens === 'shadow' ? 'Shadow IT' : lens.charAt(0).toUpperCase() + lens.slice(1)} lens</strong>
-        <span className="lens-badge">display-only · synthetic</span>
+        <strong>{t('{lens} lens', { lens: t(lens === 'shadow' ? 'Shadow IT' : lens.charAt(0).toUpperCase() + lens.slice(1)) })}</strong>
+        <span className="lens-badge">{t('display-only · synthetic')}</span>
       </div>
-      <p className="lens-blurb">{LENS_BLURB[lens]}</p>
+      <p className="lens-blurb">{t(LENS_BLURB[lens])}</p>
 
       {(lens === 'org' || lens === 'network') && (
         <dl className="lens-stats">
-          <div><dt>Frames by</dt><dd>{dim === 'org' ? 'Org boundary' : 'Network zone'}</dd></div>
-          <div><dt>Boundaries</dt><dd>{org.boundaries.length}</dd></div>
-          <div><dt>Roles</dt><dd>{org.roles.length}</dd></div>
-          <div><dt>Unsanctioned</dt><dd>{shadow.length}</dd></div>
+          <div><dt>{t('Frames by')}</dt><dd>{t(dim === 'org' ? 'Org boundary' : 'Network zone')}</dd></div>
+          <div><dt>{t('Boundaries')}</dt><dd>{org.boundaries.length}</dd></div>
+          <div><dt>{t('Roles')}</dt><dd>{org.roles.length}</dd></div>
+          <div><dt>{t('Unsanctioned')}</dt><dd>{shadow.length}</dd></div>
         </dl>
       )}
 
       {lens === 'access' && (
         <>
           <RankedResources report={report} labelOf={labelOf} selectedId={selectedId} onSelect={onSelect} />
-          <h3 className="lens-h3">Blast radius per role (direct + unverified lateral)</h3>
-          <div className="lens-table" role="table" aria-label="Blast radius per role">
-            <div className="lens-th" role="row"><span>Role</span><span>reach</span><span>admin</span><span>approve</span></div>
+          <h3 className="lens-h3">{t('Blast radius per role (direct + unverified lateral)')}</h3>
+          <div className="lens-table" role="table" aria-label={t('Blast radius per role')}>
+            <div className="lens-th" role="row"><span>{t('Role')}</span><span>{t('reach')}</span><span>{t('admin')}</span><span>{t('approve')}</span></div>
             {radii.map((r) => (
               <Row key={r.role} active={r.role === selectedId} onClick={() => onSelect(r.role)}>
                 <span>{labelOf(r.role)}</span>
@@ -111,7 +118,7 @@ export default function LensPanel({ doc, lens, dim, selectedId, onSelect }: Prop
       {lens === 'impersonation' && (
         <>
           <p className="lens-metric">
-            <b className="lens-num-hot">{unverifiedTotal}</b> unverified of {paths.length} paths from outside actors (≤4 hops)
+            <b className="lens-num-hot">{unverifiedTotal}</b> {t('unverified of {count} paths from outside actors (≤4 hops)', { count: paths.length })}
           </p>
           <RankedRoles report={report} labelOf={labelOf} selectedId={selectedId} onSelect={onSelect} />
         </>
@@ -123,19 +130,19 @@ export default function LensPanel({ doc, lens, dim, selectedId, onSelect }: Prop
             <Row key={s.entity.id} active={s.entity.id === selectedId} onClick={() => onSelect(s.entity.id)}>
               <span>
                 <strong>{s.entity.label}</strong>
-                <small>source: {s.source} · used by {s.usedBy.map(labelOf).join(', ') || 'nobody linked'}</small>
+                <small>{t('source: {source} · used by {users}', { source: s.source, users: s.usedBy.map(labelOf).join(', ') || t('nobody linked') })}</small>
               </span>
             </Row>
           ))}
-          {shadow.length === 0 && <p className="lens-blurb">No unsanctioned systems in this document.</p>}
+          {shadow.length === 0 && <p className="lens-blurb">{t('No unsanctioned systems in this document.')}</p>}
         </div>
       )}
 
       {(entity || role || actor || boundary) && (
-        <div className="lens-detail" aria-label="Selection">
+        <div className="lens-detail" aria-label={t('Selection')}>
           <div className="lens-detail-head">
             <h2>{labelOf(selectedId!)}</h2>
-            <button type="button" className="make-icon-btn" aria-label="Clear selection" onClick={() => onSelect(null)}>×</button>
+            <button type="button" className="make-icon-btn" aria-label={t('Clear selection')} onClick={() => onSelect(null)}>×</button>
           </div>
           {entity && isDevice && <DeviceDetail device={entity} weights={weights} labelOf={labelOf} onPick={(id) => onSelect(id)} />}
           {entity && !isDevice && personDevices.has(entity.id) && (
@@ -143,38 +150,38 @@ export default function LensPanel({ doc, lens, dim, selectedId, onSelect }: Prop
           )}
           {entity && (
             <dl className="lens-kv">
-              <div><dt>type</dt><dd>{entity.type}</dd></div>
-              <div><dt>org boundary</dt><dd>{boundaryPath(org.boundaries, entity.boundary).map((b) => b.label).join(' › ') || '—'}</dd></div>
-              <div><dt>network zone</dt><dd>{entity.zone ? labelOf(entity.zone) : '—'}</dd></div>
-              {entity.sanctioned === false && <div><dt>shadow IT</dt><dd>unsanctioned · {entity.source ?? 'unknown'}</dd></div>}
+              <div><dt>{t('type')}</dt><dd>{entity.type}</dd></div>
+              <div><dt>{t('org boundary')}</dt><dd>{boundaryPath(org.boundaries, entity.boundary).map((b) => b.label).join(' › ') || '—'}</dd></div>
+              <div><dt>{t('network zone')}</dt><dd>{entity.zone ? labelOf(entity.zone) : '—'}</dd></div>
+              {entity.sanctioned === false && <div><dt>{t('shadow IT')}</dt><dd>{t('unsanctioned')} · {entity.source ?? t('unknown')}</dd></div>}
               {org.roles.some((r) => r.holders.includes(entity.id)) && (
-                <div><dt>roles</dt><dd>{org.roles.filter((r) => r.holders.includes(entity.id)).map((r) => r.label).join(', ')}</dd></div>
+                <div><dt>{t('roles')}</dt><dd>{org.roles.filter((r) => r.holders.includes(entity.id)).map((r) => r.label).join(', ')}</dd></div>
               )}
               {org.grants.some((g) => g.resource === entity.id) && (
-                <div><dt>granted to</dt><dd>{org.grants.filter((g) => g.resource === entity.id).map((g) => `${labelOf(g.role)} (${g.level})`).join(', ')}</dd></div>
+                <div><dt>{t('granted to')}</dt><dd>{org.grants.filter((g) => g.resource === entity.id).map((g) => `${labelOf(g.role)} (${t(g.level)})`).join(', ')}</dd></div>
               )}
             </dl>
           )}
           {boundary && (
             <dl className="lens-kv">
-              <div><dt>kind</dt><dd>{boundary.kind}</dd></div>
-              <div><dt>path</dt><dd>{boundaryPath(org.boundaries, boundary.id).map((b) => b.label).join(' › ')}</dd></div>
+              <div><dt>{t('kind')}</dt><dd>{t(boundary.kind)}</dd></div>
+              <div><dt>{t('path')}</dt><dd>{boundaryPath(org.boundaries, boundary.id).map((b) => b.label).join(' › ')}</dd></div>
             </dl>
           )}
-          {actor && <p className="lens-blurb">Synthetic outside party. Paths below are exposure measurements, not actions.</p>}
+          {actor && <p className="lens-blurb">{t('Synthetic outside party. Paths below are exposure measurements, not actions.')}</p>}
           {role && (
             <>
               <dl className="lens-kv">
-                <div><dt>boundary</dt><dd>{boundaryPath(org.boundaries, role.boundary).map((b) => b.label).join(' › ')}</dd></div>
-                <div><dt>holders</dt><dd>{role.holders.map(labelOf).join(', ') || '—'}</dd></div>
+                <div><dt>{t('boundary')}</dt><dd>{boundaryPath(org.boundaries, role.boundary).map((b) => b.label).join(' › ')}</dd></div>
+                <div><dt>{t('holders')}</dt><dd>{role.holders.map(labelOf).join(', ') || '—'}</dd></div>
               </dl>
-              <h3 className="lens-h3">Blast radius if impersonated</h3>
+              <h3 className="lens-h3">{t('Blast radius if impersonated')}</h3>
               <ul className="lens-reach">
                 {blastRadius(doc, role.id).resources.map((r) => (
                   <li key={r.resource} className={`level-${r.level}`}>
                     <span>{labelOf(r.resource)}</span>
-                    <em>{r.level}</em>
-                    {r.via.length > 1 && <small>via {r.via.slice(1).map(labelOf).join(' → ')} (unverified)</small>}
+                    <em>{t(r.level)}</em>
+                    {r.via.length > 1 && <small>{t('via {route} (unverified)', { route: r.via.slice(1).map(labelOf).join(' → ') })}</small>}
                   </li>
                 ))}
               </ul>
@@ -202,13 +209,13 @@ export default function LensPanel({ doc, lens, dim, selectedId, onSelect }: Prop
             if (!hops.length) return null
             return (
               <>
-                <h3 className="lens-h3">{viaDevice ? 'From the role to its top resource' : 'Devices an impersonator of this role lands on'}</h3>
+                <h3 className="lens-h3">{t(viaDevice ? 'From the role to its top resource' : 'Devices an impersonator of this role lands on')}</h3>
                 <ol className="device-hops" data-role-device-path={role.id}>
                   {hops.map((h, i) => (
                     <li key={`${h.ref}:${h.to}:${i}`}>
                       <span>{labelOf(h.from)} → {labelOf(h.to)}</span>
-                      <small>{h.kind} · cost {Number.isInteger(h.cost) ? h.cost : h.cost.toFixed(2)}</small>
-                      {h.blind && <em className={`scale-hop-blind blind-${h.blind}`} data-hop-blind={h.blind}>{h.blind === 'blind' ? 'detection blind spot' : 'short log retention'}</em>}
+                      <small>{t(h.kind)} · {t('cost')} {Number.isInteger(h.cost) ? h.cost : h.cost.toFixed(2)}</small>
+                      {h.blind && <em className={`scale-hop-blind blind-${h.blind}`} data-hop-blind={h.blind}>{t(h.blind === 'blind' ? 'detection blind spot' : 'short log retention')}</em>}
                       {h.notes?.map((n) => <small key={n} className="scale-hop-note">{n}</small>)}
                     </li>
                   ))}
@@ -218,7 +225,7 @@ export default function LensPanel({ doc, lens, dim, selectedId, onSelect }: Prop
           })()}
           {(role || actor) && lens === 'impersonation' && (
             <>
-              <h3 className="lens-h3">Paths through this {role ? 'role' : 'actor'}</h3>
+              <h3 className="lens-h3">{t('Paths through this {kind}', { kind: t(role ? 'role' : 'actor') })}</h3>
               <ul className="lens-paths">
                 {paths
                   .filter((p) => p.nodes.includes(selectedId!))
@@ -226,7 +233,7 @@ export default function LensPanel({ doc, lens, dim, selectedId, onSelect }: Prop
                   .map((p) => (
                     <li key={p.channels.join('|')} className={p.unverified ? 'is-unverified' : ''}>
                       {p.nodes.map(labelOf).join(' → ')}
-                      <small>{p.hops} hop{p.hops === 1 ? '' : 's'} · {p.unverified ? 'no verification' : 'has a control'}</small>
+                      <small>{t(p.hops === 1 ? '{hops} hop · {control}' : '{hops} hops · {control}', { hops: p.hops, control: t(p.unverified ? 'no verification' : 'has a control') })}</small>
                     </li>
                   ))}
               </ul>
@@ -234,7 +241,7 @@ export default function LensPanel({ doc, lens, dim, selectedId, onSelect }: Prop
           )}
         </div>
       )}
-      <p className="lens-foot">Measures exposure in the synthetic model only. No runners, no scanning, no credential collection.</p>
+      <p className="lens-foot">{t('Measures exposure in the synthetic model only. No runners, no scanning, no credential collection.')}</p>
     </div>
   )
 }
@@ -254,15 +261,16 @@ const heatClass = (score: number) => (score >= 50 ? 'heat-4' : score >= 25 ? 'he
 
 /** Roles ranked by exposure score = easiest-path ease × criticality of what the role can reach. */
 export function RankedRoles({ report, labelOf, selectedId, onSelect, limit = 50, subOf }: RankProps) {
+  const t = useLensCopy()
   return (
-    <div className="lens-table lens-rank" role="table" aria-label="Roles ranked by exposure">
-      <div className="lens-th" role="row"><span>Role (ranked)</span><span>score</span><span>cost</span><span title="unverified paths">unv.</span><span title="min hops">hops</span></div>
+    <div className="lens-table lens-rank" role="table" aria-label={t('Roles ranked by exposure')}>
+      <div className="lens-th" role="row"><span>{t('Role (ranked)')}</span><span>{t('score')}</span><span>{t('cost')}</span><span title={t('unverified paths')}>{t('unv.')}</span><span title={t('min hops')}>{t('hops')}</span></div>
       {report.roles.slice(0, limit).map((x, i) => (
         <Row key={x.role} active={x.role === selectedId} onClick={() => onSelect(x.role)}>
           <span>
             <i className="lens-rank-n">{i + 1}</i>
             {labelOf(x.role)}
-            {x.highValue && <em className="lens-hv">high-value</em>}
+            {x.highValue && <em className="lens-hv">{t('high-value')}</em>}
             {subOf && <small>{subOf(x.role)}</small>}
           </span>
           <span className={`lens-score ${heatClass(x.score)}`}>{fmtScore(x.score)}</span>
@@ -271,44 +279,46 @@ export function RankedRoles({ report, labelOf, selectedId, onSelect, limit = 50,
           <span>{x.minHops ?? '—'}</span>
         </Row>
       ))}
-      {report.roles.length > limit && <p className="lens-blurb">Top {limit} of {report.roles.length} roles.</p>}
+      {report.roles.length > limit && <p className="lens-blurb">{t('Top {limit} of {total} roles.', { limit, total: report.roles.length })}</p>}
     </div>
   )
 }
 
 /** Resources ranked by the best exposure of any role granted on them. */
 export function RankedResources({ report, labelOf, selectedId, onSelect, limit = 50, subOf }: RankProps) {
+  const t = useLensCopy()
   return (
-    <div className="lens-table lens-rank" role="table" aria-label="Resources ranked by exposure">
-      <div className="lens-th" role="row"><span>Resource (ranked)</span><span>score</span><span>criticality</span><span>via role</span></div>
+    <div className="lens-table lens-rank" role="table" aria-label={t('Resources ranked by exposure')}>
+      <div className="lens-th" role="row"><span>{t('Resource (ranked)')}</span><span>{t('score')}</span><span>{t('criticality')}</span><span>{t('via role')}</span></div>
       {report.resources.slice(0, limit).map((x, i) => (
         <Row key={x.resource} active={x.resource === selectedId} onClick={() => onSelect(x.resource)}>
           <span><i className="lens-rank-n">{i + 1}</i>{labelOf(x.resource)}</span>
           <span className={`lens-score ${heatClass(x.score)}`}>{fmtScore(x.score)}</span>
-          <span className={`crit crit-${x.criticality}`}>{x.criticality}{x.declared ? '' : '*'}</span>
+          <span className={`crit crit-${x.criticality}`}>{t(x.criticality)}{x.declared ? '' : '*'}</span>
           <span>{x.viaRole ? labelOf(x.viaRole) : '—'}{x.viaRole && subOf && <small>{subOf(x.viaRole)}</small>}</span>
         </Row>
       ))}
-      {report.resources.some((r) => !r.declared) && <p className="lens-blurb">* no criticality declared; inferred from grant level.</p>}
+      {report.resources.some((r) => !r.declared) && <p className="lens-blurb">{t('* no criticality declared; inferred from grant level.')}</p>}
     </div>
   )
 }
 
 export function EasiestPath({ report, roleId, labelOf }: { report: ExposureReport; roleId: string; labelOf: (id: string) => string }) {
+  const t = useLensCopy()
   const x = report.roles.find((r) => r.role === roleId)
   if (!x) return null
   return (
     <>
-      <h3 className="lens-h3">Easiest path from outside</h3>
+      <h3 className="lens-h3">{t('Easiest path from outside')}</h3>
       {x.easiest ? (
         <p className="lens-easiest" data-easiest-path>
           {x.easiest.nodes.map(labelOf).join(' → ')}
           <small>
-            cost {x.easiest.cost} · ease {x.ease.toFixed(2)} · score {fmtScore(x.score)} · target {x.topResource ? labelOf(x.topResource) : '—'}
+            {t('cost {cost} · ease {ease} · score {score} · target {target}', { cost: x.easiest.cost, ease: x.ease.toFixed(2), score: fmtScore(x.score), target: x.topResource ? labelOf(x.topResource) : '—' })}
           </small>
         </p>
       ) : (
-        <p className="lens-blurb">No channel path from an external actor.</p>
+        <p className="lens-blurb">{t('No channel path from an external actor.')}</p>
       )}
     </>
   )

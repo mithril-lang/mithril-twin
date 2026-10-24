@@ -8,11 +8,11 @@
     "sync-samples": "node scripts/sync-samples.mjs",
     "predev": "npm run sync-samples",
     "dev": "vite",
-    "prebuild": "npm run sync-samples",
+    "prebuild": "npm run sync-samples && node ../../scripts/split-twin-copy.mjs --check",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json",
-    "pretest": "npm run sync-samples",
+    "pretest": "npm run sync-samples && node ../../scripts/split-twin-copy.mjs --check",
     "test": "vitest run"
   },
   "dependencies": {

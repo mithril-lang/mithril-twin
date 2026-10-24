@@ -1,0 +1,208 @@
+{
+  "date": "2026-09-29",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "scope": "local production preview; Board summary and Drill navigation",
+  "results": [
+    {
+      "host": "pages",
+      "locale": "en",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "zh-Hans",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "hi",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "es",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "ar",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "fr",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "bn",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "pt",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "id",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "ur",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "ru",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "de",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "ja",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "ko",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "pcm",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "arz",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "mr",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "jv",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "su",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "he",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "it",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "host": "pages",
+      "locale": "ar-MA",
+      "ok": true,
+      "cards": 4,
+      "visible": true,
+      "overflow": 0,
+      "errors": []
+    }
+  ]
+}
