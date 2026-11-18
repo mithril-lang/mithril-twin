@@ -1,0 +1,321 @@
+{
+  "artifact": "mithril-twin-world-source-registry",
+  "schema_version": 1,
+  "generated_jst": "2026-11-19T08:10:43.236235+09:00",
+  "status": "13 of 17 crawl-plan sources verified; 10 registration-ready, 3 candidate",
+  "disclaimer": "Evidence catalogue only. Adding a row here does NOT register a source with the World LICENCE gate and does NOT authorise person data. Owner approval and G16 (privacy check + removal/correction path) are still required.",
+  "counts": {
+    "verified": 13,
+    "registration_ready": 10,
+    "candidate": 3,
+    "crawl_plan_total": 17
+  },
+  "owner_decisions": [
+    {
+      "date_jst": "2026-11-18",
+      "decision": "名前付き職員の個人データも、公開情報ならオントロジーに追加してよい",
+      "scope": "public personal data of named officials / public-role persons",
+      "already_in_schema": "world-v1.mith main lines 56-58: 'A natural person, admitted only in a public or accountable role (owner decision 2026-11-18). The node carries the published name only; every role is a separate Role fact with its own source.'",
+      "schema_boundary": "PersonShape sh:closed true with allow-list: name, source, address, email, phone, website. ID numbers and birth dates still excluded. All fields pinned by the node's SourceRef.",
+      "still_required": [
+        "G16 removal/correction path",
+        "per-jurisdiction privacy checks",
+        "per-fact SourceRef + licence + snapshotSha256"
+      ],
+      "recorded_at_jst": "2026-11-18T23:16:08.005559+09:00",
+      "extended_at_jst": "2026-11-18T23:50:13.535627+09:00",
+      "extension": "住所・連絡先も公開情報なら追加可 (user message 2026-11-18)",
+      "implementation": {
+        "pr": "https://github.com/mithril-lang/mithril/pull/172",
+        "branch": "feat/world-person-public-contact",
+        "head_sha": "158511505abb68fd7ff7e6e530280b79182631ca",
+        "state": "OPEN (non-draft), CI pending",
+        "fields_admitted": [
+          "address",
+          "email",
+          "phone",
+          "website"
+        ],
+        "closed_shape_retained": true,
+        "still_excluded": [
+          "ID numbers",
+          "birth dates"
+        ],
+        "tests": "focused 4/9 pass; full suite 321 tests / 2606 assertions / 0 failures / 0 errors"
+      }
+    }
+  ],
+  "notes": [
+    "Crawl-plan sheet is HTTP 401; the remaining 4 source names are unidentified and are not in this catalogue.",
+    "GLEIF evidence is search-indexed official text; gleif.org refused direct fetch via robots.txt (403).",
+    "Canada CKAN isopen=false contradicts the OGL-Canada statement; open.canada.ca currently returns a WAF reject page.",
+    "KR OPENDART Art.16 reserves FSS copyright with no explicit CC/OGL-style licence; keep as candidate."
+  ],
+  "sources": [
+    {
+      "id": "gleif-lei",
+      "name": "GLEIF Global LEI Repository / LEI Reference Data",
+      "jurisdiction_scope": "global",
+      "official_urls": [
+        "https://www.gleif.org/en/about/open-data",
+        "https://gleif.org/en/meta/lei-data-terms-of-use"
+      ],
+      "access": "free; file download, web interfaces / APIs",
+      "licence": "CC0 1.0 Universal (public-domain dedication)",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "attribution_required": false,
+      "verification": "web_search snippets from two official GLEIF pages (open-data + LEI data terms of use), both state CC0",
+      "confidence": "high",
+      "caveats": "Trademark/logo use needs permission; do not claim IP rights in LEIs/LE-RD. Direct web_extract of gleif.org was refused by robots.txt (403) — evidence is search-indexed official text, not a fetched full page.",
+      "citation_for_world_statements": "GLEIF LEI Reference Data (CC0 1.0) — <snapshot URL> — retrieved <date> — SHA-256 <hash>",
+      "registration_ready": true
+    },
+    {
+      "id": "nta-houjin-bangou",
+      "name": "国税庁法人番号公表サイト (Japan Corporate Number Publication Site)",
+      "jurisdiction_scope": "JP",
+      "official_urls": [
+        "https://www.houjin-bangou.nta.go.jp/",
+        "https://www.houjin-bangou.nta.go.jp/riyokiyaku/",
+        "https://www.houjin-bangou.nta.go.jp/download/",
+        "https://www.houjin-bangou.nta.go.jp/webapi/"
+      ],
+      "access": "基本3情報 (name, address, corporate number); full + daily-diff CSV/XML (Shift-JIS or Unicode); Web-API",
+      "licence": "公共データ利用規約 第1.0版 (Digital Agency Japan Public Data License v1.0), unless otherwise noted",
+      "licence_url": "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0",
+      "attribution_required": true,
+      "attribution_text": "出典：国税庁法人番号公表サイト（国税庁）（当該ページのURL）",
+      "modification_rule": "If edited/processed, state that separately; must not present processed data as if created by the government.",
+      "third_party_rights": "Third-party rights (copyright, portrait/publicity) may exist; user must confirm and obtain permission.",
+      "verification": "direct web_extract of official 利用規約 and ダウンロード pages on 2026-11-18",
+      "confidence": "high",
+      "caveats": "Pages are JS-driven; extraction partial. Web-API has its own terms (https://www.houjin-bangou.nta.go.jp/webapi/riyokiyaku.html) — verify before using the API instead of bulk download.",
+      "citation_for_world_statements": "国税庁法人番号公表サイト（国税庁）（<URL>）を加工して作成 — retrieved <date> — SHA-256 <hash> — 公共データ利用規約 v1.0",
+      "registration_ready": true
+    },
+    {
+      "id": "sec-edgar",
+      "name": "US SEC EDGAR (data.sec.gov APIs + bulk ZIP)",
+      "jurisdiction_scope": "US",
+      "official_urls": [
+        "https://data.sec.gov/",
+        "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+        "https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data"
+      ],
+      "access": "free; no authentication/API key for data.sec.gov; submissions + XBRL JSON; nightly bulk ZIP ~03:00 ET (submissions.zip, companyfacts.zip)",
+      "licence": "US federal public information; free public access. No explicit licence token found in the pages checked.",
+      "licence_url": null,
+      "attribution_required": null,
+      "verification": "web_search result text from official SEC pages (EDGAR APIs + Accessing EDGAR Data) on 2026-11-18",
+      "confidence": "medium",
+      "caveats": "Rate limit 10 requests/second; must declare User-Agent with admin contact; no botnets or crawling outside Fair Access policy; CORS unsupported on data.sec.gov; company_tickers mappings not guaranteed accurate. Direct extraction refused by robots.txt (403).",
+      "citation_for_world_statements": "SEC EDGAR <dataset name> (<URL>) — retrieved <date> — SHA-256 <hash> — SEC Fair Access policy",
+      "registration_ready": true
+    },
+    {
+      "id": "wikidata",
+      "name": "Wikidata structured data (main/Property/Lexeme/EntitySchema namespaces)",
+      "jurisdiction_scope": "global",
+      "official_urls": [
+        "https://www.wikidata.org/wiki/Wikidata:Licensing",
+        "https://www.wikidata.org/wiki/Wikidata:Copyright",
+        "https://query.wikidata.org/"
+      ],
+      "access": "SPARQL Query Service, dumps, API",
+      "licence": "All structured data CC0 1.0 (public domain). Text in other namespaces CC BY-SA 4.0.",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "attribution_required": false,
+      "verification": "direct web_extract of Wikidata:Licensing, section 'Official policy' (line 174) on 2026-11-18",
+      "confidence": "high",
+      "caveats": "Only structured-data namespaces are CC0; do not ingest discussion/project-page text under the same term. Reused datasets inside Wikidata may carry third-party claims — Wikidata itself avoids non-CC0 data but does not adjudicate claims.",
+      "citation_for_world_statements": "Wikidata <entity/query> (<URL>) — retrieved <date> — CC0 1.0 — SHA-256 <hash>",
+      "registration_ready": true
+    },
+    {
+      "id": "govuk-organisations",
+      "name": "GOV.UK organisations directory (UK)",
+      "jurisdiction_scope": "GB",
+      "official_urls": [
+        "https://www.gov.uk/government/organisations",
+        "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+        "https://www.gov.uk/help/reuse-govuk-content",
+        "https://www.gov.uk/help/terms-conditions",
+        "https://www.api.gov.uk/gds/gov-uk-organisations/"
+      ],
+      "access": "public web directory / GOV.UK content",
+      "licence": "Open Government Licence v3.0 — official GOV.UK help pages: 'To reuse content published on GOV.UK you must meet the conditions of the Open Government Licence' and 'Most content on GOV.UK is subject to Crown copyright protection and is published under the OGL, which also sets out which content is exempt'",
+      "licence_url": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+      "attribution_required": true,
+      "attribution_text": "Contains public sector information licensed under the Open Government Licence v3.0.",
+      "verification": "Direct web_extract of www.gov.uk/government/organisations (100,136 chars, 619+ bodies listed) + official help pages via search index (wakeup #16). GOV.UK API Catalogue documents the endpoint https://www.gov.uk/api/organisations.",
+      "confidence": "high",
+      "caveats": "RESOLVED (wakeup #16): site-wide OGL confirmed on gov.uk/help/reuse-govuk-content and /help/terms-conditions; the organisations page itself carries no local licence notice, so an OGL exemption cannot be excluded per-item — carry attribution in SourceRef. OGL excludes personal data; use only organisation-level facts. Endpoint: gov.uk/api/organisations (paged JSON). Full page cache: ~/.mithril/cache/web/www.gov.uk-5ef21d580d.md",
+      "citation_for_world_statements": "GOV.UK organisations (<URL>) — retrieved <date> — OGL v3.0 — SHA-256 <hash>",
+      "registration_ready": true
+    },
+    {
+      "id": "eu-whoiswho",
+      "name": "EU WhoisWho — Official Directory of EU Institutions & Personnel",
+      "jurisdiction_scope": "EU",
+      "official_urls": [
+        "https://op.europa.eu/en/web/who-is-who",
+        "https://op.europa.eu/en/web/about-us/legal-notices/eu-whoiswho",
+        "https://op.europa.eu/en/web/about-us/legal-notices/publications-office-of-the-european-union-copyright"
+      ],
+      "access": "public directory + PDF editions (COM / AGEN_OTH)",
+      "licence": "Editorial content CC BY 4.0 (acknowledge source + indicate changes); PDF states 'Reproduction is authorised'. Individual photos require separate permission from rights holders.",
+      "licence_url": "https://op.europa.eu/en/web/about-us/legal-notices/publications-office-of-the-european-union-copyright",
+      "attribution_required": true,
+      "verification": "web_search snippets from three official Publications Office pages (copyright notice, Whoiswho privacy notice, PDF editions dated 09-11/16-11-2026) on 2026-11-18",
+      "confidence": "medium-high",
+      "caveats": "OWNER DECISION 2026-11-18: public personal data of named officials MAY be added to the ontology. EU WhoisWho is admissible under this rule. Representation per world-v1.mith main: Person node carries published name + SourceRef only (PersonShape is closed); each office/role is a separate Role fact with its own source and licence. Addresses, contact details, ID numbers and birth dates remain excluded by the closed shape. Direct marketing use is forbidden by the source terms. Individual photos need separate permission. Removal/correction path and per-jurisdiction privacy checks (G16) are still required.",
+      "citation_for_world_statements": "EU WhoisWho (<URL>) — retrieved <date> — CC BY 4.0 / reproduction authorised — SHA-256 <hash> — person-scope gated",
+      "person_scope": "ADMITTED (owner decision 2026-11-18) — published name + sourced role facts",
+      "registration_ready": true
+    },
+    {
+      "id": "us-federal-agencies",
+      "name": "US federal agencies index (USAGov A-Z) / Data.gov catalog",
+      "jurisdiction_scope": "US",
+      "official_urls": [
+        "https://www.usa.gov/federal-agencies",
+        "https://data.gov/user-guide",
+        "https://resources.data.gov/data-gov-apis",
+        "https://api.data.gov/",
+        "https://resources.data.gov/data-gov-apis/"
+      ],
+      "access": "USAGov A-Z index of agencies with contact info; Data.gov public JSON catalog API (GET /search, /harvest_record)",
+      "licence": "US federal public information (OPEN Government Data Act), free public access; Data.gov Catalog API access through the api.data.gov gateway requires a free API key in X-Api-Key (DEMO_KEY for low-volume exploration)",
+      "licence_url": null,
+      "attribution_required": false,
+      "verification": "Direct web_extract of resources.data.gov/data-gov-apis (2026-11-18); 'api.data.gov is not a barrier to access' — key is for rate limiting/usage tracking, not a licence restriction",
+      "confidence": "high",
+      "caveats": "CONFLICT RESOLVED (wakeup #15): the user guide's 'no authentication' and resources.data.gov's 'free key required' describe different things — data licensing vs the metadata API gateway. Register requires a free key; do not share keys. This does not change the public-information / redistribution status. Full text: ~/.mithril/cache/web/resources.data.gov-f9e10af2f3.md",
+      "citation_for_world_statements": "Data.gov catalog record <id> (<URL>) — retrieved <date> — licence per record — SHA-256 <hash>",
+      "registration_ready": true
+    },
+    {
+      "id": "uk-companies-house",
+      "name": "UK Companies House public register + Public Data API",
+      "jurisdiction_scope": "GB",
+      "official_urls": [
+        "https://developer.companieshouse.gov.uk/get-started",
+        "https://www.gov.uk/government/publications/companies-house-accreditation-to-information-fair-traders-scheme/public-task-copyright-and-crown-copyright",
+        "https://forum.companieshouse.gov.uk/t/commercial-use-of-companies-house-public-data-api-data/13124/2"
+      ],
+      "access": "free; REST API requires registered account + API key (live application), 600 requests / 5 min per key; also bulk Free Company Data Product",
+      "licence": "NOT published under OGL. Statutory public register under Companies Act 2006; disclosure permitted via s47 CDPA 1988 / Sch.1 Database Regulations approvals. Companies House imposes no rules or requirements on how register information is used.",
+      "licence_url": "https://forum.companieshouse.gov.uk/t/is-data-provided-under-the-ocs/4513",
+      "attribution_required": false,
+      "verification": "web_search: official Companies House service-owner forum statements + GOV.UK copyright statement; developer docs confirm API key requirement",
+      "confidence": "medium-high",
+      "caveats": "OGL v3.0 applies only to Companies House's own guidance/statistics/website copy, NOT the register data. Register data user remains responsible for data protection, copyright and other law (UK GDPR). API key needed; personal officer data must still pass G16 + per-jurisdiction privacy checks.",
+      "citation_for_world_statements": "UK Companies House public register — <company number> — retrieved <date> — SHA-256 <hash>",
+      "registration_ready": false
+    },
+    {
+      "id": "de-offeneregister-handelsregister",
+      "name": "OffeneRegister.de — German Commercial Register as open data (OpenCorporates mirror)",
+      "jurisdiction_scope": "DE",
+      "official_urls": [
+        "https://offeneregister.de/",
+        "https://www.handelsregister.de/rp_web/information/welcome.xhtml"
+      ],
+      "access": "free full download: line-delimited JSON ~250 MB (HTTP/torrent), SQLite ~740 MB (torrent), API via OpenCorporates",
+      "licence": "CC BY 4.0 with attribution to OpenCorporates",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution_required": true,
+      "verification": "web_search: OffeneRegister.de states licence and attribution explicitly; official register portal terms read directly",
+      "confidence": "high",
+      "caveats": "Do NOT crawl handelsregister.de itself: its terms forbid systematic retrieval for establishing/updating independent full or partial registers. Use only the CC BY 4.0 mirror with attribution. Older filed documents may contain private addresses/ID copies — G16 + per-jurisdiction privacy check required before storing person fields.",
+      "citation_for_world_statements": "OffeneRegister.de Handelsregister open data (CC BY 4.0, attribution: OpenCorporates) — <dataset URL> — retrieved <date> — SHA-256 <hash>",
+      "registration_ready": true
+    },
+    {
+      "id": "kr-dart-opendart",
+      "name": "Korea FSS DART / OPENDART electronic disclosure system",
+      "jurisdiction_scope": "KR",
+      "official_urls": [
+        "https://englishdart.fss.or.kr/about/engAbout1.do",
+        "https://engopendart.fss.or.kr/intro/main.do",
+        "https://engopendart.fss.or.kr/intro/terms.do"
+      ],
+      "access": "free in principle; Open API requires membership + authentication key (application states purpose, confirmation URL, IP); usage limits posted on site; XML/XBRL bulk download available",
+      "licence": "No explicit open-data licence. Terms Art.16: FSS holds copyright to the Open API service/software; copyright matters not specified follow the Copyright Act and the Public Data Act. Disclosure data is public by statute, not by CC/OGL grant.",
+      "licence_url": "https://engopendart.fss.or.kr/intro/main.do",
+      "attribution_required": null,
+      "verification": "Direct web_extract of official OPENDART intro + Terms and Conditions pages (2026-11-18); full text cached at ~/.mithril/cache/web/engopendart.fss.or.kr-cd103d2ef8.md",
+      "confidence": "high (terms read directly); licence still UNCONFIRMED as an open licence",
+      "caveats": "Terms effective 2020-01-21; FSS disclaims accuracy/completeness and all liability. Do NOT register as an open-licensed source until Korean Public Data Act / Copyright Act position is settled. Authentication key is per-member and must not be shared. PIPA applies to officer personal data — G16 + per-jurisdiction privacy check required.",
+      "citation_for_world_statements": "Korea FSS DART/OPENDART — <filing id> — retrieved <date> — SHA-256 <hash>",
+      "registration_ready": false
+    },
+    {
+      "id": "nl-kvk-hvds-open-dataset",
+      "name": "Netherlands KVK Business Register Open Dataset Basic Company Information (HVDS)",
+      "jurisdiction_scope": "NL",
+      "official_urls": [
+        "https://www.kvk.nl/producten-bestellen/kvk-handelsregister-open-data-set",
+        "https://developers.kvk.nl/documentation/open-dataset-basis-bedrijfsgegevens-api"
+      ],
+      "access": "free; public API key (no subscription), 1 req/min/IP and 200 req/5min combined; bulk ZIP download; refreshed every working day",
+      "licence": "CC BY 4.0 (HVDS) — attribution required",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/legalcode.nl",
+      "attribution_required": true,
+      "verification": "web_search: KVK official product page (states CC BY 4.0 and free use) + KVK developer portal API docs and FAQ",
+      "confidence": "high",
+      "caveats": "Dataset is anonymous by design and contains NO personal data; only first 2 digits of business-address postcode. Explicitly prohibited: enriching the HVDS so data becomes traceable to an individual person. BV/NV only. Do not use this source for person fields; use it for legal-entity/ownership facts only.",
+      "citation_for_world_statements": "KVK Handelsregister Open Dataset Basis Bedrijfsgegevens (CC BY 4.0) — <KVK number> — retrieved <date> — SHA-256 <hash>",
+      "registration_ready": true
+    },
+    {
+      "id": "ch-zefix-ogd",
+      "name": "Switzerland Zefix — Central Business Name Index (Federal Commercial Registry) + SOGC",
+      "jurisdiction_scope": "CH",
+      "official_urls": [
+        "https://www.zefix.admin.ch/ZefixPublicREST/swagger-ui/index.html",
+        "https://opendata.swiss/en/dataset/zefix-zentraler-firmenindex",
+        "https://opendata.swiss/en/faq"
+      ],
+      "access": "free; Zefix web app, public REST API (no login on search endpoints), daily OGD dataset (JSON/XML), SPARQL examples; SOGC daily commercial-register publications",
+      "licence": "OGD Open use — source citation mandatory (Zefix PublicREST Swagger: 'Open use. Must provide the source.')",
+      "licence_url": "https://opendata.swiss/en/faq",
+      "attribution_required": true,
+      "verification": "web_search: official Zefix PublicREST Swagger UI + opendata.swiss dataset page + opendata.swiss FAQ (licence/attribution and privacy sections)",
+      "confidence": "high",
+      "caveats": "OGD dataset is a daily core-data subset of active legal entities (company name, registered office seat, domicile address), not the full register. opendata.swiss states no personal information is published there; use Zefix/SOGC for entity facts only unless a separate lawful basis is documented. Cite author/title/link per Swiss OGD practice.",
+      "citation_for_world_statements": "Zefix / opendata.swiss (OGD, source mandatory) — <UID/CH-ID> — retrieved <date> — SHA-256 <hash>",
+      "registration_ready": true
+    },
+    {
+      "id": "ca-federal-corporations",
+      "name": "Canada Federal Corporations (Corporations Canada / ISED) open dataset + API",
+      "jurisdiction_scope": "CA",
+      "official_urls": [
+        "https://open.canada.ca/data/en/dataset/0032ce54-c5dd-4b66-99a0-320a7b5e99f2",
+        "https://ised-isde.canada.ca/site/corporations-canada/en/data-services",
+        "https://ised-isde.canada.ca/site/corporations-canada/en/accessing-federal-corporation-json-datasets"
+      ],
+      "access": "free; daily CSV in 4 subsets x 2 languages; Federal Corporation API gives real-time status, registered office address and directors by corporation_id or 9-digit BN",
+      "licence": "Open Government Licence – Canada (ca-ogl-lgo)",
+      "licence_url": "https://open.canada.ca/en/open-government-licence-canada",
+      "attribution_required": false,
+      "verification": "web_search: official open.canada.ca CKAN record (license_id ca-ogl-lgo) + Corporations Canada data-services and JSON API docs Retry #17 blocked by WAF.",
+      "confidence": "high",
+      "caveats": "CKAN record has isopen=false despite ca-ogl-lgo licence — resolve before registering. Excludes provincially incorporated entities and financial legislation corporations. API returns directors' names and addresses: public-officer personal data admitted by owner decision but still requires G16 correction/removal path and per-jurisdiction privacy check. | wakeup #17: retried open.canada.ca/en/open-government-licence-canada and CKAN package_search via curl — both returned HTTP 200 with a 244-byte 'Request Rejected' WAF page (support ID). No new evidence; CANDIDATE maintained.",
+      "citation_for_world_statements": "Corporations Canada Federal Corporations dataset (OGL-Canada) — <corporation id> — retrieved <date> — SHA-256 <hash>",
+      "registration_ready": false
+    }
+  ],
+  "next": [
+    "Resolve US federal agencies auth conflict (anonymous catalog.search vs api.gsa.gov key)",
+    "Confirm GOV.UK organisations dataset-page licence notice directly",
+    "Verify remaining 10 crawl-plan sources' licences",
+    "Feed these entries into RegisterSource once MITHRIL-2611 write path is published",
+    "EU WhoisWho can now be registered as a source; ingest name+role facts only when the write path is published",
+    "Crawl-plan Google Sheet returns HTTP 401 — remaining 8 source names unobtainable without owner share; jurisdiction-based verification started instead",
+    "Korea DART verification attempt failed (search backend 403) — retry with direct official URL",
+    "France RNE/INPI verification pending (search backend 403 on 2026-11-18)",
+    "Read OPENDART explicit reuse terms before registering kr-dart-opendart"
+  ]
+}
