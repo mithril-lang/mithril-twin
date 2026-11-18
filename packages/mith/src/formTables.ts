@@ -1,5 +1,5 @@
-// Generated from mithril-lang/mithril src/mithril/form.cljk at ba4919f2a1435ca895d6673d2de4334a859def9d
-// (merge of mithril-lang/mithril#8; form.cljk is unchanged since #7 dd014e4). Do not edit by hand: the tables must equal upstream.
+// Generated from mithril-lang/mithril src/mithril/form.cljk at 9d0763dd4d9220327e04742bce42df179193f9a2
+// (merge of mithril-lang/mithril#170, which added the Twin World time/provenance keys). Do not edit by hand: the tables must equal upstream.
 
 /** Top-level tags → JSON-LD `@type`. */
 export const TOP_LEVEL_TAGS: Record<string, string> = {
@@ -62,6 +62,7 @@ export const KEY_NAMES: Record<string, string> = {
   "cross-links": "crossLinks",
   "data-shape": "dataShape",
   "dataset-kind": "datasetKind",
+  "date-precision": "datePrecision",
   "decision-mode": "decisionMode",
   "decision-state-digest": "decisionStateDigest",
   "default": "default",
@@ -145,7 +146,10 @@ export const KEY_NAMES: Record<string, string> = {
   "receipt-count": "receiptCount",
   "receipt-digest": "receiptDigest",
   "receipt-policy": "receiptPolicy",
+  "record-id": "recordId",
+  "recorded-at": "recordedAt",
   "relative-score": "relativeScore",
+  "report-rows": "reportRows",
   "request-id": "requestId",
   "retention-days": "retentionDays",
   "run-id": "runId",
@@ -201,14 +205,18 @@ export const KEY_NAMES: Record<string, string> = {
   "sh/unique-lang": "shUniqueLang",
   "sh/xone": "shXone",
   "show-label": "showLabel",
+  "snapshot-sha256": "snapshotSha256",
   "soul-digest": "soulDigest",
   "source": "source",
+  "source-id": "sourceId",
   "state-digest": "stateDigest",
   "step": "step",
   "target": "target",
   "task-digest": "taskDigest",
   "tool-profile-digest": "toolProfileDigest",
   "type": "@type",
+  "valid-from": "validFrom",
+  "valid-to": "validTo",
   "viz-only": "vizOnly",
   "workdir": "workdir",
   "worker-board": "workerBoard",

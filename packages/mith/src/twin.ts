@@ -32,6 +32,8 @@ export const TWIN_TERMS = [
   'z', 'placements', 'entity', 'tone', 'showLabel', 'crossLinks', 'lens', 'frame',
   'vizOnly', 'noRunners', 'hypotheses', 'summary', 'category', 'honesty', 'observationCount', 'relativeScore',
   'scoreNote', 'nodeIds', 'steps',
+  'validFrom', 'validTo', 'datePrecision', 'recordedAt', 'assertion', 'licence', 'sourceId', 'snapshotSha256',
+  'recordId', 'jurisdiction',
 ] as const
 const TOP_LEVEL = new Set([
   '@context', '@id', '@type', 'title', 'datasetKind', 'generatedAt', 'disclaimer', 'citations', 'entities', 'edges',
@@ -47,14 +49,20 @@ export const TWIN_KEYWORDS: Record<string, string> = {
   minRetentionDays: 'min-retention-days', focusPlane: 'focus-plane', showLabel: 'show-label', crossLinks: 'cross-links',
   vizOnly: 'viz-only', noRunners: 'no-runners', observationCount: 'observation-count', relativeScore: 'relative-score',
   scoreNote: 'score-note', nodeIds: 'node-ids',
+  validFrom: 'valid-from', validTo: 'valid-to', datePrecision: 'date-precision', recordedAt: 'recorded-at',
+  sourceId: 'source-id', snapshotSha256: 'snapshot-sha256', recordId: 'record-id',
 }
 
 /**
- * Closed `datasetKind` labels upstream admits (`mithril.twin/dataset-kinds`). Both are non-live:
+ * Closed `datasetKind` labels upstream admits (`mithril.twin/dataset-kinds`, mithril-lang/mithril#170):
  * `synthetic-demo` is generated / fictional sample data; `workshop-export` is an illustrative diagram
- * hand-authored in a workshop and exported from the viewer, not collected from live systems.
+ * hand-authored in a workshop, not collected from live systems; `public-registry-snapshot` is real data
+ * from pinned snapshots of public, licensed registers (Twin World), still display-only, and must cite
+ * its sources.
  */
-export const TWIN_DATASET_KINDS = ['synthetic-demo', 'workshop-export'] as const
+export const TWIN_DATASET_KINDS = ['synthetic-demo', 'workshop-export', 'public-registry-snapshot'] as const
+/** datasetKind labels that describe real public data and therefore require non-empty `citations`. */
+export const TWIN_SOURCED_DATASET_KINDS: readonly string[] = ['public-registry-snapshot']
 export type TwinDatasetKind = (typeof TWIN_DATASET_KINDS)[number]
 export const isTwinDatasetKind = (v: unknown): v is TwinDatasetKind => (TWIN_DATASET_KINDS as readonly unknown[]).includes(v)
 
@@ -95,6 +103,10 @@ export function admitTwin(doc: J): Record<string, J> {
     refuse('twin document @id must be a mithril.fund HTTPS IRI')
   }
   if (!isTwinDatasetKind(doc.datasetKind)) refuse(`twin datasetKind must be one of ${TWIN_DATASET_KINDS.join(', ')}`)
+  if (TWIN_SOURCED_DATASET_KINDS.includes(String(doc.datasetKind))) {
+    const c = doc.citations
+    if (!(Array.isArray(c) ? c.length : c != null)) refuse('a public-registry-snapshot twin must cite its sources in :citations')
+  }
   if (isObj(doc.diagram)) {
     for (const [term, allowed] of [['lens', DIAGRAM_LENSES], ['frame', DIAGRAM_FRAMES]] as const) {
       if (term in doc.diagram && !(allowed as readonly unknown[]).includes(doc.diagram[term])) {
@@ -367,7 +379,7 @@ export function toTwinForm(doc: MithDocument, iri = `https://mithril.fund/lib/tw
   const m = doc.model
   const lines: string[] = [
     '(mithril/twin-document',
-    `  ;; Twin vocabulary for Mithril .mith (twin-local terms: https://mithril.fund/lib/twin/v1#). ${doc.dataset_kind === 'synthetic-demo' ? 'Synthetic' : 'Illustrative workshop export'}, display-only.`,
+    `  ;; Twin vocabulary for Mithril .mith (twin-local terms: https://mithril.fund/lib/twin/v1#). ${doc.dataset_kind === 'synthetic-demo' ? 'Synthetic' : doc.dataset_kind === 'workshop-export' ? 'Illustrative workshop export' : 'Public registry snapshot, cited sources'}, display-only.`,
     `  :id ${q(iri)}`,
     `  :title ${q(doc.title)}`,
     `  :dataset-kind ${q(doc.dataset_kind)}`,
