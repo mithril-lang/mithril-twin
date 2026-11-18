@@ -65,7 +65,7 @@ Gates, in order (`Gate` enum):
 | `MITH_PARSE` | The Form reader and closed twin vocabulary accept the document: a `(mithril/twin-document …)` with `datasetKind` `public-registry-snapshot` and non-empty `citations` (mithril-lang/mithril#170). |
 | `SHACL` | `world-v1.mith` shapes: domain/range, cardinality, identifier formats, and every statement has a source, licence and valid interval. |
 | `LICENCE` | Every `SourceRef` is registered and its licence is allowed in `config/data-source-terms.json`. Excluded sources (OpenSanctions) always fail. |
-| `PERSON_SCOPE` | A person may appear only in a public or accountable role (office holder, legal representative, director or officer), citing an official register or record. Only role fields are allowed. Addresses, contact details, ID numbers and full birth dates fail. A jurisdiction without a recorded privacy check and removal path fails. |
+| `PERSON_SCOPE` | A person may appear only in a public or accountable role (office holder, legal representative, director or officer), citing an official register or record. Published `address`, `email`, `phone` and `website` are admitted when pinned to that source (owner decision 2026-11-18, mithril#172 / ADR 0042 amendment); ID numbers and full birth dates still fail. A jurisdiction without a recorded privacy check and removal path fails. |
 | `SIZE` | At most 12 MiB of `.mith` and 50,000 changes per set. |
 | `CONFLICT` | `base_snapshot_id` is not older than the retention window, and every `END`/`CORRECT` target is still the current record (optimistic concurrency). |
 
