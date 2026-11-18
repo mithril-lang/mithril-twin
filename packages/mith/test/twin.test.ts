@@ -51,7 +51,7 @@ describe('twin reader (Form primary, JSON-LD, legacy v0 deprecated)', () => {
     const lowered = parseForm(pub('polaris-floor.mith'))
     expect(() => admitTwin({ ...lowered, surprise: 1 })).toThrow(/unknown twin document key "surprise"/)
     expect(() => admitTwin({ ...lowered, '@context': 'https://mithril.fund/context/v1' })).toThrow(/pinned twin context/)
-    expect(() => admitTwin({ ...lowered, datasetKind: 'live' })).toThrow(/one of synthetic-demo, workshop-export/)
+    expect(() => admitTwin({ ...lowered, datasetKind: 'live' })).toThrow(/one of synthetic-demo, workshop-export, public-registry-snapshot/)
     for (const label of ['production', 'customer', 'real', '']) expect(() => admitTwin({ ...lowered, datasetKind: label })).toThrow(/datasetKind/)
     expect(admitTwin({ ...lowered, datasetKind: 'workshop-export' }).datasetKind).toBe('workshop-export')
     const diagram = (extra: Record<string, unknown>) => ({ ...lowered, diagram: { ...(lowered.diagram as object), ...extra } })
@@ -63,6 +63,25 @@ describe('twin reader (Form primary, JSON-LD, legacy v0 deprecated)', () => {
     withExtra.entities[0].payload = 'x'
     expect(() => admitTwin(withExtra)).toThrow(/unknown twin key "payload"/)
     expect(() => readMith('(mithril/growth-decision :id "x")')).toThrow(MithParseError)
+  })
+
+  it('admits sourced real public data with time and provenance terms (mithril#170)', () => {
+    const lowered = parseForm(pub('polaris-floor.mith'))
+    const real = { ...lowered, datasetKind: 'public-registry-snapshot' }
+    expect(() => admitTwin({ ...real, citations: [] })).toThrow(/must cite its sources/)
+    const cited = { ...real, citations: [{ '@type': 'Citation', source: 'wikidata' }] }
+    expect(admitTwin(cited).datasetKind).toBe('public-registry-snapshot')
+    const doc = parseForm(
+      '(mithril/twin-document :id "https://mithril.fund/world/batch/t" :title "t" :dataset-kind "public-registry-snapshot" ' +
+        ':citations [(rdf/node :type "Citation" :source "wikidata")] ' +
+        ':entities [(rdf/node :type "Entity" :key "jp" :label "Japan" :valid-from "1947-05" :valid-to "2026" ' +
+        ':date-precision "month" :assertion "asserted" :licence "CC0-1.0" :jurisdiction "JP" :source-id "wikidata" ' +
+        ':snapshot-sha256 "aa" :record-id "Q17" :recorded-at "2026-11-18")])',
+    )
+    const entity = (admitTwin(doc).entities as Record<string, unknown>[])[0]
+    for (const term of ['validFrom', 'validTo', 'datePrecision', 'assertion', 'licence', 'jurisdiction', 'sourceId', 'snapshotSha256', 'recordId', 'recordedAt']) {
+      expect(entity).toHaveProperty(term)
+    }
   })
 
   it('exposes the pre-validation record for Form and JSON alike', () => {

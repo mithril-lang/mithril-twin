@@ -62,7 +62,7 @@ Gates, in order (`Gate` enum):
 
 | Gate | Rule |
 |---|---|
-| `MITH_PARSE` | The Form reader and closed vocabulary accept the document; the world document tag and `datasetKind` are admitted. |
+| `MITH_PARSE` | The Form reader and closed twin vocabulary accept the document: a `(mithril/twin-document …)` with `datasetKind` `public-registry-snapshot` and non-empty `citations` (mithril-lang/mithril#170). |
 | `SHACL` | `world-v1.mith` shapes: domain/range, cardinality, identifier formats, and every statement has a source, licence and valid interval. |
 | `LICENCE` | Every `SourceRef` is registered and its licence is allowed in `config/data-source-terms.json`. Excluded sources (OpenSanctions) always fail. |
 | `PERSON_SCOPE` | A person may appear only in a public or accountable role (office holder, legal representative, director or officer), citing an official register or record. Only role fields are allowed. Addresses, contact details, ID numbers and full birth dates fail. A jurisdiction without a recorded privacy check and removal path fails. |
@@ -79,7 +79,7 @@ Gates, in order (`Gate` enum):
 
 ```json
 {"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"world_submit_change_set","arguments":{
-  "mith":"(mithril/world-document :id \"https://mithril.fund/world/batch/gleif-2026-11-18-0001\" :dataset-kind \"public-registry-snapshot\" ...)",
+  "mith":"(mithril/twin-document :id \"https://mithril.fund/world/batch/gleif-2026-11-18-0001\" :title \"GLEIF 2026-11-18\" :dataset-kind \"public-registry-snapshot\" :citations [...] :entities [...])",
   "baseSnapshotId":"8231947712340012",
   "provenance":{"agentProfile":"mithril-world-ontology","runId":"r-20261118-0001","linearIssue":"MITHRIL-2608","sourceRevision":"<git sha>","model":"UNKNOWN"}}}}
 ```
@@ -101,7 +101,7 @@ The response carries the `ChangeSet`, with `state` and the per-gate `findings`.
 
 ## Open items before implementation
 
-1. Upstream mithril: the world document tag, temporal terms and the real-data `datasetKind` (MITHRIL-2605).
+1. Upstream mithril vocabulary (done). The payload is a `mithril/twin-document` with `datasetKind` `public-registry-snapshot` and the time / provenance terms (mithril-lang/mithril#170; TS reader mirrored in this repository). There is no separate world document tag. Python writer: `mithril_pipelines.mith_form` (mithril-lang/mithril-fund#2729).
 2. Proto vendoring and code generation for TypeScript (Worker) and Python (bots). Connect-ES is the proposed generator; this needs a dependency review.
 3. Credential issuance for `world:propose` tokens: one per bot profile, stored in 1Password at creation (credential custody rule), never in the profile or repository.
 4. Drain re-qualification (MITHRIL-2604) before any `COMMITTED` state can occur.

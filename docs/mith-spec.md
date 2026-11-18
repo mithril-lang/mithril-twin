@@ -12,21 +12,21 @@ The viewer loads the generated enterprise pack by default; `?doc=polaris-org` op
 | Lowered JSON-LD with `"@context": "https://mithril.fund/context/twin/v1"` | `twin.ts` `admitTwin` → `parseMith` | supported |
 | v0 JSON `{"mith": "0.1", …}` | `parseMith` | **deprecated** legacy path; still loads, and the loader logs a warning |
 
-`readMith(text)` returns `{ doc, format, deprecated }`. `toTwinForm(doc)` writes Form. Non-integers are written as typed literals, for example `(rdf/literal "0.3" :datatype "xsd:decimal")`, because upstream Form has no bare decimals. The reader refuses what upstream refuses and uses the same `mithril.form/*` error codes. It also refuses unknown twin keys, an unpinned context, non-synthetic data and non-display-only inference.
+`readMith(text)` returns `{ doc, format, deprecated }`. `toTwinForm(doc)` writes Form. Non-integers are written as typed literals, for example `(rdf/literal "0.3" :datatype "xsd:decimal")`, because upstream Form has no bare decimals. The reader refuses what upstream refuses and uses the same `mithril.form/*` error codes. It also refuses unknown twin keys, an unpinned context, any `datasetKind` outside the closed set, a `public-registry-snapshot` document without citations, and non-display-only inference.
 
 The in-memory shape below is unchanged from v0; Form only changes the spelling. Kebab-case Form keys map to the camelCase terms (`:forward-to` → `forwardTo`, `:dataset-kind` → `dataset_kind` in memory). Nested twin nodes use `:key` for their id.
 
 ### Import and export
 
-Import (file picker or drop) reads Form, twin JSON-LD, or legacy v0 JSON; a legacy file opens with a note that the spelling is deprecated. Export writes `(mithril/twin-document …)` Form with media type `application/vnd.mithril.form`, including `diagram.lens` and `diagram.frame`. The twin vocabulary admits a closed `dataset_kind` set, `synthetic-demo` and `workshop-export` (an illustrative workshop diagram, not collected from live systems); both export as Form with their label. A document that declares any other label cannot be spelled as twin Form, so export writes it as legacy v0 JSON and says so rather than relabelling it.
+Import (file picker or drop) reads Form, twin JSON-LD, or legacy v0 JSON; a legacy file opens with a note that the spelling is deprecated. Export writes `(mithril/twin-document …)` Form with media type `application/vnd.mithril.form`, including `diagram.lens` and `diagram.frame`. The twin vocabulary admits a closed `dataset_kind` set: `synthetic-demo`, `workshop-export` (an illustrative workshop diagram, not collected from live systems) and `public-registry-snapshot` (real data from pinned snapshots of public, licensed registers; it must cite its sources). All three export as Form with their label. A document that declares any other label cannot be spelled as twin Form, so export writes it as legacy v0 JSON and says so rather than relabelling it.
 
-The lens / frame terms and the `workshop-export` label come from the upstream follow-up [mithril-lang/mithril#8](https://github.com/mithril-lang/mithril/pull/8) (merge commit `ba4919f2a1435ca895d6673d2de4334a859def9d`); this reader follows that pin.
+The lens / frame terms and the `workshop-export` label come from the upstream follow-up [mithril-lang/mithril#8](https://github.com/mithril-lang/mithril/pull/8) (merge commit `ba4919f2a1435ca895d6673d2de4334a859def9d`); The `public-registry-snapshot` label and the time / provenance terms come from [mithril-lang/mithril#170](https://github.com/mithril-lang/mithril/pull/170) (merge commit `9d0763dd4d9220327e04742bce42df179193f9a2`); this reader follows that pin.
 
 ## Sections (BPMN analog)
 
 | .mith | BPMN analog | Holds |
 | --- | --- | --- |
-| `model` | semantic model | Entities (org / network / firewall / node / server), edges, citations. `dataset_kind` is `synthetic-demo` or `workshop-export`. |
+| `model` | semantic model | Entities (org / network / firewall / node / server), edges, citations. `dataset_kind` is `synthetic-demo`, `workshop-export` or `public-registry-snapshot`. |
 | `diagram` | BPMN DI | `arrangement`, planes (one board each), placements (`x`/`y` in 0..1), plane `transform` (`x`,`y`,`z`,`tilt`,`yaw`), `camera`, `selection`, `crossLinks`, optional `lens` and `frame`. The same entity id on two planes is a shared object. |
 | `inference` | analysis overlay | Optional hypotheses. `honesty` is `hypothesis`, `observation_count` is `0`, `relative_score` is an illustrative rank. `viz_only` and `no_runners` are required. |
 
