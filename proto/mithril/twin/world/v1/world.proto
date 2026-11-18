@@ -126,7 +126,7 @@ enum Gate {
   GATE_MITH_PARSE = 1;      // Form reader + closed vocabulary
   GATE_SHACL = 2;           // world-v1 shapes
   GATE_LICENCE = 3;         // every source registered and allowed
-  GATE_PERSON_SCOPE = 4;    // public-role persons, role fields only
+  GATE_PERSON_SCOPE = 4;    // public-role persons; source-pinned published contact allowed (ADR 0042 amendment)
   GATE_SIZE = 5;            // byte / statement limits
   GATE_CONFLICT = 6;        // base snapshot and target records still current
 }
