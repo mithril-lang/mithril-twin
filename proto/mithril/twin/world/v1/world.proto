@@ -1,0 +1,333 @@
+// Mithril Twin World API — contract v1 (design, MITHRIL-2603 / MITHRIL-2605).
+//
+// The canonical payload of every write is a `.mith` world document (Mithril
+// Form text). Protobuf messages carry that text plus the metadata the server
+// needs to admit, gate, deduplicate and trace it. Bots propose change sets;
+// they never write Iceberg tables directly and never publish. Published facts
+// are never deleted: an ended fact gets `valid_to`, a wrong fact is superseded
+// by a correction that cites the record it replaces.
+//
+// Transport: Connect protocol (binary protobuf or protobuf-JSON over HTTP) on
+// the Fund API Worker under /v1/world/rpc/. The MCP server at /v1/world/mcp
+// exposes the same operations as MCP tools whose input/output JSON Schemas
+// are generated from these messages (protobuf JSON mapping). See
+// docs/world-api.md.
+syntax = "proto3";
+
+package mithril.twin.world.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// ---------------------------------------------------------------------------
+// Shared value types
+// ---------------------------------------------------------------------------
+
+// Calendar precision of a valid-time bound.
+enum DatePrecision {
+  DATE_PRECISION_UNSPECIFIED = 0;
+  DATE_PRECISION_YEAR = 1;
+  DATE_PRECISION_MONTH = 2;
+  DATE_PRECISION_DAY = 3;
+  DATE_PRECISION_APPROXIMATE = 4;
+}
+
+// A point in world (valid) time. ISO 8601 date text so that years before
+// 1970, BCE years and partial dates survive without timestamp coercion.
+message WorldDate {
+  string iso_date = 1;          // "1991", "1991-12", "1991-12-26"
+  DatePrecision precision = 2;
+}
+
+// Half-open valid interval [from, to). An absent bound is open.
+message ValidInterval {
+  WorldDate valid_from = 1;
+  WorldDate valid_to = 2;
+}
+
+// Honesty class of a statement (Norbert rules).
+enum Assertion {
+  ASSERTION_UNSPECIFIED = 0;
+  ASSERTION_ASSERTED = 1;   // stated by the cited source
+  ASSERTION_INFERRED = 2;   // derived by a named, versioned .mith view
+  ASSERTION_PROPOSED = 3;   // a candidate awaiting confirmation
+}
+
+// A pinned source snapshot. Must already be registered (RegisterSource) and
+// present in config/data-source-terms.json with an allowed licence.
+message SourceRef {
+  string source_id = 1;         // e.g. "gleif-golden-copy"
+  string snapshot_sha256 = 2;   // hex, 64 chars
+  string record_id = 3;         // record within the source, when applicable
+}
+
+// One RDF statement with its world time and provenance.
+message Statement {
+  string subject = 1;           // IRI
+  string predicate = 2;         // IRI in an admitted vocabulary
+  oneof object {
+    string object_iri = 3;
+    Literal object_literal = 4;
+  }
+  ValidInterval valid = 5;
+  Assertion assertion = 6;
+  repeated SourceRef sources = 7;
+  string licence = 8;           // SPDX id or register key
+  string graph_iri = 9;         // named graph; defaults to the world graph
+}
+
+message Literal {
+  string lexical = 1;
+  string datatype = 2;          // IRI, e.g. xsd:decimal
+  string language = 3;          // BCP 47, optional
+}
+
+// Server-assigned identity of a stored statement version.
+message StatementRecord {
+  string record_id = 1;              // stable, server-minted
+  Statement statement = 2;
+  google.protobuf.Timestamp recorded_at = 3;
+  int64 catalog_snapshot_id = 4;     // Iceberg snapshot that holds it
+  string supersedes_record_id = 5;   // set for corrections
+  string change_set_id = 6;
+}
+
+// ---------------------------------------------------------------------------
+// Change sets (the only write path)
+// ---------------------------------------------------------------------------
+
+enum ChangeKind {
+  CHANGE_KIND_UNSPECIFIED = 0;
+  CHANGE_KIND_ASSERT = 1;    // add a new statement
+  CHANGE_KIND_END = 2;       // set valid_to on an existing record
+  CHANGE_KIND_CORRECT = 3;   // supersede an existing record (reason required)
+}
+
+message Change {
+  ChangeKind kind = 1;
+  Statement statement = 2;             // ASSERT, CORRECT
+  string target_record_id = 3;         // END, CORRECT
+  WorldDate end_at = 4;                // END
+  string reason = 5;                   // CORRECT (required), END (optional)
+}
+
+enum ChangeSetState {
+  CHANGE_SET_STATE_UNSPECIFIED = 0;
+  CHANGE_SET_STATE_RECEIVED = 1;   // stored in private ingress
+  CHANGE_SET_STATE_REJECTED = 2;   // failed a gate; see gate results
+  CHANGE_SET_STATE_ADMITTED = 3;   // all gates passed; queued for drain
+  CHANGE_SET_STATE_COMMITTED = 4;  // drained into the catalog (private)
+  CHANGE_SET_STATE_PUBLISHED = 5;  // visible on the public surface
+  CHANGE_SET_STATE_WITHDRAWN = 6;  // withdrawn by its submitter before commit
+  CHANGE_SET_STATE_UNKNOWN = 7;    // outcome not yet verified; never "success"
+}
+
+enum Gate {
+  GATE_UNSPECIFIED = 0;
+  GATE_MITH_PARSE = 1;      // Form reader + closed vocabulary
+  GATE_SHACL = 2;           // world-v1 shapes
+  GATE_LICENCE = 3;         // every source registered and allowed
+  GATE_PERSON_SCOPE = 4;    // public-role persons, role fields only
+  GATE_SIZE = 5;            // byte / statement limits
+  GATE_CONFLICT = 6;        // base snapshot and target records still current
+}
+
+message GateResult {
+  Gate gate = 1;
+  bool passed = 2;
+  repeated Finding findings = 3;
+}
+
+message Finding {
+  string code = 1;          // stable machine code, e.g. "person.non_role_field"
+  string message = 2;
+  int32 change_index = 3;   // index into the change set, -1 if global
+}
+
+message ChangeSet {
+  string change_set_id = 1;           // server-minted
+  string mith = 2;                    // canonical .mith world document text
+  repeated Change changes = 3;        // parsed view of `mith`, server-derived
+  string content_sha256 = 4;          // sha256 of `mith`; idempotency key
+  int64 base_snapshot_id = 5;         // catalog snapshot the submitter read
+  ChangeSetState state = 6;
+  repeated GateResult gates = 7;
+  Provenance provenance = 8;
+  google.protobuf.Timestamp received_at = 9;
+  google.protobuf.Timestamp state_changed_at = 10;
+}
+
+// Who produced the change set and how; recorded, never trusted for authz.
+message Provenance {
+  string agent_profile = 1;     // e.g. "mithril-world-ontology"
+  string run_id = 2;
+  string linear_issue = 3;      // e.g. "MITHRIL-2608"
+  string source_revision = 4;   // git revision of the producing code
+  string model = 5;             // observed provider/model id or "UNKNOWN"
+}
+
+// ---------------------------------------------------------------------------
+// Services
+// ---------------------------------------------------------------------------
+
+// Read access. Public surface needs no credential; private surface needs
+// scope world:read.
+service WorldReadService {
+  rpc GetEntity(GetEntityRequest) returns (GetEntityResponse);
+  rpc ListStatements(ListStatementsRequest) returns (ListStatementsResponse);
+  rpc GetView(GetViewRequest) returns (GetViewResponse);
+  rpc Diff(DiffRequest) returns (DiffResponse);
+}
+
+enum Surface {
+  SURFACE_UNSPECIFIED = 0;
+  SURFACE_PUBLIC = 1;
+  SURFACE_PRIVATE = 2;
+}
+
+// Time selection shared by reads. `as_of` filters valid time; `known_at`
+// selects record time (an Iceberg snapshot). Absent = latest.
+message TimeSelector {
+  WorldDate as_of = 1;
+  int64 known_at_snapshot_id = 2;
+}
+
+message GetEntityRequest {
+  string iri = 1;
+  Surface surface = 2;
+  TimeSelector time = 3;
+}
+
+message GetEntityResponse {
+  string iri = 1;
+  repeated string types = 2;
+  repeated StatementRecord statements = 3;
+  repeated string same_as = 4;           // crosswalk matches above threshold
+  int64 snapshot_id = 5;
+}
+
+message ListStatementsRequest {
+  Surface surface = 1;
+  TimeSelector time = 2;
+  string subject = 3;
+  string predicate = 4;
+  string jurisdiction = 5;   // ISO 3166 / M49 code
+  int32 page_size = 6;       // server caps at 1000
+  string page_token = 7;
+}
+
+message ListStatementsResponse {
+  repeated StatementRecord statements = 1;
+  string next_page_token = 2;
+  int64 snapshot_id = 3;
+}
+
+// A precomputed view chunk, returned as .mith text. Views are declared in
+// .mith view documents; `view_hash` pins the exact definition.
+message GetViewRequest {
+  string view = 1;           // e.g. "as-of-jurisdictions", "gov-tree", "control-chain"
+  string jurisdiction = 2;
+  WorldDate as_of = 3;
+  Surface surface = 4;
+}
+
+message GetViewResponse {
+  string mith = 1;
+  string view_hash = 2;
+  repeated int64 input_snapshot_ids = 3;
+  google.protobuf.Timestamp computed_at = 4;
+}
+
+message DiffRequest {
+  string jurisdiction = 1;
+  WorldDate from = 2;
+  WorldDate to = 3;
+  Surface surface = 4;
+}
+
+message DiffResponse {
+  string mith = 1;           // .mith change summary: appeared / ended / changed
+  repeated int64 input_snapshot_ids = 2;
+}
+
+// Write access for bots (scope world:propose). Never publishes.
+service WorldWriteService {
+  // Runs every gate without storing anything.
+  rpc ValidateChangeSet(ValidateChangeSetRequest) returns (ValidateChangeSetResponse);
+  // Stores the change set in private ingress and runs the gates. Idempotent
+  // on content_sha256: a repeat returns the existing change set.
+  rpc SubmitChangeSet(SubmitChangeSetRequest) returns (SubmitChangeSetResponse);
+  rpc GetChangeSet(GetChangeSetRequest) returns (GetChangeSetResponse);
+  rpc ListChangeSets(ListChangeSetsRequest) returns (ListChangeSetsResponse);
+  // Allowed only before COMMITTED and only for the submitting credential.
+  rpc WithdrawChangeSet(WithdrawChangeSetRequest) returns (WithdrawChangeSetResponse);
+  // Registers a pinned source snapshot. The licence must already be allowed
+  // in the register; this call never widens the register.
+  rpc RegisterSource(RegisterSourceRequest) returns (RegisterSourceResponse);
+}
+
+message SubmitChangeSetRequest {
+  string mith = 1;               // required; the canonical payload
+  int64 base_snapshot_id = 2;    // required; the snapshot the bot read
+  Provenance provenance = 3;
+}
+
+// Same fields as SubmitChangeSetRequest; nothing is stored.
+message ValidateChangeSetRequest {
+  string mith = 1;
+  int64 base_snapshot_id = 2;
+  Provenance provenance = 3;
+}
+
+message SubmitChangeSetResponse {
+  ChangeSet change_set = 1;
+  bool deduplicated = 2;   // true when content_sha256 matched an existing set
+}
+
+message ValidateChangeSetResponse {
+  bool admissible = 1;
+  repeated GateResult gates = 2;
+  repeated Change changes = 3;
+}
+
+message GetChangeSetRequest {
+  string change_set_id = 1;
+}
+
+message GetChangeSetResponse {
+  ChangeSet change_set = 1;
+}
+
+message ListChangeSetsRequest {
+  ChangeSetState state = 1;
+  string agent_profile = 2;
+  int32 page_size = 3;
+  string page_token = 4;
+}
+
+message ListChangeSetsResponse {
+  repeated ChangeSet change_sets = 1;
+  string next_page_token = 2;
+}
+
+message WithdrawChangeSetRequest {
+  string change_set_id = 1;
+  string reason = 2;
+}
+
+message WithdrawChangeSetResponse {
+  ChangeSet change_set = 1;
+}
+
+message RegisterSourceRequest {
+  string source_id = 1;
+  string snapshot_sha256 = 2;
+  int64 rows = 3;
+  string retrieved_at = 4;       // RFC 3339
+  string url = 5;
+  string licence = 6;            // must match the register entry
+}
+
+message RegisterSourceResponse {
+  SourceRef source = 1;
+  bool already_registered = 2;
+}
