@@ -1,7 +1,7 @@
 {
   "artifact": "mithril-twin-world-source-registry",
   "schema_version": 1,
-  "generated_jst": "2026-11-19T08:10:43.236235+09:00",
+  "generated_jst": "2026-11-19T09:55:41.428624+09:00",
   "status": "13 of 17 crawl-plan sources verified; 10 registration-ready, 3 candidate",
   "disclaimer": "Evidence catalogue only. Adding a row here does NOT register a source with the World LICENCE gate and does NOT authorise person data. Owner approval and G16 (privacy check + removal/correction path) are still required.",
   "counts": {
@@ -49,7 +49,8 @@
     "Crawl-plan sheet is HTTP 401; the remaining 4 source names are unidentified and are not in this catalogue.",
     "GLEIF evidence is search-indexed official text; gleif.org refused direct fetch via robots.txt (403).",
     "Canada CKAN isopen=false contradicts the OGL-Canada statement; open.canada.ca currently returns a WAF reject page.",
-    "KR OPENDART Art.16 reserves FSS copyright with no explicit CC/OGL-style licence; keep as candidate."
+    "KR OPENDART Art.16 reserves FSS copyright with no explicit CC/OGL-style licence; keep as candidate.",
+    "UK Companies House register data is NOT OGL — statutory disclosure with no imposed use restrictions; retained as candidate pending owner legal judgement (wakeup #22)."
   ],
   "sources": [
     {
@@ -201,15 +202,16 @@
       "official_urls": [
         "https://developer.companieshouse.gov.uk/get-started",
         "https://www.gov.uk/government/publications/companies-house-accreditation-to-information-fair-traders-scheme/public-task-copyright-and-crown-copyright",
-        "https://forum.companieshouse.gov.uk/t/commercial-use-of-companies-house-public-data-api-data/13124/2"
+        "https://forum.companieshouse.gov.uk/t/commercial-use-of-companies-house-public-data-api-data/13124/2",
+        "https://www.gov.uk/guidance/companies-house-data-products"
       ],
       "access": "free; REST API requires registered account + API key (live application), 600 requests / 5 min per key; also bulk Free Company Data Product",
       "licence": "NOT published under OGL. Statutory public register under Companies Act 2006; disclosure permitted via s47 CDPA 1988 / Sch.1 Database Regulations approvals. Companies House imposes no rules or requirements on how register information is used.",
-      "licence_url": "https://forum.companieshouse.gov.uk/t/is-data-provided-under-the-ocs/4513",
+      "licence_url": "https://www.gov.uk/government/publications/companies-house-accreditation-to-information-fair-traders-scheme/public-task-copyright-and-crown-copyright",
       "attribution_required": false,
-      "verification": "web_search: official Companies House service-owner forum statements + GOV.UK copyright statement; developer docs confirm API key requirement",
-      "confidence": "medium-high",
-      "caveats": "OGL v3.0 applies only to Companies House's own guidance/statistics/website copy, NOT the register data. Register data user remains responsible for data protection, copyright and other law (UK GDPR). API key needed; personal officer data must still pass G16 + per-jurisdiction privacy checks.",
+      "verification": "Direct web_extract of two official GOV.UK pages (wakeup #22): 'Our public task, copyright and Crown copyright' (Crown copyright material under OGL v3.0; register information instead made available via s47 CDPA 1988 / Sch.1 Database Regulations approvals; 'Companies House imposes no rules or requirements on how the information on the public register is used') and 'Companies House data products' (free monthly company snapshot incl. registered office address, SIC, status, officers/PSC; 'We impose no rules or requirements on how the information on the public register is used'). Full text: ~/.mithril/cache/web/www.gov.uk-808eee9beb.md and www.gov.uk-3543fc1378.md",
+      "confidence": "high",
+      "caveats": "OGL v3.0 applies only to Companies House's own guidance/statistics/website copy, NOT to register data: the register is supplied under statutory provisions with no licence terms, which is permissive but not a licence grant. CANDIDATE retained as a deliberate policy: the gate requires an explicit licence classification and the user bears third-party copyright / UK GDPR obligations (officer names and addresses are person data → G16 + jurisdiction privacy check). API key required; 600 req/5 min. Ownership decision needed before registration.",
       "citation_for_world_statements": "UK Companies House public register — <company number> — retrieved <date> — SHA-256 <hash>",
       "registration_ready": false
     },
