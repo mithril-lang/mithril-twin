@@ -22,6 +22,7 @@ import { useViewerLocale } from '../locale'
 import { loadTwinCopy, twinCopy } from './twin-copy'
 import { importLocalFiles, readLocalFiles } from './mith/io'
 import {
+  csRepositoryDocFromSearch,
   hypothesisToScenario,
   loadSampleMith,
   mithLayerItems,
@@ -42,10 +43,14 @@ const LAYERS: { id: TwinLayer; label: string }[] = [
 
 function TwinApp() {
   const locale = useViewerLocale()
+  const csDocument = useMemo(
+    () => csRepositoryDocFromSearch(typeof window === 'undefined' ? '' : window.location.search),
+    [],
+  )
   const t = (english: string, values?: Record<string, string | number>) => twinCopy(locale, english, values)
   const [view, setView] = useState<ViewMode>('make')
   const [sampleId, setSampleId] = useState(
-    () => sampleDocFromSearch(typeof window === 'undefined' ? '' : window.location.search).id,
+    () => csDocument?.id ?? sampleDocFromSearch(typeof window === 'undefined' ? '' : window.location.search).id,
   )
   const [doc, setDoc] = useState<MithDocument | null>(null)
   const [source, setSource] = useState<'mith' | 'file'>('mith')
@@ -65,8 +70,8 @@ function TwinApp() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    document.title = 'Mithril Twin | twin.mithril.fund'
-  }, [])
+    document.title = csDocument ? 'Repository Twin | Mithril CS' : 'Mithril Twin | twin.mithril.fund'
+  }, [csDocument])
 
   useEffect(() => {
     const prevent = (event: DragEvent) => {
@@ -92,7 +97,7 @@ function TwinApp() {
     setDocEpoch((n) => n + 1)
   }, [])
 
-  const sample = SAMPLE_DOCS.find((d) => d.id === sampleId) ?? SAMPLE_DOCS[0]!
+  const sample = (sampleId === csDocument?.id ? csDocument : null) ?? SAMPLE_DOCS.find((d) => d.id === sampleId) ?? SAMPLE_DOCS[0]!
   const fileOpen = fileName != null
   const isPack = !fileOpen && !!sample.pack
 
@@ -104,18 +109,18 @@ function TwinApp() {
     setLoading(true)
     setError('')
     try {
-      const loaded = await loadSampleMith(fetch, sample.url)
+      const loaded = await loadSampleMith(fetch, sample.url, !csDocument)
       if (gen !== loadGen.current) return
-      setFileName(null)
+      setFileName(csDocument?.file ?? null)
       setFileNote(null)
-      applyDoc(loaded.doc, 'mith', loaded.packageId)
+      applyDoc(loaded.doc, csDocument ? 'file' : 'mith', loaded.packageId)
     } catch (err) {
       if (gen !== loadGen.current) return
       setError(`Could not load .mith: ${err instanceof Error ? err.message : 'unknown'}`)
     } finally {
       if (gen === loadGen.current) setLoading(false)
     }
-  }, [applyDoc, fileOpen, sample])
+  }, [applyDoc, fileOpen, sample, csDocument])
 
   useEffect(() => {
     // Load the sample once on mount. loadMith sets loading/error state by design.
@@ -245,7 +250,7 @@ function TwinApp() {
         source={source}
         packageId={packageId}
         sampleId={sampleId}
-        onPickSample={pickSample}
+        onPickSample={csDocument ? undefined : pickSample}
         focusPlaneId={focusPlaneId}
         selectedId={selectedId}
         hypothesisId={hypothesisId}
@@ -272,7 +277,7 @@ function TwinApp() {
           <h1>{doc?.title ?? '北極星 FI'}</h1>
           <p className="subtitle">
             {view === 'board'
-              ? t('Secondary flat board for the same synthetic-demo model.')
+              ? csDocument ? t('Secondary flat board for this model.') : t('Secondary flat board for the same synthetic-demo model.')
               : t('{layer} drill-in. Grid remains the main overview.', { layer: t(layerLabel) })}
           </p>
         </div>
@@ -364,7 +369,9 @@ function TwinApp() {
       </section>
 
       <footer className="footer">
-        {t('Fictional institution. Local synthetic-demo content. Attack paths are hypothesis overlays (observation_count=0), visualization only.')}
+        {csDocument
+          ? t('CS-local repository draft. Findings are unverified hypotheses. Visualization only.')
+          : t('Fictional institution. Local synthetic-demo content. Attack paths are hypothesis overlays (observation_count=0), visualization only.')}
       </footer>
     </main>
   )

@@ -9,6 +9,7 @@ import { labelLines } from './components/TokenNode'
 import { orthoPath } from './components/ortho'
 import { twinSymbol } from './themes/symbols'
 import { readMith, readMithRaw } from './mith/twin'
+import { csRepositoryDocFromSearch } from './mith/load'
 
 const tinyMith = {
   mith: '0.1',
@@ -118,6 +119,24 @@ beforeEach(() => {
 })
 
 describe('Twin Polaris surface', () => {
+  it('loads a CS repository draft only from the same-origin repository route', async () => {
+    expect(csRepositoryDocFromSearch('?csRepository=1463656144')?.url).toBe('/api/twin/repositories/1463656144/export.mith')
+    expect(csRepositoryDocFromSearch('?csRepository=https://evil.test')).toBeNull()
+    expect(csRepositoryDocFromSearch('?csRepository=0')).toBeNull()
+    const calls: string[] = []
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      calls.push(String(input))
+      return new Response(JSON.stringify({ ...tinyMith, dataset_kind: 'cs-repository-twin', title: 'CS repository twin' }), { status: 200 })
+    }))
+    window.history.replaceState(null, '', '/twin?csRepository=1463656144&lang=en')
+    render(<TwinHome />)
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'CS repository twin' })).toBeTruthy())
+    expect(calls).toEqual(['/api/twin/repositories/1463656144/export.mith'])
+    expect(document.title).toBe('Repository Twin | Mithril CS')
+    expect(screen.queryByLabelText('Sample document')).toBeNull()
+    expect(document.querySelector('.make-app')?.getAttribute('data-source')).toBe('file')
+  })
+
   it('translates the secondary board controls without changing model labels', async () => {
     window.history.replaceState(null, '', '/twin?doc=polaris-fi&lang=ja')
     render(<TwinLocaleProvider><TwinHome /></TwinLocaleProvider>)

@@ -28,6 +28,18 @@ export function sampleDocFromSearch(search: string) {
   return SAMPLE_DOCS.find((d) => d.id === id) ?? SAMPLE_DOCS[0]!
 }
 
+/** A same-origin CS repository draft, when this packaged viewer is hosted by CS. */
+export function csRepositoryDocFromSearch(search: string): (typeof SAMPLE_DOCS)[number] | null {
+  const id = new URLSearchParams(search).get('csRepository')
+  if (!id || !/^[1-9][0-9]{0,15}$/.test(id)) return null
+  return {
+    id: `cs-repository-${id}`,
+    file: `cs-repo-twin-${id}.mith`,
+    url: `/api/twin/repositories/${id}/export.mith`,
+    label: 'CS repository twin',
+  }
+}
+
 export type LoadedMith = {
   doc: MithDocument
   packageId: string | null
@@ -36,12 +48,14 @@ export type LoadedMith = {
 export async function loadSampleMith(
   fetchImpl: typeof fetch = fetch,
   url: string = SAMPLE_MITH_URL,
+  loadPackage = true,
 ): Promise<LoadedMith> {
   const response = await fetchImpl(url)
   if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`)
   const read = readMith(await response.text())
   if (read.deprecated) console.warn('twin: legacy v0 JSON .mith is deprecated; write (mithril/twin-document …) Form instead')
   const doc = read.doc
+  if (!loadPackage) return { doc, packageId: null }
   let packageId: string | null = null
   try {
     const pkg = await fetchImpl(SAMPLE_PACKAGE_URL)
